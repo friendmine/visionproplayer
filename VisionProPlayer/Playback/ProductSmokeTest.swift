@@ -30,6 +30,34 @@ extension PlayerModel {
             transfer = nil
             let photoURL = try photoStore.resolve(photo)
             check("photo-import-preserves-video-bytes", try Data(contentsOf: photoURL) == Data(contentsOf: nativeURL) && photo.photoFile != nil)
+            let localHistory = try photoStore.add(nativeURL)
+            let networkHistory = try photoStore.add(URL(string: "https://example.com/history.mp4")!)
+            for id in [photo.id, localHistory.id, networkHistory.id] {
+                photoStore.update(id) {
+                    $0.lastOpened = Date(); $0.position = 5; $0.duration = 12
+                    $0.favorite = true; $0.preferences.strength = 0.6
+                }
+            }
+            let expectedAfterClear = photoStore.films.map { film in
+                var copy = film; copy.lastOpened = nil; copy.position = 0; return copy
+            }
+            try photoStore.clearWatchHistory()
+            let clearedStore = MediaLibrary(root: photoRoot, defaults: defaults)
+            check("history-clear-persists-and-preserves-library", !clearedStore.hasWatchHistory && clearedStore.films == expectedAfterClear && FileManager.default.isReadableFile(atPath: photoURL.path))
+            photoStore.updateProgress(photo.id, seconds: 9, duration: 12)
+            check("history-clear-rejects-delayed-progress", photoStore.films == expectedAfterClear && MediaLibrary(root: photoRoot, defaults: defaults).films == expectedAfterClear)
+            photoStore.update(photo.id) { $0.lastOpened = Date() }
+            photoStore.updateProgress(photo.id, seconds: 3, duration: 12)
+            check("history-new-viewing-records-progress", photoStore.hasWatchHistory && MediaLibrary(root: photoRoot, defaults: defaults).film(photo.id)?.position == 3)
+            let beforeFailure = photoStore.films
+            let unavailableRoot = folder.appending(path: "unavailable-photo-store")
+            try FileManager.default.moveItem(at: photoRoot, to: unavailableRoot)
+            try Data("block store writes".utf8).write(to: photoRoot)
+            var clearFailed = false
+            do { try photoStore.clearWatchHistory() } catch { clearFailed = true }
+            check("history-clear-storage-failure-preserves-records", clearFailed && photoStore.films == beforeFailure && MediaLibrary(root: unavailableRoot, defaults: defaults).films == beforeFailure)
+            try FileManager.default.removeItem(at: photoRoot)
+            try FileManager.default.moveItem(at: unavailableRoot, to: photoRoot)
             let movedRoot = folder.appending(path: "moved-photo-store")
             try FileManager.default.moveItem(at: photoRoot, to: movedRoot)
             let movedPhotos = MediaLibrary(root: movedRoot, defaults: defaults)

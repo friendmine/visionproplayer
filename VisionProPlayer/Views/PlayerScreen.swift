@@ -14,6 +14,16 @@ struct PlayerScreen: View {
     @State private var seekValue = 0.0
     @State private var seeking = false
 
+    private var stereoControls: Bool {
+        guard let request = model.request else { return false }
+        return request.layout.isStereo || request.converts2D || request.isSpatialVideo
+    }
+    private var controlsVisible: Bool { stereoControls || controls }
+    private var videoAspect: CGFloat {
+        let ratio = model.stereoDisplayAspect
+        return ratio.isFinite && ratio > 0 ? CGFloat(ratio) : 16 / 9
+    }
+
     var body: some View {
         VStack(spacing: 14) {
             HStack(spacing: 18) {
@@ -30,57 +40,74 @@ struct PlayerScreen: View {
                     .popover(isPresented: $picture) { PictureSettings(model: model).padding(24).frame(width: 430) }
                 Button("影院", systemImage: "vision.pro") { cinema = true; reveal() }
                     .popover(isPresented: $cinema) { CinemaSettings(model: model, enter: enterCinema).padding(24).frame(width: 430) }
-            }.opacity(controls ? 1 : 0).allowsHitTesting(controls)
-            ZStack(alignment: .bottom) {
-                Color.black.opacity(0.95)
-                Group {
-                    if model.cinemaActive {
-                        ContentUnavailableView("正在空间影院播放", systemImage: "vision.pro", description: Text("可以在影院下方调整屏幕或退出影院。"))
-                    } else if let request = model.request {
-                        if request.isSpatialVideo, let player = model.nativePlayer { SpatialVideoView(model: model, player: player).id(request.id) }
-                        else if request.usesTextureOutput { StereoPlayerView(model: model, request: request).id(request.id) }
-                        else if request.engine == .vlc { VLCPlayerView(model: model).id(request.id) }
-                        else if let player = model.nativePlayer { NativeVideoSurface(player: player) }
-                    } else { ProgressView("正在打开影片…") }
-                }.frame(maxWidth: .infinity, maxHeight: .infinity)
-                Color.clear.contentShape(Rectangle()).onTapGesture { reveal() }
-                if !model.subtitleText.isEmpty && !model.cinemaActive {
-                    CaptionOverlay(text: model.subtitleText)
-                        .padding(.bottom, controls ? 150 : 30).padding(.horizontal, 32).offset(z: 0.02)
-                        .allowsHitTesting(false)
+            }.opacity(controlsVisible ? 1 : 0).allowsHitTesting(controlsVisible)
+            if stereoControls {
+                GeometryReader { geometry in
+                    let width = min(geometry.size.width, geometry.size.height * videoAspect)
+                    videoStage
+                        .frame(width: max(1, width), height: max(1, width / videoAspect))
+                        .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
                 }
-                if model.errorMessage != nil || model.rendererError != nil {
-                    VStack(spacing: 16) {
-                        Label("暂时无法播放这部影片", systemImage: "exclamationmark.triangle").font(.title3)
-                        Text(model.errorMessage ?? model.rendererError ?? "").font(.callout).lineLimit(4)
-                        HStack {
-                            Button("重试") { model.retryPlayback() }
-                            if model.isPlaying { Button("关闭提示") { model.errorMessage = nil; model.rendererError = nil } }
-                            Button("返回片库") { Task { await leave() } }
-                        }
-                    }.padding(28).frame(maxWidth: 550).glassBackgroundEffect().frame(maxHeight: .infinity).offset(z: 0.04)
-                } else if model.hasEnded {
-                    HStack(spacing: 20) {
-                        Button("重新播放", systemImage: "arrow.counterclockwise") { model.restart(); reveal() }
-                        Button("返回片库", systemImage: "square.grid.2x2") { Task { await leave() } }
-                    }.padding(24).glassBackgroundEffect().frame(maxHeight: .infinity).offset(z: 0.04)
-                } else if model.stateText.contains("打开") || model.stateText.contains("缓冲") || model.isSwitchingEngine {
-                    ProgressView(model.isSwitchingEngine ? "正在尝试兼容播放…" : model.stateText)
-                        .padding(24).glassBackgroundEffect().frame(maxHeight: .infinity).offset(z: 0.04)
-                }
-                transport.padding(20).opacity(controls ? 1 : 0).allowsHitTesting(controls).offset(z: 0.04)
-            }.clipShape(RoundedRectangle(cornerRadius: 26))
+                // Reserve a separate row: RealityKit's forward screen plane
+                // cannot cover the slider, and controls never resize the movie.
+                transport.frame(maxWidth: 960)
+            } else {
+                videoStage
+            }
         }.padding(24).toolbar(.hidden, for: .navigationBar)
-            .onChange(of: model.progress) { _, value in if !seeking { seekValue = value } }
+            .onChange(of: model.progress, initial: true) { _, value in if !seeking { seekValue = value } }
             .onChange(of: model.isPlaying) { _, _ in reveal() }
             .onChange(of: picture) { _, value in if !value { model.savePicturePreferences(); reveal() } }
             .onChange(of: tracks) { _, value in if !value { reveal() } }
             .onChange(of: cinema) { _, value in if !value { reveal() } }
             .task(id: activity) {
                 try? await Task.sleep(for: .seconds(5))
-                guard !Task.isCancelled, model.isPlaying, !picture, !tracks, !cinema, !seeking, model.errorMessage == nil else { return }
+                guard !Task.isCancelled, !stereoControls, model.isPlaying, !picture, !tracks, !cinema, !seeking, model.errorMessage == nil else { return }
                 controls = false
             }
+    }
+    private var videoStage: some View {
+        ZStack(alignment: .bottom) {
+            Color.black.opacity(0.95)
+            Group {
+                if model.cinemaActive {
+                    ContentUnavailableView("正在空间影院播放", systemImage: "vision.pro", description: Text("可以在影院下方调整屏幕或退出影院。"))
+                } else if let request = model.request {
+                    if request.isSpatialVideo, let player = model.nativePlayer { SpatialVideoView(model: model, player: player).id(request.id) }
+                    else if request.usesTextureOutput { StereoPlayerView(model: model, request: request).id(request.id) }
+                    else if request.engine == .vlc { VLCPlayerView(model: model).id(request.id) }
+                    else if let player = model.nativePlayer { NativeVideoSurface(player: player) }
+                } else { ProgressView("正在打开影片…") }
+            }.frame(maxWidth: .infinity, maxHeight: .infinity)
+            Color.clear.contentShape(Rectangle()).onTapGesture { reveal() }.offset(z: stereoControls ? 24 : 0)
+            if !model.subtitleText.isEmpty && !model.cinemaActive {
+                CaptionOverlay(text: model.subtitleText)
+                    .padding(.bottom, stereoControls ? 24 : (controls ? 150 : 30)).padding(.horizontal, 32).offset(z: stereoControls ? 24 : 0.02)
+                    .allowsHitTesting(false)
+            }
+            if model.errorMessage != nil || model.rendererError != nil {
+                VStack(spacing: 16) {
+                    Label("暂时无法播放这部影片", systemImage: "exclamationmark.triangle").font(.title3)
+                    Text(model.errorMessage ?? model.rendererError ?? "").font(.callout).lineLimit(4)
+                    HStack {
+                        Button("重试") { model.retryPlayback() }
+                        if model.isPlaying { Button("关闭提示") { model.errorMessage = nil; model.rendererError = nil } }
+                        Button("返回片库") { Task { await leave() } }
+                    }
+                }.padding(28).frame(maxWidth: 550).glassBackgroundEffect().frame(maxHeight: .infinity).offset(z: stereoControls ? 32 : 0.04)
+            } else if model.hasEnded {
+                HStack(spacing: 20) {
+                    Button("重新播放", systemImage: "arrow.counterclockwise") { model.restart(); reveal() }
+                    Button("返回片库", systemImage: "square.grid.2x2") { Task { await leave() } }
+                }.padding(24).glassBackgroundEffect().frame(maxHeight: .infinity).offset(z: stereoControls ? 32 : 0.04)
+            } else if model.stateText.contains("打开") || model.stateText.contains("缓冲") || model.isSwitchingEngine {
+                ProgressView(model.isSwitchingEngine ? "正在尝试兼容播放…" : model.stateText)
+                    .padding(24).glassBackgroundEffect().frame(maxHeight: .infinity).offset(z: stereoControls ? 32 : 0.04)
+            }
+            if !stereoControls {
+                transport.padding(20).opacity(controls ? 1 : 0).allowsHitTesting(controls).offset(z: 0.04)
+            }
+        }.clipShape(RoundedRectangle(cornerRadius: 26))
     }
     private var transport: some View {
         VStack(spacing: 10) {

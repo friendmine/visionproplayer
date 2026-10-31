@@ -11,6 +11,7 @@ struct SpatialVideoView: View {
     @State private var video = Entity()
     @State private var recordedStereo = false
     @State private var size = SIMD2<Float>(1, 9.0 / 16.0)
+    @State private var cinemaControls: Entity?
 
     var body: some View {
         Group {
@@ -22,11 +23,14 @@ struct SpatialVideoView: View {
                     sky.isEnabled = model.library.darkCinema; content.add(sky)
                     positionCinema()
                     if let controls = attachments.entity(for: "controls") {
-                        controls.position = [0, 0.35, -2]; controls.scale = [1.2, 1.2, 1.2]; content.add(controls)
+                        cinemaControls = controls
+                        CinemaControlPlacement.place(controls, model: model, aspect: size.x / size.y)
+                        content.add(controls)
                     }
                     if let captions = attachments.entity(for: "captions") { content.add(captions) }
                 } update: { content, attachments in
                     positionCinema()
+                    if let controls = cinemaControls { CinemaControlPlacement.place(controls, model: model, aspect: size.x / size.y) }
                     content.entities.first(where: { $0.name == "CinemaBackground" })?.isEnabled = model.library.darkCinema
                     if let captions = attachments.entity(for: "captions") {
                         captions.position = [0, model.library.screenHeight - model.library.screenWidth * size.y / size.x * 0.36, -model.library.screenDistance + 0.03]
@@ -51,9 +55,11 @@ struct SpatialVideoView: View {
         }
         .task {
             while !Task.isCancelled {
+                if let controls = cinemaControls { CinemaControlPlacement.place(controls, model: model, aspect: size.x / size.y) }
                 if let component = video.components[VideoPlayerComponent.self] {
                     let current = component.playerScreenSize
                     if current.x > 0, current.y > 0, current.x.isFinite, current.y.isFinite, current != size { size = current }
+                    model.stereoDisplayAspect = Double(size.x / size.y)
                     let stereo = component.viewingMode == .stereo
                     if model.spatialStereoActive != stereo { model.spatialStereoActive = stereo }
                     #if DEBUG

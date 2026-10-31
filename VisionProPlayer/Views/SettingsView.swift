@@ -3,6 +3,9 @@ import SwiftUI
 struct SettingsView: View {
     @Bindable var model: PlayerModel
     let close: () -> Void
+    @State private var confirmingHistoryClear = false
+    @State private var historyCleared = false
+    @State private var historyError: String?
     var body: some View {
         NavigationStack {
             Form {
@@ -13,6 +16,15 @@ struct SettingsView: View {
                 Section("空间影院") {
                     Toggle("暗色环境", isOn: Binding(get: { model.library.darkCinema }, set: { model.library.darkCinema = $0 }))
                     Text("关闭时保留现实环境。进入影院后可以调整屏幕尺寸和距离。").font(.caption).foregroundStyle(.secondary)
+                }
+                Section("观看历史") {
+                    Button("清除观看历史", systemImage: "clock.arrow.circlepath", role: .destructive) {
+                        confirmingHistoryClear = true
+                    }.disabled(!model.library.hasWatchHistory)
+                    Text(model.library.hasWatchHistory
+                         ? "清除最近观看记录和续播进度。保留片库影片、收藏及影片设置。"
+                         : (historyCleared ? "观看历史已清除。再次打开影片将从头播放。" : "暂无观看历史。"))
+                        .font(.caption).foregroundStyle(.secondary)
                 }
                 Section("关于") {
                     LabeledContent("Vision Player", value: "0.2 · 预览版")
@@ -25,6 +37,18 @@ struct SettingsView: View {
                 #endif
             }.navigationTitle("设置").toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成", action: close) } }
         }.frame(width: 640, height: 610)
+        .confirmationDialog("清除全部观看历史？", isPresented: $confirmingHistoryClear, titleVisibility: .visible) {
+            Button("清除观看历史", role: .destructive) {
+                do { try model.library.clearWatchHistory(); historyCleared = true }
+                catch { historyError = error.localizedDescription }
+            }
+            Button("取消", role: .cancel) { }
+        } message: {
+            Text("将清除最近观看记录和所有续播进度，无法撤销。片库影片、收藏、相册副本和影片设置都会保留。")
+        }
+        .alert("未能清除观看历史", isPresented: Binding(get: { historyError != nil }, set: { if !$0 { historyError = nil } })) {
+            Button("好", role: .cancel) { historyError = nil }
+        } message: { Text(historyError ?? "请稍后重试。") }
     }
 }
 

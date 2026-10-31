@@ -1,6 +1,23 @@
 import SwiftUI
 import RealityKit
 
+enum CinemaControlPlacement {
+    static func position(screenHeight: Float, screenWidth: Float, aspect: Float,
+                         distance: Float, controlsTop: Float) -> SIMD3<Float> {
+        let bottom = screenHeight - screenWidth / max(0.1, aspect) / 2
+        return [0, bottom - 0.14 - controlsTop, -distance + 0.12]
+    }
+
+    @MainActor static func place(_ controls: Entity, model: PlayerModel, aspect: Float) {
+        controls.scale = SIMD3(repeating: 1.2)
+        let bounds = controls.visualBounds(relativeTo: controls)
+        let top = bounds.extents.y > 0 && bounds.max.y.isFinite ? bounds.max.y * 1.2 : 0.15
+        controls.position = position(screenHeight: model.library.screenHeight,
+                                     screenWidth: model.library.screenWidth, aspect: aspect,
+                                     distance: model.library.screenDistance, controlsTop: top)
+    }
+}
+
 struct CinemaSettings: View {
     @Bindable var model: PlayerModel
     let enter: () async -> Void
@@ -73,7 +90,7 @@ struct CinemaControls: View {
                 }
             }
             HStack {
-                Text(PlayerModel.clock(model.elapsed)).monospacedDigit()
+                Text(PlayerModel.clock(dragging ? seek * model.duration : model.elapsed)).monospacedDigit()
                 Slider(value: $seek, in: 0...1, onEditingChanged: { editing in dragging = editing; if !editing { model.seek(to: seek) } }).accessibilityLabel("播放进度").disabled(!model.isSeekable)
                 Text(PlayerModel.clock(model.duration)).monospacedDigit()
             }
@@ -87,6 +104,6 @@ struct CinemaControls: View {
             if adjust { ScreenAdjustments(model: model) }
             if let error = model.errorMessage ?? model.rendererError { Text(error).foregroundStyle(.orange).font(.caption) }
         }.padding(24).frame(width: 700).glassBackgroundEffect()
-            .onChange(of: model.progress) { _, value in if !dragging { seek = value } }
+            .onChange(of: model.progress, initial: true) { _, value in if !dragging { seek = value } }
     }
 }

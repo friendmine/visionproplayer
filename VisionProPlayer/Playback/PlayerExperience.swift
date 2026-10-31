@@ -33,7 +33,7 @@ extension PlayerModel {
     func checkpoint() {
         guard let id = request?.libraryID, duration.isFinite, duration > 0, elapsed.isFinite else { return }
         let seconds = max(0, nativePlayer?.currentTime().seconds ?? elapsed)
-        library.update(id) { $0.position = seconds.isFinite ? seconds : elapsed; $0.duration = duration }
+        library.updateProgress(id, seconds: seconds.isFinite ? seconds : elapsed, duration: duration)
     }
     func savePicturePreferences() {
         guard let request, let id = request.libraryID else { return }

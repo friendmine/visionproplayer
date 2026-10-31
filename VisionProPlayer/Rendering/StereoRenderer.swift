@@ -241,6 +241,7 @@ struct StereoPlayerView: View {
     @State private var renderer = StereoRenderer()
     @State private var aspect: Float = 16 / 9
     @State private var ready = false
+    @State private var cinemaControls: Entity?
 
     var body: some View {
         Group {
@@ -254,7 +255,11 @@ struct StereoPlayerView: View {
                         sky.scale = [-1, 1, 1]; sky.name = "CinemaBackground"
                         sky.isEnabled = model.library.darkCinema; content.add(sky)
                         positionCinema()
-                        if let controls = attachments.entity(for: "controls") { controls.position = [0, 0.35, -2]; controls.scale = [1.2, 1.2, 1.2]; content.add(controls) }
+                        if let controls = attachments.entity(for: "controls") {
+                            cinemaControls = controls
+                            CinemaControlPlacement.place(controls, model: model, aspect: aspect)
+                            content.add(controls)
+                        }
                         if let captions = attachments.entity(for: "captions") { content.add(captions) }
                         ready = true
                     } catch {
@@ -262,6 +267,7 @@ struct StereoPlayerView: View {
                     }
                 } update: { content, attachments in
                     positionCinema()
+                    if let controls = cinemaControls { CinemaControlPlacement.place(controls, model: model, aspect: aspect) }
                     content.entities.first(where: { $0.name == "CinemaBackground" })?.isEnabled = model.library.darkCinema
                     if let captions = attachments.entity(for: "captions") {
                         captions.position = [0, model.library.screenHeight - model.library.screenWidth / aspect * 0.36, -model.library.screenDistance + 0.03]
@@ -308,6 +314,15 @@ struct StereoPlayerView: View {
         // explicit 5 mm gap. Default 3D depth would push the screen much farther
         // toward the viewer and magnify it over the transport controls.
         .frame(depth: 0)
+            }
+        }
+        .task {
+            guard immersive else { return }
+            // Attachment height changes when screen adjustments expand. Keep
+            // its top edge below the movie, including while playback is paused.
+            while !Task.isCancelled {
+                if let controls = cinemaControls { CinemaControlPlacement.place(controls, model: model, aspect: aspect) }
+                try? await Task.sleep(for: .milliseconds(200))
             }
         }
         .task(id: ready) {

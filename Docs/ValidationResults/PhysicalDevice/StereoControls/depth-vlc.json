@@ -1,0 +1,49 @@
+{
+  "benchmarkSeconds": 10.001947166667378,
+  "checks": [
+    {
+      "name": "model-and-render-started",
+      "passed": true
+    },
+    {
+      "name": "sustained-conversion",
+      "passed": true
+    },
+    {
+      "name": "seek-resets-depth-history",
+      "passed": true
+    },
+    {
+      "name": "pause-and-strength-redraw",
+      "passed": true
+    },
+    {
+      "name": "resume-conversion",
+      "passed": true
+    },
+    {
+      "name": "disable-preserves-position",
+      "passed": true
+    },
+    {
+      "name": "reenable-conversion",
+      "passed": true
+    }
+  ],
+  "convertedFramesInBenchmark": 296,
+  "depthAgeP95MS": 102.68279167212313,
+  "engine": "vlc",
+  "environment": "physical-device",
+  "error": "",
+  "frameSize": "2D 1920 × 1080 → AI 左右眼",
+  "inferenceMeanMS": 42.09411017894206,
+  "inferenceP95MS": 47.47199999837903,
+  "passed": true,
+  "runID": "a338eaca-1030-40d1-8091-cc8677e4eeeb",
+  "sample": "depth-vlc",
+  "scope": "10-second warmed-up submission benchmark, not headset scanout FPS or long-run thermal validation. Perceived depth, artifacts and audio sync need manual observation.",
+  "submittedFPS": 29.894179105089794,
+  "systemVersion": "Version 27.0.1 (Build 24M372)",
+  "thermalState": 0,
+  "timestamp": "2026-10-31T12:51:29Z"
+}

@@ -75,6 +75,25 @@ final class MediaLibrary {
         }
     }
     var recent: [LibraryFilm] { films.sorted { ($0.lastOpened ?? $0.addedAt) > ($1.lastOpened ?? $1.addedAt) } }
+    var hasWatchHistory: Bool { films.contains { $0.lastOpened != nil || $0.position > 0 } }
+    func clearWatchHistory() throws {
+        guard persistenceAvailable else { throw LibraryError.storageUnavailable }
+        let cleared = films.map { film in
+            var copy = film
+            copy.lastOpened = nil
+            copy.position = 0
+            return copy
+        }
+        // Publish only after saving succeeds, so a failed clear can be retried.
+        try JSONEncoder().encode(cleared).write(to: root.appending(path: "library.json"), options: .atomic)
+        films = cleared
+    }
+    func updateProgress(_ id: UUID, seconds: Double, duration: Double) {
+        // A delayed checkpoint after clearing must not restore old progress.
+        // Opening the film again explicitly sets lastOpened and enables saving.
+        guard film(id)?.lastOpened != nil else { return }
+        update(id) { $0.position = seconds; $0.duration = duration }
+    }
     func film(_ id: UUID) -> LibraryFilm? { films.first { $0.id == id } }
     func thumbnailURL(_ id: UUID) -> URL { root.appending(path: "\(id.uuidString).jpg") }
     func subtitleURL(_ name: String) -> URL { root.appending(path: name) }
@@ -211,12 +230,13 @@ final class MediaLibrary {
         return cues
     }
     enum LibraryError: LocalizedError {
-        case unavailable, subtitleTooLarge, invalidSubtitle
+        case unavailable, subtitleTooLarge, invalidSubtitle, storageUnavailable
         var errorDescription: String? {
             switch self {
             case .unavailable: "找不到这部影片，或访问权限已失效。请重新定位文件。"
             case .subtitleTooLarge: "字幕文件过大，请选择小于 5 MB 的 SRT 或 WebVTT 文件。"
             case .invalidSubtitle: "无法读取字幕，请选择 UTF-8 或 UTF-16 编码的 SRT / WebVTT 文件。"
+            case .storageUnavailable: "片库当前无法保存，请先解决存储错误。"
             }
         }
     }

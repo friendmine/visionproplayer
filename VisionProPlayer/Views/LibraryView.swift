@@ -61,7 +61,7 @@ struct LibraryView: View {
                                     }
                                 }
                                 HStack {
-                                    Text(filter == "全部" ? "最近打开" : filter).font(.title2.bold())
+                                    Text(filter == "全部" ? (model.library.hasWatchHistory ? "最近打开" : "我的片库") : filter).font(.title2.bold())
                                     Spacer()
                                     Picker("片库分类", selection: $filter) {
                                         ForEach(["全部", "收藏", "网络"], id: \.self) { Text($0) }
