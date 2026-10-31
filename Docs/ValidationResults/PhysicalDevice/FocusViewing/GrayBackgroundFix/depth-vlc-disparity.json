@@ -1,0 +1,17 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "matchedFeatures": 529,
+  "disparityPixelsP05P50P95": [
+    33.0,
+    36.0,
+    44.0
+  ],
+  "disparityWidthPercentP05P50P95": [
+    1.7187500000000002,
+    1.875,
+    2.2916666666666665
+  ],
+  "positiveFraction": 1.0,
+  "scope": "Texture patch correspondences only; not headset scanout, physical depth, or perceptual acceptance."
+}

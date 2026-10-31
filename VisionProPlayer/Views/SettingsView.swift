@@ -10,6 +10,8 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section("观看") {
+                    Toggle("专注观影", isOn: Binding(get: { model.library.focusViewing }, set: { model.library.focusViewing = $0; model.focus.reveal() }))
+                    Text("播放时无操作 3 秒后收起控制；轻点画面恢复。字幕保留，暂停和调节时控制保持显示。").font(.caption).foregroundStyle(.secondary)
                     Toggle("自动续播", isOn: Binding(get: { model.library.resumePlayback }, set: { model.library.resumePlayback = $0 }))
                     Text("画面格式、AI 立体强度和眼别按影片保存。新影片默认不开启 AI 转换。").font(.caption).foregroundStyle(.secondary)
                 }
@@ -100,6 +102,13 @@ struct DiagnosticsView: View {
                 ForEach(CompatibilitySample.allCases) { sample in
                     Button(sample.title) { play(sample.url, sample.layout, sample.engine) }
                 }
+            }
+            Section("左右眼与出屏对照") {
+                Button("播放出屏对照（无 AI）") {
+                    let url = URL.documentsDirectory.appending(path: "StereoReference.mp4")
+                    if FileManager.default.fileExists(atPath: url.path) { play(url, .fullSBS, .native) }
+                }
+                Text("单眼确认 LEFT / RIGHT；双眼比较金色圆盘、白色参照框和青色圆盘的前后位置。").font(.caption)
             }
             Section("AI 立体") {
                 Button("2D 转 3D · 原生") { play(CompatibilitySample.hevcMP4.url, .flat, .native, depth: true) }

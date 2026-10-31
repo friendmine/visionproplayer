@@ -1,0 +1,55 @@
+{
+  "benchmarkSeconds": 10.000641791666567,
+  "checks": [
+    {
+      "name": "model-and-render-started",
+      "passed": true
+    },
+    {
+      "name": "sustained-conversion",
+      "passed": true
+    },
+    {
+      "name": "seek-resets-depth-history",
+      "passed": true
+    },
+    {
+      "name": "pause-and-strength-redraw",
+      "passed": true
+    },
+    {
+      "name": "paused-pop-out-redraw",
+      "passed": true
+    },
+    {
+      "name": "resume-conversion",
+      "passed": true
+    },
+    {
+      "name": "disable-preserves-position",
+      "passed": true
+    },
+    {
+      "name": "reenable-conversion",
+      "passed": true
+    }
+  ],
+  "convertedFramesInBenchmark": 298,
+  "depthAgeP95MS": 104.07608333480312,
+  "engine": "native",
+  "environment": "physical-device",
+  "error": "",
+  "frameSize": "2D 1920 × 1080 → AI 左右眼",
+  "inferenceMeanMS": 47.175705236146015,
+  "inferenceP95MS": 54.99120832973858,
+  "passed": true,
+  "popOut": 0.6000000238418579,
+  "runID": "d9c2d674-2492-4be8-b78c-67dbf108f10e",
+  "sample": "depth-native",
+  "scope": "10-second warmed-up submission benchmark, not headset scanout FPS or long-run thermal validation. Perceived depth, artifacts and audio sync need manual observation.",
+  "screenWidthMeters": 0.6535947918891907,
+  "submittedFPS": 29.998074748561333,
+  "systemVersion": "Version 27.0.1 (Build 24M372)",
+  "thermalState": 0,
+  "timestamp": "2026-10-31T13:41:25Z"
+}

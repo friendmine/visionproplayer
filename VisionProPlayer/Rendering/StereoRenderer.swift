@@ -56,6 +56,8 @@ final class StereoRenderer {
         material = try await ShaderGraphMaterial(named: "/Root/StereoMaterial", from: "StereoMaterial.usda")
         eyeCheckMaterial = try await ShaderGraphMaterial(named: "/Root/EyeCheckMaterial", from: "StereoMaterial.usda")
         entity.model = ModelComponent(mesh: .generatePlane(width: 1, height: 1), materials: [])
+        entity.components.set(InputTargetComponent(allowedInputTypes: .indirect))
+        entity.components.set(CollisionComponent(shapes: [.generateBox(width: 1, height: 1, depth: 0.001)]))
     }
 
     func fit(in size: SIMD3<Float>, centeredAt center: SIMD3<Float>, aspect: Float) {
@@ -156,7 +158,14 @@ final class StereoRenderer {
         return (texture, nil)
     }
 
-    func renderConverted(_ buffer: CVPixelBuffer, depth: EstimatedDepth, strength: Float, swapped: Bool) throws -> Bool {
+    func disparityLimits(distance: Float?) -> SIMD2<Float> {
+        let widthMeters = max(0.1, entity.scale.x)
+        let front = min(0.05, distance.map { max(0.01, $0 * 0.02) } ?? 0.05)
+        let rear = min(0.04, distance.map { max(0.01, $0 * 0.015) } ?? 0.04)
+        return [min(distance == nil ? 0.04 : 0.03, front / widthMeters), min(0.012, rear / widthMeters)]
+    }
+
+    func renderConverted(_ buffer: CVPixelBuffer, depth: EstimatedDepth, strength: Float, popOut: Float, distance: Float?, swapped: Bool) throws -> Bool {
         guard !inFlight, let queue = commandQueue, let depthPipeline, let warpPipeline else { return false }
         let sourceWidth = CVPixelBufferGetWidth(buffer), sourceHeight = CVPixelBufferGetHeight(buffer)
         let scale = min(1.0, 1920.0 / Double(max(sourceWidth, sourceHeight)))
@@ -191,8 +200,12 @@ final class StereoRenderer {
         warp.setComputePipelineState(warpPipeline)
         warp.setTexture(color.0, index: 0); warp.setTexture(smooth, index: 1)
         warp.setTexture(left, index: 2); warp.setTexture(right, index: 3)
-        var amount = max(0, min(1, strength))
-        warp.setBytes(&amount, length: MemoryLayout<Float>.stride, index: 0)
+        // Bound physical disparity as screens grow. In cinema also cap its
+        // angular extent using the configured viewing distance (not head tracking).
+        let limits = disparityLimits(distance: distance)
+        var warpParams = SIMD4<Float>(max(0, min(1, strength)), max(0, min(1, popOut)),
+                                     limits.x, limits.y)
+        warp.setBytes(&warpParams, length: MemoryLayout<SIMD4<Float>>.stride, index: 0)
         warp.dispatchThreads(MTLSize(width: width, height: height, depth: 1), threadsPerThreadgroup: MTLSize(width: 16, height: 8, depth: 1))
         warp.endEncoding()
         depthIndex = 1 - depthIndex; depthHistoryValid = true; inFlight = true
@@ -316,6 +329,7 @@ struct StereoPlayerView: View {
         .frame(depth: 0)
             }
         }
+        .gesture(SpatialTapGesture().targetedToEntity(renderer.entity).onEnded { _ in model.focus.reveal() })
         .task {
             guard immersive else { return }
             // Attachment height changes when screen adjustments expand. Keep
@@ -335,6 +349,8 @@ struct StereoPlayerView: View {
             defer { stream.cancel() }
             var lastDepthVersion = -1
             var lastStrength: Float = -1
+            var lastPopOut: Float = -1
+            var lastDisparityLimits = SIMD2<Float>(repeating: -1)
             var lastRevision = model.depthRevision
             while !Task.isCancelled, model.request?.id == request.id {
                 if let failure = renderer.failure { model.rendererError = failure; return }
@@ -346,7 +362,9 @@ struct StereoPlayerView: View {
                     lastBuffer = nil; lastRevision = model.depthRevision; stream.reset(revision: lastRevision)
                 }
                 let newBuffer = model.copyVideoFrame()
-                let strengthChanged = request.converts2D && model.depthStrength != lastStrength
+                let disparityLimits = renderer.disparityLimits(distance: immersive ? model.library.screenDistance : nil)
+                let strengthChanged = request.converts2D && (model.depthStrength != lastStrength || model.depthPopOut != lastPopOut
+                    || (abs(disparityLimits.x - lastDisparityLimits.x) > 0.00001 || abs(disparityLimits.y - lastDisparityLimits.y) > 0.00001))
                 let depthChangedWhilePaused = request.converts2D && !model.isPlaying && stream.version != lastDepthVersion
                 if let failure = stream.error { model.rendererError = failure; return }
                 if let buffer = newBuffer ?? ((strengthChanged || depthChangedWhilePaused) ? lastBuffer : nil) {
@@ -356,7 +374,7 @@ struct StereoPlayerView: View {
                         if request.converts2D && model.depthStrength > 0 {
                             if newBuffer != nil || strengthChanged { stream.offer(buffer, revision: model.depthRevision) }
                             if let latest = stream.latest, ProcessInfo.processInfo.systemUptime - latest.capturedAt <= 0.15 || !model.isPlaying {
-                                rendered = try renderer.renderConverted(buffer, depth: latest.depth, strength: model.depthStrength, swapped: model.swapEyes)
+                                rendered = try renderer.renderConverted(buffer, depth: latest.depth, strength: model.depthStrength, popOut: model.depthPopOut, distance: immersive ? model.library.screenDistance : nil, swapped: model.swapEyes)
                                 model.depthStatus = "Depth Anything V2 Small · 本机转换"
                                 if rendered, newBuffer != nil {
                                     model.recordConvertedFrame(age: (ProcessInfo.processInfo.systemUptime - latest.capturedAt) * 1000)
@@ -372,12 +390,14 @@ struct StereoPlayerView: View {
                         }
                         if rendered {
                             lastDepthVersion = stream.version
-                            lastBuffer = buffer; lastStrength = model.depthStrength
+                            lastBuffer = buffer; lastStrength = model.depthStrength; lastPopOut = model.depthPopOut
+                            lastDisparityLimits = disparityLimits
                             aspect = request.layout.displayAspect(width: width, height: height)
                             let eye = request.layout.eyeRegions(width: width, height: height).left
                             model.frameSize = !request.layout.isStereo
                                 ? "2D \(width) × \(height) → AI 左右眼"
                                 : "\(width) × \(height) → 左右眼各 \(Int(eye.width)) × \(Int(eye.height))"
+                            model.depthScreenWidthMeters = renderer.entity.scale.x
                             model.renderedFrames += 1
                             model.stereoDisplayAspect = Double(renderer.entity.scale.x / renderer.entity.scale.y)
                         }

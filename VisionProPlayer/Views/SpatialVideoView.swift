@@ -53,12 +53,16 @@ struct SpatialVideoView: View {
                 }.frame(depth: 0)
             }
         }
+        .gesture(SpatialTapGesture().targetedToEntity(video).onEnded { _ in model.focus.reveal() })
         .task {
             while !Task.isCancelled {
                 if let controls = cinemaControls { CinemaControlPlacement.place(controls, model: model, aspect: size.x / size.y) }
                 if let component = video.components[VideoPlayerComponent.self] {
                     let current = component.playerScreenSize
-                    if current.x > 0, current.y > 0, current.x.isFinite, current.y.isFinite, current != size { size = current }
+                    if current.x > 0, current.y > 0, current.x.isFinite, current.y.isFinite, current != size {
+                        size = current
+                        video.components.set(CollisionComponent(shapes: [.generateBox(width: size.x, height: size.y, depth: 0.001)]))
+                    }
                     model.stereoDisplayAspect = Double(size.x / size.y)
                     let stereo = component.viewingMode == .stereo
                     if model.spatialStereoActive != stereo { model.spatialStereoActive = stereo }
@@ -91,6 +95,8 @@ struct SpatialVideoView: View {
         // BGRA extraction, AI conversion, or eye splitting occurs here.
         if #available(visionOS 26.0, *) { component.desiredSpatialVideoMode = .screen }
         video.components.set(component)
+        video.components.set(InputTargetComponent(allowedInputTypes: .indirect))
+        video.components.set(CollisionComponent(shapes: [.generateBox(width: size.x, height: size.y, depth: 0.001)]))
     }
     private func fit(_ bounds: BoundingBox) {
         let scale = max(0.001, min(abs(bounds.extents.x) / size.x, abs(bounds.extents.y) / size.y))

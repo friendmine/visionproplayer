@@ -18,6 +18,32 @@ extension PlayerModel {
             let suite = "product-probe-\(UUID().uuidString)"
             let defaults = UserDefaults(suiteName: suite)!
             defer { defaults.removePersistentDomain(forName: suite) }
+            let focus = FocusPlayback()
+            focus.reveal(at: 0)
+            focus.update(enabled: true, playing: true, blocked: false, at: 2.9)
+            let beforeDeadline = focus.visible
+            focus.update(enabled: true, playing: true, blocked: false, at: 3.1)
+            check("focus-hides-after-idle", beforeDeadline && !focus.visible)
+            focus.reveal(at: 4)
+            check("focus-interaction-restores-controls", focus.visible)
+            focus.hold("menu", true, at: 4)
+            focus.hold("slider", true, at: 4)
+            focus.hold("menu", false, at: 5)
+            focus.update(enabled: true, playing: true, blocked: false, at: 20)
+            let held = focus.visible
+            focus.hold("slider", false, at: 20)
+            focus.update(enabled: true, playing: true, blocked: false, at: 22.9)
+            let releaseDelay = focus.visible
+            focus.update(enabled: true, playing: true, blocked: false, at: 23.1)
+            check("focus-overlapping-interactions-hold-and-restart-timer", held && releaseDelay && !focus.visible)
+            focus.update(enabled: true, playing: false, blocked: false, at: 24)
+            let pausedVisible = focus.visible
+            focus.update(enabled: true, playing: true, blocked: true, at: 40)
+            let errorVisible = focus.visible
+            focus.update(enabled: false, playing: true, blocked: false, at: 60)
+            check("focus-pause-errors-and-disabled-mode-stay-visible", pausedVisible && errorVisible && focus.visible)
+            let legacyPreferences = try JSONDecoder().decode(FilmPreferences.self, from: Data(#"{"layout":"flat","converts2D":false,"strength":0.35,"swapped":false,"subtitleOffset":0}"#.utf8))
+            check("legacy-library-defaults-to-balanced-pop-out", legacyPreferences.popOut == nil && legacyPreferences.strength == 0.35)
             let store = MediaLibrary(root: folder.appending(path: "store"), defaults: defaults)
             let nativeURL = folder.appending(path: "product-native.mp4")
             let vlcURL = folder.appending(path: "product-vlc.mkv")
@@ -83,12 +109,12 @@ extension PlayerModel {
             _ = try recovered.add(nativeURL)
             let backups = try FileManager.default.contentsOfDirectory(at: damagedRoot, includingPropertiesForKeys: nil).filter { $0.lastPathComponent.hasPrefix("library-recovery-") }
             check("damaged-library-preserved-before-save", try backups.count == 1 && Data(contentsOf: backups[0]) == damagedData)
-            store.update(first.id) { $0.favorite = true; $0.position = 3; $0.duration = 12; $0.preferences.strength = 0.62; $0.preferences.layout = .halfSBS }
+            store.update(first.id) { $0.favorite = true; $0.position = 3; $0.duration = 12; $0.preferences.strength = 0.62; $0.preferences.popOut = 0.6; $0.preferences.layout = .halfSBS }
             let reloaded = MediaLibrary(root: folder.appending(path: "store"), defaults: defaults)
-            check("library-persists-progress-favorite-settings", reloaded.film(first.id)?.favorite == true && reloaded.film(first.id)?.position == 3 && reloaded.film(first.id)?.preferences.strength == 0.62)
+            check("library-persists-progress-favorite-settings", reloaded.film(first.id)?.favorite == true && reloaded.film(first.id)?.position == 3 && reloaded.film(first.id)?.preferences.strength == 0.62 && reloaded.film(first.id)?.preferences.popOut == 0.6)
             check("bookmark-resolves", try reloaded.resolve(first).path == nativeURL.path)
             let second = try reloaded.add(vlcURL)
-            check("per-film-settings-isolated", reloaded.film(second.id)?.preferences.layout == .flat && reloaded.film(second.id)?.preferences.strength == 0.35)
+            check("per-film-settings-isolated", reloaded.film(second.id)?.preferences.layout == .flat && reloaded.film(second.id)?.preferences.strength == 0.35 && reloaded.film(second.id)?.preferences.popOut == nil)
             let remote = try reloaded.add(URL(string: "https://example.com/movie.mp4")!, title: "Network fixture")
             check("network-source-saved-without-opening", reloaded.film(remote.id)?.isNetwork == true)
             reloaded.remove(first.id)
@@ -128,16 +154,16 @@ extension PlayerModel {
             check("format-change-preserves-paused-position", request?.layout == .halfSBS && !isPlaying && abs(elapsed - paused) < 0.6 && renderedFrames > 0)
             setLayout(.flat); await waitForPendingChange()
             await wait { duration > 0 && abs(elapsed - paused) < 0.6 }
-            depthStrength = 0.62; savePicturePreferences()
+            depthStrength = 0.62; depthPopOut = 0.6; savePicturePreferences()
             returnToLibrary(); await waitForPendingChange()
             let savedPosition = library.film(native.id)?.position ?? 0
             openFilm(library.film(native.id)!)
             await waitForPendingChange(); await wait { elapsed >= savedPosition - 0.4 && duration > 0 }
-            check("return-and-resume", savedPosition > 2 && abs(elapsed - savedPosition) < 1 && depthStrength == 0.62)
+            check("return-and-resume", savedPosition > 2 && abs(elapsed - savedPosition) < 1 && depthStrength == 0.62 && depthPopOut == 0.6)
 
             let other = try library.add(vlcURL, title: "Temporary VLC probe"); owned.append(other.id)
             openFilm(other); await waitForPendingChange(); await wait { duration > 0 && audioTracks.count >= 2 && !subtitleTracks.isEmpty }
-            check("vlc-unified-player-and-tracks", request?.engine == .vlc && audioTracks.count >= 2 && !subtitleTracks.isEmpty && depthStrength == 0.35 && request?.converts2D == false)
+            check("vlc-unified-player-and-tracks", request?.engine == .vlc && audioTracks.count >= 2 && !subtitleTracks.isEmpty && depthStrength == 0.35 && depthPopOut == 0 && request?.converts2D == false)
             if let last = audioTracks.last { selectAudio(last.id) }
             await wait(3) { vlc?.audioTracks.last?["selected"] as? Bool == true }
             check("vlc-audio-selection", vlc?.audioTracks.last?["selected"] as? Bool == true)

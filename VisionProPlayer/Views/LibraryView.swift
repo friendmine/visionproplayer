@@ -25,11 +25,13 @@ struct LibraryView: View {
         }
     }
     var body: some View {
-        NavigationStack {
-            Group {
-                if model.showingPlayer {
-                    PlayerScreen(model: model)
-                } else {
+        // NavigationStack supplies its own glass plate on visionOS. Keep it
+        // exclusive to the library so focused playback can be transparent.
+        ZStack {
+            if model.showingPlayer {
+                PlayerScreen(model: model)
+            } else {
+                NavigationStack {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 28) {
                             if model.library.films.isEmpty {

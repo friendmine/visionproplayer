@@ -74,6 +74,7 @@ struct CinemaControls: View {
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     @Environment(\.openWindow) private var openWindow
     @State private var adjust = false
+    @State private var depthEffects = false
     @State private var seek = 0.0
     @State private var dragging = false
     var body: some View {
@@ -99,11 +100,25 @@ struct CinemaControls: View {
                 Button(model.isPlaying ? "暂停" : "播放", systemImage: model.isPlaying ? "pause.fill" : "play.fill") { model.togglePlayback() }.labelStyle(.iconOnly)
                 Button("快进 10 秒", systemImage: "goforward.10") { model.skip(10) }.labelStyle(.iconOnly)
                 Spacer()
+                if model.request?.converts2D == true {
+                    Button("立体效果", systemImage: "view.3d") { depthEffects = true }
+                        .popover(isPresented: $depthEffects) { DepthEffectControls(model: model).padding(24).frame(width: 430) }
+                }
                 Button(adjust ? "收起屏幕调整" : "调整屏幕", systemImage: "slider.horizontal.3") { adjust.toggle() }
             }
             if adjust { ScreenAdjustments(model: model) }
             if let error = model.errorMessage ?? model.rendererError { Text(error).foregroundStyle(.orange).font(.caption) }
         }.padding(24).frame(width: 700).glassBackgroundEffect()
+            .opacity(model.focus.visible ? 1 : 0).allowsHitTesting(model.focus.visible).accessibilityHidden(!model.focus.visible)
+            .animation(.easeInOut(duration: 0.25), value: model.focus.visible)
+            .simultaneousGesture(TapGesture().onEnded { model.focus.reveal() })
+            .onChange(of: adjust) { _, value in model.focus.hold("cinema-adjust", value) }
+            .onChange(of: depthEffects) { _, value in model.focus.hold("cinema-depth", value) }
+            .onChange(of: dragging) { _, value in model.focus.hold("cinema-seek", value) }
+            .onDisappear {
+                for key in ["cinema-adjust", "cinema-depth", "cinema-seek"] { model.focus.hold(key, false) }
+            }
+            .modifier(FocusPlaybackModifier(model: model))
             .onChange(of: model.progress, initial: true) { _, value in if !dragging { seek = value } }
     }
 }

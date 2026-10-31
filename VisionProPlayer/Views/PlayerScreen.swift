@@ -9,16 +9,15 @@ struct PlayerScreen: View {
     @State private var picture = false
     @State private var tracks = false
     @State private var cinema = false
-    @State private var controls = true
-    @State private var activity = 0
     @State private var seekValue = 0.0
     @State private var seeking = false
+    @State private var more = false
 
     private var stereoControls: Bool {
         guard let request = model.request else { return false }
         return request.layout.isStereo || request.converts2D || request.isSpatialVideo
     }
-    private var controlsVisible: Bool { stereoControls || controls }
+    private var controlsVisible: Bool { model.focus.visible }
     private var videoAspect: CGFloat {
         let ratio = model.stereoDisplayAspect
         return ratio.isFinite && ratio > 0 ? CGFloat(ratio) : 16 / 9
@@ -40,7 +39,7 @@ struct PlayerScreen: View {
                     .popover(isPresented: $picture) { PictureSettings(model: model).padding(24).frame(width: 430) }
                 Button("影院", systemImage: "vision.pro") { cinema = true; reveal() }
                     .popover(isPresented: $cinema) { CinemaSettings(model: model, enter: enterCinema).padding(24).frame(width: 430) }
-            }.opacity(controlsVisible ? 1 : 0).allowsHitTesting(controlsVisible)
+            }.opacity(controlsVisible ? 1 : 0).allowsHitTesting(controlsVisible).accessibilityHidden(!controlsVisible)
             if stereoControls {
                 GeometryReader { geometry in
                     let width = min(geometry.size.width, geometry.size.height * videoAspect)
@@ -50,7 +49,7 @@ struct PlayerScreen: View {
                 }
                 // Reserve a separate row: RealityKit's forward screen plane
                 // cannot cover the slider, and controls never resize the movie.
-                transport.frame(maxWidth: 960)
+                transport.frame(maxWidth: 960).opacity(controlsVisible ? 1 : 0).allowsHitTesting(controlsVisible).accessibilityHidden(!controlsVisible)
             } else {
                 videoStage
             }
@@ -60,11 +59,16 @@ struct PlayerScreen: View {
             .onChange(of: picture) { _, value in if !value { model.savePicturePreferences(); reveal() } }
             .onChange(of: tracks) { _, value in if !value { reveal() } }
             .onChange(of: cinema) { _, value in if !value { reveal() } }
-            .task(id: activity) {
-                try? await Task.sleep(for: .seconds(5))
-                guard !Task.isCancelled, !stereoControls, model.isPlaying, !picture, !tracks, !cinema, !seeking, model.errorMessage == nil else { return }
-                controls = false
+            .onChange(of: picture) { _, value in model.focus.hold("window-picture", value) }
+            .onChange(of: tracks) { _, value in model.focus.hold("window-tracks", value) }
+            .onChange(of: cinema) { _, value in model.focus.hold("window-cinema", value) }
+            .onChange(of: more) { _, value in model.focus.hold("window-more", value) }
+            .onChange(of: seeking) { _, value in model.focus.hold("window-seek", value) }
+            .onDisappear {
+                for key in ["window-picture", "window-tracks", "window-cinema", "window-seek", "window-more"] { model.focus.hold(key, false) }
             }
+            .animation(.easeInOut(duration: 0.25), value: controlsVisible)
+            .modifier(FocusPlaybackModifier(model: model))
     }
     private var videoStage: some View {
         ZStack(alignment: .bottom) {
@@ -82,7 +86,7 @@ struct PlayerScreen: View {
             Color.clear.contentShape(Rectangle()).onTapGesture { reveal() }.offset(z: stereoControls ? 24 : 0)
             if !model.subtitleText.isEmpty && !model.cinemaActive {
                 CaptionOverlay(text: model.subtitleText)
-                    .padding(.bottom, stereoControls ? 24 : (controls ? 150 : 30)).padding(.horizontal, 32).offset(z: stereoControls ? 24 : 0.02)
+                    .padding(.bottom, stereoControls ? 24 : (controlsVisible ? 150 : 30)).padding(.horizontal, 32).offset(z: stereoControls ? 24 : 0.02)
                     .allowsHitTesting(false)
             }
             if model.errorMessage != nil || model.rendererError != nil {
@@ -105,7 +109,7 @@ struct PlayerScreen: View {
                     .padding(24).glassBackgroundEffect().frame(maxHeight: .infinity).offset(z: stereoControls ? 32 : 0.04)
             }
             if !stereoControls {
-                transport.padding(20).opacity(controls ? 1 : 0).allowsHitTesting(controls).offset(z: 0.04)
+                transport.padding(20).opacity(controlsVisible ? 1 : 0).allowsHitTesting(controlsVisible).accessibilityHidden(!controlsVisible).offset(z: 0.04)
             }
         }.clipShape(RoundedRectangle(cornerRadius: 26))
     }
@@ -126,17 +130,20 @@ struct PlayerScreen: View {
                 Spacer()
                 Button("字幕与音轨", systemImage: "captions.bubble") { model.loadTracks(); tracks = true; reveal() }
                     .popover(isPresented: $tracks) { TrackSettings(model: model).frame(width: 460, height: 560) }
-                Menu {
+                Button("更多", systemImage: "ellipsis") { more = true; reveal() }.labelStyle(.iconOnly)
+                    .popover(isPresented: $more) {
+                    VStack(alignment: .leading, spacing: 20) {
                     Button("从头播放", systemImage: "arrow.counterclockwise") { model.restart(); reveal() }
                     if model.currentFilm?.title.hasPrefix("Big Buck Bunny") == true || model.request?.url.lastPathComponent.hasPrefix("BBB-") == true {
                         Text("Big Buck Bunny © 2008 Blender Foundation · CC BY 3.0")
                     }
                     Button("返回片库", systemImage: "square.grid.2x2") { Task { await leave() } }
-                } label: { Label("更多", systemImage: "ellipsis") }.labelStyle(.iconOnly)
+                    }.padding(24).frame(width: 300)
+                }
             }
         }.padding(.horizontal, 24).padding(.vertical, 14).glassBackgroundEffect(in: RoundedRectangle(cornerRadius: 24))
     }
-    private func reveal() { controls = true; activity += 1 }
+    private func reveal() { model.focus.reveal() }
     private func leave() async {
         if model.cinemaActive { await dismissImmersiveSpace(); model.setCinema(false) }
         model.returnToLibrary()
@@ -178,9 +185,7 @@ struct PictureSettings: View {
                     Text("普通 2D").tag(false); Text("AI 立体").tag(true)
                 }.pickerStyle(.segmented).disabled(model.isClosing)
                 if model.request?.converts2D == true {
-                    HStack { Text("立体强度"); Spacer(); Text("\(Int(model.depthStrength * 100))%").monospacedDigit() }
-                    Slider(value: $model.depthStrength, in: 0...1, onEditingChanged: { editing in if !editing { model.savePicturePreferences() } }).accessibilityLabel("立体强度")
-                    Text("实验性效果。设为 0 可对比平面画面；运动和遮挡边缘可能出现拉伸。").font(.caption).foregroundStyle(.secondary)
+                    DepthEffectControls(model: model)
                 }
             } else {
                 Label("使用影片自带的左右眼画面", systemImage: "view.3d")
@@ -197,6 +202,28 @@ struct PictureSettings: View {
             }
             }
             if model.currentFilm != nil { Label("自动记住这部影片的设置", systemImage: "checkmark.circle").font(.caption).foregroundStyle(.secondary) }
+        }
+    }
+}
+
+struct DepthEffectControls: View {
+    @Bindable var model: PlayerModel
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack { Text("立体强度"); Spacer(); Text("\(Int(model.depthStrength * 100))%").monospacedDigit() }
+            Slider(value: $model.depthStrength, in: 0...1, onEditingChanged: { editing in
+                if !editing { model.savePicturePreferences() }
+            }).accessibilityLabel("立体强度")
+            Text("控制前后层次；设为 0 可对比平面画面。").font(.caption).foregroundStyle(.secondary)
+            HStack { Text("出屏程度"); Spacer(); Text("\(Int(model.depthPopOut * 100))%").monospacedDigit() }
+            Slider(value: $model.depthPopOut, in: 0...1, onEditingChanged: { editing in
+                if !editing { model.savePicturePreferences() }
+            }).accessibilityLabel("出屏程度")
+            Text("向右把景深范围移到屏幕前。0 为原来的平衡效果；强度为 0 时保持平面。窗口较小时，放大窗口更容易看出差别。").font(.caption).foregroundStyle(.secondary)
+            Button("恢复默认立体效果") {
+                model.depthStrength = 0.35; model.depthPopOut = 0; model.savePicturePreferences()
+            }
+            Text("实验性效果。遮挡处仍可能拉伸；若出现重影，可降低强度或出屏程度。").font(.caption).foregroundStyle(.secondary)
         }
     }
 }

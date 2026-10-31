@@ -12,6 +12,7 @@ extension PlayerModel {
                 try? await Task.sleep(for: .milliseconds(100))
             }
         }
+        depthPopOut = 0.6
         depthStrength = 0.35
         openSample(sample.url, layout: .flat, engine: engine, convert2D: true)
         await waitForPendingChange()
@@ -31,7 +32,7 @@ extension PlayerModel {
         let mean = times.reduce(0, +) / Double(max(1, times.count))
         let p95 = times.isEmpty ? 0 : times[min(times.count - 1, Int(Double(times.count) * 0.95))]
         let age95 = ages.isEmpty ? 0 : ages[min(ages.count - 1, Int(Double(ages.count) * 0.95))]
-        checks.append(["name": "sustained-conversion", "passed": fps >= 24 && depthConvertedFrames > convertedStart + 200 && depthPredictions > startInferences + 100
+        checks.append(["name": "sustained-conversion", "passed": fps >= 24 && fps <= 36 && depthConvertedFrames > convertedStart + 200 && depthPredictions > startInferences + 100
             && elapsed > startMedia + 8 && rendererError == nil && errorMessage == nil && abs(stereoDisplayAspect - 16.0 / 9.0) < 0.01])
         let convertedDuringBenchmark = depthConvertedFrames - convertedStart
         let revision = depthRevision
@@ -51,6 +52,11 @@ extension PlayerModel {
         depthStrength = 0.7
         await waitUntil(seconds: 2) { renderedFrames > zeroFrames }
         checks.append(["name": "pause-and-strength-redraw", "passed": held && zeroRedrew && renderedFrames > zeroFrames && !isPlaying])
+        let beforePop = renderedFrames
+        depthPopOut = 1
+        await waitUntil(seconds: 2) { renderedFrames > beforePop }
+        checks.append(["name": "paused-pop-out-redraw", "passed": renderedFrames > beforePop && !isPlaying && abs(elapsed - paused) < 0.2])
+        depthPopOut = 0.6
         depthStrength = 0.35
         let beforeResume = depthPredictions
         if !isPlaying { togglePlayback() }
@@ -67,7 +73,7 @@ extension PlayerModel {
         await waitUntil { depthPredictions > 5 }
         checks.append(["name": "reenable-conversion", "passed": request?.converts2D == true && depthPredictions > 5 && rendererError == nil])
         let report = smokeMetadata().merging([
-            "sample": name, "engine": engine.rawValue, "checks": checks,
+            "sample": name, "engine": engine.rawValue, "checks": checks, "popOut": depthPopOut, "screenWidthMeters": depthScreenWidthMeters,
             "benchmarkSeconds": seconds, "submittedFPS": fps, "inferenceMeanMS": mean,
             "inferenceP95MS": p95, "depthAgeP95MS": age95, "convertedFramesInBenchmark": convertedDuringBenchmark,
             "frameSize": frameSize, "thermalState": ProcessInfo.processInfo.thermalState.rawValue,

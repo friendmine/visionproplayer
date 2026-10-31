@@ -7,6 +7,7 @@ struct FilmPreferences: Codable, Equatable {
     var layout: StereoLayout = .flat
     var converts2D = false
     var strength: Float = 0.35
+    var popOut: Float? // Missing in older libraries means the original balanced depth.
     var swapped = false
     var subtitleFile: String?
     var subtitleOffset = 0.0
@@ -36,6 +37,7 @@ final class MediaLibrary {
     private(set) var films: [LibraryFilm] = []
     var error: String?
     var thumbnailRevision = 0
+    var focusViewing = true { didSet { defaults.set(focusViewing, forKey: "focusViewing") } }
     var resumePlayback = true { didSet { defaults.set(resumePlayback, forKey: "resumePlayback") } }
     var screenWidth: Float = 3 { didSet { defaults.set(screenWidth, forKey: "screenWidth") } }
     var screenDistance: Float = 3 { didSet { defaults.set(screenDistance, forKey: "screenDistance") } }
@@ -49,6 +51,7 @@ final class MediaLibrary {
     init(root: URL? = nil, defaults: UserDefaults = .standard) {
         self.defaults = defaults
         self.root = root ?? URL.applicationSupportDirectory.appending(path: "MediaLibrary", directoryHint: .isDirectory)
+        focusViewing = defaults.object(forKey: "focusViewing") as? Bool ?? true
         resumePlayback = defaults.object(forKey: "resumePlayback") as? Bool ?? true
         screenWidth = min(5, max(1.5, defaults.float(forKey: "screenWidth") == 0 ? 3 : defaults.float(forKey: "screenWidth")))
         screenDistance = min(6, max(2, defaults.float(forKey: "screenDistance") == 0 ? 3 : defaults.float(forKey: "screenDistance")))

@@ -5,6 +5,7 @@ import SwiftUI
 @MainActor @Observable
 final class PlayerModel {
     let library = MediaLibrary()
+    let focus = FocusPlayback()
     var showingPlayer = false
     var missingFilmID: UUID?
     var cinemaActive = false
@@ -29,6 +30,8 @@ final class PlayerModel {
     var eyeCheck = false
     var depthEnabled = false
     var depthStrength: Float = 0.35
+    var depthPopOut: Float = 0
+    @ObservationIgnored var depthScreenWidthMeters: Float = 0
     var depthRevision = 0
     var depthStatus = "等待转换"
     var depthInferenceMS = 0.0
@@ -151,6 +154,7 @@ final class PlayerModel {
         if let id = next.libraryID, let film = library.film(id) {
             swapEyes = film.preferences.swapped
             depthStrength = film.preferences.strength
+            depthPopOut = min(1, max(0, film.preferences.popOut ?? 0))
             subtitleOffset = film.preferences.subtitleOffset
             if let file = film.preferences.subtitleFile,
                let data = try? Data(contentsOf: library.subtitleURL(file)), let cues = try? SubtitleCue.parse(data) {
