@@ -37,7 +37,8 @@ struct PlayerScreen: View {
                     if model.cinemaActive {
                         ContentUnavailableView("正在空间影院播放", systemImage: "vision.pro", description: Text("可以在影院下方调整屏幕或退出影院。"))
                     } else if let request = model.request {
-                        if request.usesTextureOutput { StereoPlayerView(model: model, request: request).id(request.id) }
+                        if request.isSpatialVideo, let player = model.nativePlayer { SpatialVideoView(model: model, player: player).id(request.id) }
+                        else if request.usesTextureOutput { StereoPlayerView(model: model, request: request).id(request.id) }
                         else if request.engine == .vlc { VLCPlayerView(model: model).id(request.id) }
                         else if let player = model.nativePlayer { NativeVideoSurface(player: player) }
                     } else { ProgressView("正在打开影片…") }
@@ -142,7 +143,10 @@ struct PictureSettings: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
             Text("画面设置").font(.title2)
-            if model.request?.layout.isStereo == false {
+            if model.request?.isSpatialVideo == true {
+                Label(model.spatialStereoActive ? "正在播放原生双眼画面" : "正在准备原生空间画面", systemImage: "vision.pro")
+                Text("保留影片的左右眼画面，无需 AI 转换或手动分屏。").font(.callout).foregroundStyle(.secondary)
+            } else if model.request?.layout.isStereo == false {
                 Picker("观看效果", selection: Binding(get: { model.request?.converts2D ?? false }, set: { model.setDepthConversion($0) })) {
                     Text("普通 2D").tag(false); Text("AI 立体").tag(true)
                 }.pickerStyle(.segmented).disabled(model.isClosing)
@@ -155,6 +159,7 @@ struct PictureSettings: View {
                 Label("使用影片自带的左右眼画面", systemImage: "view.3d")
                 Toggle("交换左右眼", isOn: $model.swapEyes).onChange(of: model.swapEyes) { _, _ in model.savePicturePreferences() }
             }
+            if model.request?.isSpatialVideo != true {
             DisclosureGroup("影片格式 · \(model.request?.layout.title ?? "普通 2D")") {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("左右并排、上下排列或比例异常时调整。上下格式默认上方为左眼，可交换左右眼。").font(.caption).foregroundStyle(.secondary)
@@ -162,6 +167,7 @@ struct PictureSettings: View {
                         ForEach(StereoLayout.allCases) { Text($0.title).tag($0) }
                     }.pickerStyle(.inline).labelsHidden().disabled(model.isClosing)
                 }.padding(.top, 14)
+            }
             }
             if model.currentFilm != nil { Label("自动记住这部影片的设置", systemImage: "checkmark.circle").font(.caption).foregroundStyle(.secondary) }
         }

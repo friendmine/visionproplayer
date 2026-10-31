@@ -7,7 +7,7 @@
 1. 先执行 `python3 Scripts/prepare_depth_model.py`，下载、校验并编译 Apple 提供的 Depth Anything V2 Small F16 模型（约 44 MB 下载）；随后用 Xcode 打开 `VisionProPlayer.xcodeproj`，选择 `VisionProPlayer` scheme。
 2. 等待 Swift Package 解析官方 VLCKit。初次下载约 880 MiB，展开后占用更多空间。
 3. 选择 Apple Vision Pro 模拟器并运行；真机运行需在 Signing & Capabilities 选择自己的开发团队。
-4. 首页用「打开影片」选择本地文件，或添加 HTTP(S) 视频链接。影片会进入片库，自动选择播放引擎。
+4. 首页用「打开影片」选择本地文件、从相册导入视频，或添加 HTTP(S) 视频链接。影片会进入片库，自动选择播放引擎。
 5. 点击影片直接观看；返回片库后可继续上次进度。长按影片可收藏、重命名、重新定位或移除记录，不删除原影片。
 6. 播放页的「画面」调整 2D / AI 立体、左右 / 上下格式和左右眼；「字幕与音轨」选择音轨、内嵌字幕，或导入 SRT / WebVTT。
 7. 「影院」选择现实或暗色环境，进入后可调整屏幕宽度、距离、高度，随时返回窗口。影院复用当前播放位置。
@@ -61,6 +61,16 @@
 
 开发版在「设置 → 诊断与测试」中可点「左右眼检查」，分别闭眼观察纯色：左眼应为红色，右眼应为蓝色，绿色代表单眼渲染回退。此模式独立于视频纹理，关闭后恢复影片；它不证明视频裁切本身正确。
 
+## 相册视频与原生空间视频
+
+首页「打开影片 → 从相册导入」使用系统 PhotosPicker，只读取你选中的视频，不请求整个相册的读写权限。选择当前编码，以文件方式接收，不把整段视频加载进内存，也不主动转码。iCloud 资源由系统下载，导入期间显示进度并支持取消。
+
+选中的文件先暂存，再移入 App 自有片库；这是占用本地空间的独立副本，关闭或更新 App 后仍可续播。移除相册影片时会确认删除 App 内的副本，原相册视频不受影响。普通本地文件仍只移除记录。取消或失败的临时文件自动清理。
+
+空间视频检测依据视频轨的 `containsStereoMultiviewVideo` 特征，不根据扩展名猜测。检测到后使用 `VideoPlayerComponent(avPlayer:)` 并请求 `.stereo`，保留原生左右眼；默认固定立体屏幕，支持现有影院尺寸和距离控制。显示「空间视频 · 原生 3D」，无需手动选择 SBS / OU，也不提供重复的 AI 转换。原生空间解码出错时显示错误，不静默切成 VLC 单眼画面。
+
+参考：[Apple PhotosPicker 文件导入](https://developer.apple.com/documentation/photokit/bringing-photos-picker-to-your-swiftui-app)、[Apple RealityKit 立体视频](https://developer.apple.com/documentation/realitykit/rendering-stereoscopic-video-with-realitykit)。
+
 ## 上下 3D（Over-Under / Top-Bottom）
 
 在「画面 → 影片格式」选择「上下 3D · 全高」或「上下 3D · 半高」。全高如 1920×2160，每眼 1920×1080；半高如 1920×1080，每眼存储 1920×540，显示时恢复高度。默认上半幅为左眼，下半幅为右眼；眼序相反时打开「交换左右眼」。设置按影片保存，窗口和影院共用。
@@ -80,7 +90,7 @@
 - 尚未实现 HDR / Dolby Vision 保真、蓝光 MVC、180° / 360°。VLC SBS 内嵌字幕未做每眼重新排版，当前须使用外置文本字幕。
 - 自定义纹理路径不是 `VideoPlayerComponent(avPlayer:)`；后者不能直接接收这个 VLC 播放器。
 
-本工程没有附带 MV-HEVC 测试片，当前统一播放界面未将原生空间视频的立体播放列为已验证能力。
+本地 MP4 / MOV 中的 MV-HEVC 空间视频会自动识别，交给 Apple VideoPlayerComponent 原生双眼播放，窗口和影院共用；不走单眼 BGRA 提取或 AI 转换。实际验收状态见验证记录。
 
 HTTP 地址可能受 Apple 网络安全策略限制，优先使用 HTTPS；本项目没有全局关闭系统网络安全限制。
 

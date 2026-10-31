@@ -9,6 +9,7 @@ final class PlayerModel {
     var missingFilmID: UUID?
     var cinemaActive = false
     var cinemaTransition = false
+    var spatialStereoActive = false
     var audioTracks: [PlaybackTrack] = []
     var subtitleTracks: [PlaybackTrack] = []
     var selectedAudio = ""
@@ -75,7 +76,7 @@ final class PlayerModel {
 
     func setDepthConversion(_ enabled: Bool) {
         depthEnabled = enabled
-        guard let current = request, !current.layout.isStereo, current.converts2D != enabled else { return }
+        guard let current = request, !current.isSpatialVideo, !current.layout.isStereo, current.converts2D != enabled else { return }
         if let id = current.libraryID { library.update(id) { $0.preferences.converts2D = enabled } }
         reconfigure(layout: current.layout, conversion: enabled, cinema: current.isCinema)
     }
@@ -126,15 +127,27 @@ final class PlayerModel {
                 if scoped { url.stopAccessingSecurityScopedResource() }
                 return
             }
+            var spatial = false
+            if selectedLayout == .flat, selectedEngine == .native, url.isFileURL {
+                let tracks = try? await AVURLAsset(url: url).loadTracks(withMediaCharacteristic: .containsStereoMultiviewVideo)
+                spatial = tracks?.isEmpty == false
+            }
+            guard generation == self.openGeneration else {
+                if scoped { url.stopAccessingSecurityScopedResource() }
+                return
+            }
+            if let libraryID { self.library.update(libraryID) { $0.isSpatialVideo = spatial } }
             self.start(PlaybackRequest(url: url, engine: selectedEngine, layout: selectedLayout,
                                        swapEyes: self.swapEyes, securityScoped: scoped,
-                                       allowsNativeFallback: preference == .automatic, converts2D: conversion, libraryID: libraryID, isCinema: cinema), recovery: recovery)
+                                       allowsNativeFallback: preference == .automatic && !spatial,
+                                       converts2D: conversion && !spatial, libraryID: libraryID, isCinema: cinema, isSpatialVideo: spatial), recovery: recovery)
         }
     }
 
     private func start(_ next: PlaybackRequest, recovery: (seconds: Double, playing: Bool)? = nil,
                        notice: String? = nil) {
         request = next
+        spatialStereoActive = false
         if let id = next.libraryID, let film = library.film(id) {
             swapEyes = film.preferences.swapped
             depthStrength = film.preferences.strength

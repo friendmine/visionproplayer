@@ -38,7 +38,9 @@ struct CinemaScene: View {
     var body: some View {
         ZStack {
             if let request = model.request, request.isCinema {
-                StereoPlayerView(model: model, request: request, immersive: true).id(request.id)
+                if request.isSpatialVideo, let player = model.nativePlayer {
+                    SpatialVideoView(model: model, player: player, immersive: true).id(request.id)
+                } else { StereoPlayerView(model: model, request: request, immersive: true).id(request.id) }
             }
         }.onChange(of: phase) { _, value in
             if value == .background { model.pauseForBackground(); model.checkpoint() }

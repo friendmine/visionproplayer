@@ -61,7 +61,8 @@ struct PlaybackRequest: Identifiable {
     var converts2D = false
     var libraryID: UUID?
     var isCinema = false
-    var usesTextureOutput: Bool { layout.isStereo || converts2D || isCinema }
+    var isSpatialVideo = false
+    var usesTextureOutput: Bool { !isSpatialVideo && (layout.isStereo || converts2D || isCinema) }
 }
 
 /// Documents-based real-film fixtures shared by manual and automated checks.

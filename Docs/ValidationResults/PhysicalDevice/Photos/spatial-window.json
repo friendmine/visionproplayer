@@ -1,0 +1,12 @@
+{
+  "actualViewingMode" : "stereo",
+  "detectedMultiview" : true,
+  "environment" : "physical-device",
+  "passed" : true,
+  "runID" : "unspecified",
+  "sample" : "spatial-window",
+  "scope" : "Real VideoPlayerComponent stereo mode during playback; contains no source filename, asset ID or video content.",
+  "systemVersion" : "Version 27.0.1 (Build 24M372)",
+  "timestamp" : "2026-10-31T11:08:07Z",
+  "usesSingleViewTextureOutput" : false
+}

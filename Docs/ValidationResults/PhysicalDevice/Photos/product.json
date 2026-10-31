@@ -1,0 +1,120 @@
+{
+  "checks": [
+    {
+      "name": "photo-import-preserves-video-bytes",
+      "passed": true
+    },
+    {
+      "name": "photo-import-survives-container-move",
+      "passed": true
+    },
+    {
+      "name": "photo-remove-keeps-original",
+      "passed": true
+    },
+    {
+      "name": "photo-cancel-cleans-staging",
+      "passed": true
+    },
+    {
+      "name": "library-deduplicates",
+      "passed": true
+    },
+    {
+      "name": "bookmark-deduplicates-relocated-container",
+      "passed": true
+    },
+    {
+      "name": "damaged-library-preserved-before-save",
+      "passed": true
+    },
+    {
+      "name": "library-persists-progress-favorite-settings",
+      "passed": true
+    },
+    {
+      "name": "bookmark-resolves",
+      "passed": true
+    },
+    {
+      "name": "per-film-settings-isolated",
+      "passed": true
+    },
+    {
+      "name": "network-source-saved-without-opening",
+      "passed": true
+    },
+    {
+      "name": "removing-record-keeps-source",
+      "passed": true
+    },
+    {
+      "name": "missing-file-needs-relink",
+      "passed": true
+    },
+    {
+      "name": "relink-preserves-record",
+      "passed": true
+    },
+    {
+      "name": "subtitle-timing-and-seek",
+      "passed": true
+    },
+    {
+      "name": "webvtt-parser",
+      "passed": true
+    },
+    {
+      "name": "native-unified-player-and-tracks",
+      "passed": true
+    },
+    {
+      "name": "native-audio-selection",
+      "passed": true
+    },
+    {
+      "name": "native-embedded-caption-output",
+      "passed": true
+    },
+    {
+      "name": "external-caption-after-seek",
+      "passed": true
+    },
+    {
+      "name": "format-change-preserves-paused-position",
+      "passed": true
+    },
+    {
+      "name": "return-and-resume",
+      "passed": true
+    },
+    {
+      "name": "vlc-unified-player-and-tracks",
+      "passed": true
+    },
+    {
+      "name": "vlc-audio-selection",
+      "passed": true
+    },
+    {
+      "name": "vlc-subtitle-selection",
+      "passed": true
+    },
+    {
+      "name": "vlc-external-caption",
+      "passed": true
+    },
+    {
+      "name": "background-pauses",
+      "passed": true
+    }
+  ],
+  "environment": "physical-device",
+  "error": "",
+  "passed": true,
+  "runID": "7fc5d6fd-a30f-4a93-89a3-e066d28b9c72",
+  "sample": "product",
+  "scope": "Persistent library, access recovery, per-film isolation, unified playback, native/VLC audio and subtitle selection, external text timing. Immersive comfort and UI usability require manual headset observation.",
+  "systemVersion": "Version 27.0.1 (Build 24M372)",
+  "timestamp": "2026-10-31T11:01:20Z"
+}

@@ -6,6 +6,7 @@ extension PlayerModel {
     var movieTitle: String { currentFilm?.title ?? request?.url.deletingPathExtension().lastPathComponent ?? "正在打开影片" }
     var pictureTitle: String {
         guard let request else { return "2D" }
+        if request.isSpatialVideo { return "空间视频 · 原生 3D" }
         return request.layout.isStereo ? "原片 3D" : (request.converts2D ? "AI 立体" : "2D")
     }
     var hasEnded: Bool { duration > 0 && (elapsed >= duration - 0.3 || (stateText.contains("播放结束") && elapsed > duration * 0.9)) }

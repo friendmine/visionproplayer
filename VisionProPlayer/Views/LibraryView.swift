@@ -1,10 +1,14 @@
 import SwiftUI
+import PhotosUI
 import UniformTypeIdentifiers
 
 struct LibraryView: View {
     @Bindable var model: PlayerModel
     @Environment(\.scenePhase) private var scenePhase
     @State private var importing = false
+    @State private var choosingPhoto = false
+    @State private var photoSelection: PhotosPickerItem?
+    @State private var photoImporter = PhotoVideoImporter()
     @State private var settings = false
     @State private var linkSheet = false
     @State private var editingLink: LibraryFilm?
@@ -35,6 +39,7 @@ struct LibraryView: View {
                                     Text("打开一部影片开始观看。进度和画面设置会为你保留。")
                                 } actions: {
                                     Button("打开影片", systemImage: "folder") { importing = true }.buttonStyle(.borderedProminent)
+                                    Button("从相册导入", systemImage: "photo.on.rectangle") { choosingPhoto = true }
                                     Button("播放视频链接", systemImage: "link") { editingLink = nil; linkSheet = true }
                                 }.frame(minHeight: 380)
                             } else {
@@ -74,7 +79,7 @@ struct LibraryView: View {
                                                     Text(film.title).lineLimit(1).font(.headline)
                                                     if film.favorite { Image(systemName: "heart.fill").foregroundStyle(.pink) }
                                                 }
-                                                Text("\(film.preferences.layout.isStereo ? "3D" : "2D") · \(film.sourceDescription)")
+                                                Text("\(film.isSpatialVideo == true ? "空间 3D" : (film.preferences.layout.isStereo ? "3D" : "2D")) · \(film.sourceDescription)")
                                                     .font(.caption).foregroundStyle(.secondary).lineLimit(1)
                                                 if film.duration > 0 { ProgressView(value: min(1, film.position / film.duration)).tint(.secondary) }
                                             }.padding(12).background(.thinMaterial, in: RoundedRectangle(cornerRadius: 22))
@@ -85,7 +90,7 @@ struct LibraryView: View {
                                                 Button("重命名", systemImage: "pencil") { renaming = film }
                                                 if film.isNetwork {
                                                     Button("编辑网络来源", systemImage: "link") { editingLink = film; linkSheet = true }
-                                                } else {
+                                                } else if film.photoFile == nil {
                                                     Button("重新定位文件", systemImage: "folder") { relocating = film.id; importing = true }
                                                 }
                                                 Button("从片库移除", systemImage: "minus.circle", role: .destructive) { removing = film }
@@ -104,12 +109,28 @@ struct LibraryView: View {
                             Button("设置", systemImage: "gearshape") { settings = true }
                             Menu {
                                 Button("打开文件", systemImage: "folder") { relocating = nil; importing = true }
+                                Button("从相册导入", systemImage: "photo.on.rectangle") { choosingPhoto = true }
                                 Button("视频链接", systemImage: "link") { editingLink = nil; linkSheet = true }
                             } label: { Label("打开影片", systemImage: "plus") }
                         }
                     }
                 }
             }
+        }
+        .photosPicker(isPresented: $choosingPhoto, selection: $photoSelection, matching: .videos, preferredItemEncoding: .current)
+        .onChange(of: photoSelection) { _, item in
+            guard let item else { return }
+            photoSelection = nil
+            photoImporter.begin(item, model: model)
+        }
+        .sheet(isPresented: Binding(get: { photoImporter.isImporting }, set: { if !$0 { photoImporter.cancel() } })) {
+            VStack(spacing: 24) {
+                Text("正在导入视频").font(.title2)
+                if let fraction = photoImporter.fraction { ProgressView(value: fraction).frame(width: 320) }
+                else { ProgressView() }
+                Text("iCloud 视频可能需要先下载。导入后会在 App 中保留一份副本，不改动相册原视频。").foregroundStyle(.secondary)
+                Button("取消") { photoImporter.cancel() }
+            }.padding(32).frame(width: 480)
         }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.movie, .video, .data]) { result in
             defer { relocating = nil }
@@ -125,7 +146,7 @@ struct LibraryView: View {
         .sheet(isPresented: $settings) { SettingsView(model: model) { settings = false } }
         .sheet(isPresented: $linkSheet) { NetworkSourceSheet(model: model, existing: editingLink) }
         .sheet(item: $renaming) { film in RenameFilmSheet(library: model.library, film: film) }
-        .confirmationDialog("从片库移除？原始影片文件不会被删除。", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }), titleVisibility: .visible) {
+        .confirmationDialog(removing?.photoFile != nil ? "移除影片及 App 内导入副本？相册原视频不会删除。" : "从片库移除？原始影片文件不会被删除。", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }), titleVisibility: .visible) {
             Button("移除记录", role: .destructive) { if let film = removing { model.library.remove(film.id) }; removing = nil }
         }
         .alert("无法打开影片", isPresented: Binding(get: { model.errorMessage != nil && !model.showingPlayer }, set: { if !$0 { model.errorMessage = nil } })) {
@@ -135,7 +156,7 @@ struct LibraryView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .background && !model.cinemaActive { model.pauseForBackground(); model.checkpoint() }
         }
-        .onDisappear { if !model.cinemaActive { model.pauseForBackground(); model.checkpoint() } }
+        .onDisappear { photoImporter.cancel(); if !model.cinemaActive { model.pauseForBackground(); model.checkpoint() } }
         .task { await model.runSmokeTestIfRequested() }
     }
 }

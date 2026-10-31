@@ -17,6 +17,8 @@ struct LibraryFilm: Identifiable, Codable, Equatable {
     var title: String
     var location: String
     var bookmark: Data?
+    var photoFile: String?
+    var isSpatialVideo: Bool?
     var favorite = false
     var addedAt = Date()
     var lastOpened: Date?
@@ -26,7 +28,7 @@ struct LibraryFilm: Identifiable, Codable, Equatable {
     var isNetwork: Bool { URL(string: location)?.isFileURL == false }
     var completed: Bool { duration > 0 && position >= duration - min(10, duration * 0.05) }
     var resumable: Bool { position > 2 && !completed }
-    var sourceDescription: String { isNetwork ? (URL(string: location)?.host ?? "网络影片") : "本地影片" }
+    var sourceDescription: String { photoFile != nil ? "相册导入" : isNetwork ? (URL(string: location)?.host ?? "网络影片") : "本地影片" }
 }
 
 @MainActor @Observable
@@ -111,10 +113,33 @@ final class MediaLibrary {
         films.insert(film, at: 0); save()
         return film
     }
+    private func photoURL(_ filename: String) -> URL? {
+        guard filename == (filename as NSString).lastPathComponent, !filename.isEmpty, filename != ".", filename != ".." else { return nil }
+        return root.appending(path: "PhotoVideos", directoryHint: .isDirectory).appending(path: filename)
+    }
+    func importPhoto(_ video: PhotoVideoTransfer) throws -> LibraryFilm {
+        guard persistenceAvailable else { throw PhotoVideoImporter.ImportError.storageUnavailable }
+        let ext = video.url.pathExtension.nilIfEmpty ?? "mov"
+        let filename = UUID().uuidString + "." + ext
+        let destination = photoURL(filename)!
+        try FileManager.default.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+        do {
+            try FileManager.default.moveItem(at: video.url, to: destination)
+            var film = LibraryFilm(title: (video.name as NSString).deletingPathExtension.nilIfEmpty ?? "相册视频", location: destination.absoluteString)
+            film.photoFile = filename
+            let updated = [film] + films
+            try JSONEncoder().encode(updated).write(to: root.appending(path: "library.json"), options: .atomic)
+            films = updated
+            return film
+        } catch { try? FileManager.default.removeItem(at: destination); throw error }
+    }
     func resolve(_ film: LibraryFilm) throws -> URL {
         var stale = false
         let url: URL
-        if let bookmark = film.bookmark {
+        if let photo = film.photoFile {
+            guard let owned = photoURL(photo) else { throw LibraryError.unavailable }
+            url = owned
+        } else if let bookmark = film.bookmark {
             url = try URL(resolvingBookmarkData: bookmark, options: .withoutUI, relativeTo: nil, bookmarkDataIsStale: &stale)
         } else if let direct = URL(string: film.location) { url = direct }
         else { throw LibraryError.unavailable }
@@ -137,10 +162,18 @@ final class MediaLibrary {
         try? FileManager.default.removeItem(at: thumbnailURL(id))
     }
     func remove(_ id: UUID) {
-        // Removing a library record never removes its source movie.
-        thumbnailTasks[id]?.cancel(); thumbnailTasks[id] = nil
-        films.removeAll { $0.id == id }; save()
-        try? FileManager.default.removeItem(at: thumbnailURL(id))
+        let owned = film(id)?.photoFile.flatMap { photoURL($0) }
+        let updated = films.filter { $0.id != id }
+        do {
+            guard persistenceAvailable else { throw PhotoVideoImporter.ImportError.storageUnavailable }
+            try JSONEncoder().encode(updated).write(to: root.appending(path: "library.json"), options: .atomic)
+            films = updated
+            thumbnailTasks[id]?.cancel(); thumbnailTasks[id] = nil
+            // Only an app-owned photo copy is removed, never a Photos asset or
+            // an externally selected movie. Store-relative names survive updates.
+            if let owned { try FileManager.default.removeItem(at: owned) }
+            try? FileManager.default.removeItem(at: thumbnailURL(id))
+        } catch { self.error = "无法完整移除记录或导入副本：\(error.localizedDescription)" }
     }
     func makeThumbnail(for film: LibraryFilm) {
         guard !film.isNetwork, thumbnailTasks[film.id] == nil,
