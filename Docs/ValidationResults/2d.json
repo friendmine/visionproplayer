@@ -1,0 +1,15 @@
+{
+  "afterSeekSeconds" : 6.6347125240000002,
+  "durationSeconds" : 12,
+  "engine" : "native",
+  "error" : null,
+  "frameSize" : "等待视频帧",
+  "passed" : true,
+  "pauseHeld" : true,
+  "resumed" : true,
+  "sample" : "2d",
+  "scope" : "Simulator transport \/ frame submission only; stereo perception and audio require manual verification.",
+  "seekable" : true,
+  "startedSeconds" : 1.044767709,
+  "submittedStereoFrames" : 0
+}

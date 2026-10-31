@@ -1,0 +1,19 @@
+{
+  "afterSeekSeconds": 6.47219,
+  "durationSeconds": 12.011,
+  "engine": "vlc",
+  "environment": "physical-device",
+  "error": null,
+  "frameSize": "等待视频帧",
+  "passed": true,
+  "pauseHeld": true,
+  "resumed": true,
+  "runID": "a3e1b062-75d8-47cf-a592-2da7601a4941",
+  "sample": "mkv",
+  "scope": "Playback transport / frame submission only; stereo perception and audio require manual verification.",
+  "seekable": true,
+  "startedSeconds": 1.166127,
+  "submittedStereoFrames": 0,
+  "systemVersion": "Version 27.0.1 (Build 24M372)",
+  "timestamp": "2026-10-31T04:45:11Z"
+}

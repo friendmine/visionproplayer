@@ -1,0 +1,19 @@
+{
+  "afterSeekSeconds": 6.753495,
+  "durationSeconds": 12.021,
+  "engine": "vlc",
+  "environment": "physical-device",
+  "error": null,
+  "frameSize": "1280 × 360 → 左右眼各 640 × 360",
+  "passed": true,
+  "pauseHeld": true,
+  "resumed": true,
+  "runID": "f790cd7b-ac03-4165-8ebd-7e04bbc95a25",
+  "sample": "sbs-vlc",
+  "scope": "Playback transport / frame submission only; stereo perception and audio require manual verification.",
+  "seekable": true,
+  "startedSeconds": 1.013646,
+  "submittedStereoFrames": 77,
+  "systemVersion": "Version 27.0.1 (Build 24M372)",
+  "timestamp": "2026-10-31T04:45:45Z"
+}

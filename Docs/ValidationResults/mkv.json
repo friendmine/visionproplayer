@@ -1,0 +1,15 @@
+{
+  "afterSeekSeconds" : 6.6745460000000003,
+  "durationSeconds" : 12.010999999999999,
+  "engine" : "vlc",
+  "error" : null,
+  "frameSize" : "等待视频帧",
+  "passed" : true,
+  "pauseHeld" : true,
+  "resumed" : true,
+  "sample" : "mkv",
+  "scope" : "Simulator transport \/ frame submission only; stereo perception and audio require manual verification.",
+  "seekable" : true,
+  "startedSeconds" : 1.1271329999999999,
+  "submittedStereoFrames" : 0
+}

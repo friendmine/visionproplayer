@@ -1,0 +1,15 @@
+{
+  "afterSeekSeconds" : 6.6822533359999996,
+  "durationSeconds" : 12,
+  "engine" : "native",
+  "error" : null,
+  "frameSize" : "1280 × 360 → 左右眼各 640 × 360",
+  "passed" : true,
+  "pauseHeld" : true,
+  "resumed" : true,
+  "sample" : "sbs-native",
+  "scope" : "Simulator transport \/ frame submission only; stereo perception and audio require manual verification.",
+  "seekable" : true,
+  "startedSeconds" : 1.102944084,
+  "submittedStereoFrames" : 80
+}

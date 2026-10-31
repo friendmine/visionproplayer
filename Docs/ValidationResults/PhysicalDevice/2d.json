@@ -1,0 +1,19 @@
+{
+  "afterSeekSeconds": 6.805459375,
+  "durationSeconds": 12,
+  "engine": "native",
+  "environment": "physical-device",
+  "error": null,
+  "frameSize": "等待视频帧",
+  "passed": true,
+  "pauseHeld": true,
+  "resumed": true,
+  "runID": "4b8f2def-d6cf-4de9-bbce-327d99656a1f",
+  "sample": "2d",
+  "scope": "Playback transport / frame submission only; stereo perception and audio require manual verification.",
+  "seekable": true,
+  "startedSeconds": 1.081560709,
+  "submittedStereoFrames": 0,
+  "systemVersion": "Version 27.0.1 (Build 24M372)",
+  "timestamp": "2026-10-31T04:44:54Z"
+}

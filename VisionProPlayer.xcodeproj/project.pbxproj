@@ -1,0 +1,319 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0929B27627E70F123430E9C8 /* VisionProPlayer/Rendering/StereoRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B73E32EBC868BB66AD6EE9 /* VisionProPlayer/Rendering/StereoRenderer.swift */; };
+		193FAC927D9BA238BCD0BB33 /* VisionProPlayer/Resources/Sample2D.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = B07B46678AB9FE7E9207C5ED /* VisionProPlayer/Resources/Sample2D.mp4 */; };
+		207D36A08F4600A321FEF3C0 /* VisionProPlayer/Resources/SampleSBS.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = A8EF9CCB1CAD98701B1A8FE5 /* VisionProPlayer/Resources/SampleSBS.mp4 */; };
+		290DEE6DF0EB1C5FF3A72A70 /* VisionProPlayer/Resources/Black.png in Resources */ = {isa = PBXBuildFile; fileRef = FA0B3CEBAD05A17E0E75D374 /* VisionProPlayer/Resources/Black.png */; };
+		2F69955FBCD21648666EBDF9 /* VisionProPlayer/App/VisionProPlayerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15E114CC91E8AD3D05F4A5FA /* VisionProPlayer/App/VisionProPlayerApp.swift */; };
+		5576FAB30ED4030B7E472D10 /* VisionProPlayer/Playback/SmokeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D457BC026B22EFB5E5C9882 /* VisionProPlayer/Playback/SmokeTest.swift */; };
+		61F2D1F4EA06992FE1F367CE /* VisionProPlayer/Views/NativePlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A079286662AE46422ED06356 /* VisionProPlayer/Views/NativePlayerView.swift */; };
+		6522AEC0F0E2A223516DC089 /* VisionProPlayer/Resources/SampleSBS.mkv in Resources */ = {isa = PBXBuildFile; fileRef = F41EDE6DCD80FA99C790A7AE /* VisionProPlayer/Resources/SampleSBS.mkv */; };
+		7205C0FF74E8E58D75C0B22F /* VisionProPlayer/Resources/StereoMaterial.usda in Resources */ = {isa = PBXBuildFile; fileRef = 873A17E88A2B33616020A3AE /* VisionProPlayer/Resources/StereoMaterial.usda */; };
+		89479E1D2DB887D5F734AF57 /* VisionProPlayer/Playback/PlayerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69A6CC3B3D152608E2C97149 /* VisionProPlayer/Playback/PlayerModel.swift */; };
+		97FEF75E8589FF884DCC5877 /* VisionProPlayer/Resources/SampleMKV.mkv in Resources */ = {isa = PBXBuildFile; fileRef = 5DCA3CB617E9AE3FE6107454 /* VisionProPlayer/Resources/SampleMKV.mkv */; };
+		BBA013EF23A762B1BFC84DAB /* VisionProPlayer/Views/LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC8DAF4B870003D1586D59D3 /* VisionProPlayer/Views/LibraryView.swift */; };
+		BD69A0F422BE1243E5BC434D /* VisionProPlayer/Playback/PlaybackOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD7CE42135287B03876AB033 /* VisionProPlayer/Playback/PlaybackOptions.swift */; };
+		BEEE29B93E5F9E1EA0F67AC7 /* VLCKit in Frameworks */ = {isa = PBXBuildFile; productRef = 60E262C5E4EFA18325B3550C /* VLCKit */; };
+		DD9BAE24ED42235ACA21258B /* VisionProPlayer/Bridge/VPPVLCSession.m in Sources */ = {isa = PBXBuildFile; fileRef = EB160971203D8714336B8B48 /* VisionProPlayer/Bridge/VPPVLCSession.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		15E114CC91E8AD3D05F4A5FA /* VisionProPlayer/App/VisionProPlayerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionProPlayer/App/VisionProPlayerApp.swift; sourceTree = SOURCE_ROOT; };
+		506314666EBFC84416E1DA22 /* VisionProPlayer/Bridge/VPPVLCSession.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VisionProPlayer/Bridge/VPPVLCSession.h; sourceTree = SOURCE_ROOT; };
+		53128ADBA0B5E23A8EF7F9C1 /* VisionProPlayer/.DS_Store */ = {isa = PBXFileReference; lastKnownFileType = text; path = VisionProPlayer/.DS_Store; sourceTree = SOURCE_ROOT; };
+		5DCA3CB617E9AE3FE6107454 /* VisionProPlayer/Resources/SampleMKV.mkv */ = {isa = PBXFileReference; lastKnownFileType = file; path = VisionProPlayer/Resources/SampleMKV.mkv; sourceTree = SOURCE_ROOT; };
+		5E4B8A14449D551A5B4C31FE /* VisionProPlayer/App/Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = VisionProPlayer/App/Info.plist; sourceTree = SOURCE_ROOT; };
+		69A6CC3B3D152608E2C97149 /* VisionProPlayer/Playback/PlayerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionProPlayer/Playback/PlayerModel.swift; sourceTree = SOURCE_ROOT; };
+		7D1043473D55BFA90E8530D3 /* VisionProPlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = VisionProPlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7D457BC026B22EFB5E5C9882 /* VisionProPlayer/Playback/SmokeTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionProPlayer/Playback/SmokeTest.swift; sourceTree = SOURCE_ROOT; };
+		84B73E32EBC868BB66AD6EE9 /* VisionProPlayer/Rendering/StereoRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionProPlayer/Rendering/StereoRenderer.swift; sourceTree = SOURCE_ROOT; };
+		873A17E88A2B33616020A3AE /* VisionProPlayer/Resources/StereoMaterial.usda */ = {isa = PBXFileReference; lastKnownFileType = text; path = VisionProPlayer/Resources/StereoMaterial.usda; sourceTree = SOURCE_ROOT; };
+		A079286662AE46422ED06356 /* VisionProPlayer/Views/NativePlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionProPlayer/Views/NativePlayerView.swift; sourceTree = SOURCE_ROOT; };
+		A100F2958996050DAF70157D /* VisionProPlayer/Bridge/VisionProPlayer-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "VisionProPlayer/Bridge/VisionProPlayer-Bridging-Header.h"; sourceTree = SOURCE_ROOT; };
+		A8EF9CCB1CAD98701B1A8FE5 /* VisionProPlayer/Resources/SampleSBS.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = VisionProPlayer/Resources/SampleSBS.mp4; sourceTree = SOURCE_ROOT; };
+		B07B46678AB9FE7E9207C5ED /* VisionProPlayer/Resources/Sample2D.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = VisionProPlayer/Resources/Sample2D.mp4; sourceTree = SOURCE_ROOT; };
+		CC8DAF4B870003D1586D59D3 /* VisionProPlayer/Views/LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionProPlayer/Views/LibraryView.swift; sourceTree = SOURCE_ROOT; };
+		EB160971203D8714336B8B48 /* VisionProPlayer/Bridge/VPPVLCSession.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VisionProPlayer/Bridge/VPPVLCSession.m; sourceTree = SOURCE_ROOT; };
+		F41EDE6DCD80FA99C790A7AE /* VisionProPlayer/Resources/SampleSBS.mkv */ = {isa = PBXFileReference; lastKnownFileType = file; path = VisionProPlayer/Resources/SampleSBS.mkv; sourceTree = SOURCE_ROOT; };
+		FA0B3CEBAD05A17E0E75D374 /* VisionProPlayer/Resources/Black.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = VisionProPlayer/Resources/Black.png; sourceTree = SOURCE_ROOT; };
+		FD7CE42135287B03876AB033 /* VisionProPlayer/Playback/PlaybackOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionProPlayer/Playback/PlaybackOptions.swift; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		7561BFB015D8F536760CB671 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BEEE29B93E5F9E1EA0F67AC7 /* VLCKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		325F10A6957A34D66CB8C0E4 = {
+			isa = PBXGroup;
+			children = (
+				53128ADBA0B5E23A8EF7F9C1 /* VisionProPlayer/.DS_Store */,
+				5E4B8A14449D551A5B4C31FE /* VisionProPlayer/App/Info.plist */,
+				15E114CC91E8AD3D05F4A5FA /* VisionProPlayer/App/VisionProPlayerApp.swift */,
+				506314666EBFC84416E1DA22 /* VisionProPlayer/Bridge/VPPVLCSession.h */,
+				EB160971203D8714336B8B48 /* VisionProPlayer/Bridge/VPPVLCSession.m */,
+				A100F2958996050DAF70157D /* VisionProPlayer/Bridge/VisionProPlayer-Bridging-Header.h */,
+				FD7CE42135287B03876AB033 /* VisionProPlayer/Playback/PlaybackOptions.swift */,
+				69A6CC3B3D152608E2C97149 /* VisionProPlayer/Playback/PlayerModel.swift */,
+				7D457BC026B22EFB5E5C9882 /* VisionProPlayer/Playback/SmokeTest.swift */,
+				84B73E32EBC868BB66AD6EE9 /* VisionProPlayer/Rendering/StereoRenderer.swift */,
+				FA0B3CEBAD05A17E0E75D374 /* VisionProPlayer/Resources/Black.png */,
+				B07B46678AB9FE7E9207C5ED /* VisionProPlayer/Resources/Sample2D.mp4 */,
+				5DCA3CB617E9AE3FE6107454 /* VisionProPlayer/Resources/SampleMKV.mkv */,
+				F41EDE6DCD80FA99C790A7AE /* VisionProPlayer/Resources/SampleSBS.mkv */,
+				A8EF9CCB1CAD98701B1A8FE5 /* VisionProPlayer/Resources/SampleSBS.mp4 */,
+				873A17E88A2B33616020A3AE /* VisionProPlayer/Resources/StereoMaterial.usda */,
+				CC8DAF4B870003D1586D59D3 /* VisionProPlayer/Views/LibraryView.swift */,
+				A079286662AE46422ED06356 /* VisionProPlayer/Views/NativePlayerView.swift */,
+				FBDC4F23F93125BBEEAE800C /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		FBDC4F23F93125BBEEAE800C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				7D1043473D55BFA90E8530D3 /* VisionProPlayer.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0E8A3AD980EC179856012B7E /* VisionProPlayer */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E30856D4D988D9571DE7D610 /* Build configuration list for PBXNativeTarget "VisionProPlayer" */;
+			buildPhases = (
+				BCE16DD0260827ECF338C787 /* Sources */,
+				7561BFB015D8F536760CB671 /* Frameworks */,
+				0189424A5A60FED329FA868E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = VisionProPlayer;
+			packageProductDependencies = (
+				60E262C5E4EFA18325B3550C /* VLCKit */,
+			);
+			productName = VisionProPlayer;
+			productReference = 7D1043473D55BFA90E8530D3 /* VisionProPlayer.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		98F54143AB4E86B28C3AFEE0 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2700;
+			};
+			buildConfigurationList = 95AC892C3AACDECFBDAED97E /* Build configuration list for PBXProject "VisionProPlayer" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 325F10A6957A34D66CB8C0E4;
+			packageReferences = (
+				582681C2EAE02B3F3D399C0C /* XCRemoteSwiftPackageReference "vlckit" */,
+			);
+			productRefGroup = FBDC4F23F93125BBEEAE800C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				0E8A3AD980EC179856012B7E /* VisionProPlayer */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		0189424A5A60FED329FA868E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				290DEE6DF0EB1C5FF3A72A70 /* VisionProPlayer/Resources/Black.png in Resources */,
+				193FAC927D9BA238BCD0BB33 /* VisionProPlayer/Resources/Sample2D.mp4 in Resources */,
+				97FEF75E8589FF884DCC5877 /* VisionProPlayer/Resources/SampleMKV.mkv in Resources */,
+				6522AEC0F0E2A223516DC089 /* VisionProPlayer/Resources/SampleSBS.mkv in Resources */,
+				207D36A08F4600A321FEF3C0 /* VisionProPlayer/Resources/SampleSBS.mp4 in Resources */,
+				7205C0FF74E8E58D75C0B22F /* VisionProPlayer/Resources/StereoMaterial.usda in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		BCE16DD0260827ECF338C787 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2F69955FBCD21648666EBDF9 /* VisionProPlayer/App/VisionProPlayerApp.swift in Sources */,
+				DD9BAE24ED42235ACA21258B /* VisionProPlayer/Bridge/VPPVLCSession.m in Sources */,
+				BD69A0F422BE1243E5BC434D /* VisionProPlayer/Playback/PlaybackOptions.swift in Sources */,
+				89479E1D2DB887D5F734AF57 /* VisionProPlayer/Playback/PlayerModel.swift in Sources */,
+				5576FAB30ED4030B7E472D10 /* VisionProPlayer/Playback/SmokeTest.swift in Sources */,
+				0929B27627E70F123430E9C8 /* VisionProPlayer/Rendering/StereoRenderer.swift in Sources */,
+				BBA013EF23A762B1BFC84DAB /* VisionProPlayer/Views/LibraryView.swift in Sources */,
+				61F2D1F4EA06992FE1F367CE /* VisionProPlayer/Views/NativePlayerView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		393D46F43650EFF47D010A6A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+			};
+			name = Debug;
+		};
+		A5A76368A6E498576C4EEF98 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = arm64;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VisionProPlayer/App/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Vision Player Lab";
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "播放你选择的局域网视频地址。";
+				INFOPLIST_KEY_UISupportsDocumentBrowser = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jeff.visionproplayer;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = xros;
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OBJC_BRIDGING_HEADER = "VisionProPlayer/Bridge/VisionProPlayer-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+				SYSTEM_HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(BUILT_PRODUCTS_DIR)/VLCKit.framework/Headers",
+				);
+				TARGETED_DEVICE_FAMILY = 7;
+				XROS_DEPLOYMENT_TARGET = 2.0;
+			};
+			name = Debug;
+		};
+		A5BD66D3C03A0FAF1A0386D5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = arm64;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VisionProPlayer/App/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Vision Player Lab";
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "播放你选择的局域网视频地址。";
+				INFOPLIST_KEY_UISupportsDocumentBrowser = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jeff.visionproplayer;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = xros;
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "VisionProPlayer/Bridge/VisionProPlayer-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+				SYSTEM_HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(BUILT_PRODUCTS_DIR)/VLCKit.framework/Headers",
+				);
+				TARGETED_DEVICE_FAMILY = 7;
+				XROS_DEPLOYMENT_TARGET = 2.0;
+			};
+			name = Release;
+		};
+		C08F1534F06EA574653FD4BB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		95AC892C3AACDECFBDAED97E /* Build configuration list for PBXProject "VisionProPlayer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				393D46F43650EFF47D010A6A /* Debug */,
+				C08F1534F06EA574653FD4BB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E30856D4D988D9571DE7D610 /* Build configuration list for PBXNativeTarget "VisionProPlayer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A5A76368A6E498576C4EEF98 /* Debug */,
+				A5BD66D3C03A0FAF1A0386D5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		582681C2EAE02B3F3D399C0C /* XCRemoteSwiftPackageReference "vlckit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/videolan/vlckit.git";
+			requirement = {
+				kind = revision;
+				revision = 2e0868f5ed40fe59cd92f377645fdcc260c6e759;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		60E262C5E4EFA18325B3550C /* VLCKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 582681C2EAE02B3F3D399C0C /* XCRemoteSwiftPackageReference "vlckit" */;
+			productName = VLCKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 98F54143AB4E86B28C3AFEE0 /* Project object */;
+}

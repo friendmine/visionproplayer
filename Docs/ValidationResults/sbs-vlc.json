@@ -1,0 +1,15 @@
+{
+  "afterSeekSeconds" : 6.5228359999999999,
+  "durationSeconds" : 12.021000000000001,
+  "engine" : "vlc",
+  "error" : null,
+  "frameSize" : "1280 × 360 → 左右眼各 640 × 360",
+  "passed" : true,
+  "pauseHeld" : true,
+  "resumed" : true,
+  "sample" : "sbs-vlc",
+  "scope" : "Simulator transport \/ frame submission only; stereo perception and audio require manual verification.",
+  "seekable" : true,
+  "startedSeconds" : 1.005625,
+  "submittedStereoFrames" : 86
+}

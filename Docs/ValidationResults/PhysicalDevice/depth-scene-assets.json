@@ -1,0 +1,26 @@
+{
+  "scene": "three-depth-layers",
+  "sha256": {
+    "SampleSBS.mp4": "d78c1493c8b5c72df183197eccc79863aee25eb254f6dcdcfa705f71d99b0987",
+    "SampleSBS.mkv": "9cbec1085be27997f40d18776ea37859567e33522e7c9c7ad73e72612fa94e43"
+  },
+  "signedBuild": "passed",
+  "installation": "passed",
+  "fullDecode": "passed",
+  "devicePlayback": "native and VLC visual depth confirmed by user; VLC automatic playback checks passed",
+  "manualObservation": {
+    "nativeSBS": "能看到三个球，也有前后层次",
+    "vlcSBS": "VLC 也有前后层次",
+    "eyeCheck": "not yet confirmed",
+    "audio": "not yet confirmed"
+  },
+  "nativeRetest": {
+    "runID": "7fed602e-1931-4798-9051-57bc0cf5f646",
+    "result": "no matching current report within 55 seconds"
+  },
+  "vlcRetest": {
+    "runID": "b7d62a80-c829-42a5-ab0a-a7bbd68ebbe0",
+    "result": "passed",
+    "report": "depth-scene-vlc.json"
+  }
+}

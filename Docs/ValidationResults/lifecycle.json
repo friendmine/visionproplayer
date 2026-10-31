@@ -1,0 +1,27 @@
+{
+  "checks" : [
+    {
+      "engine" : "vlc",
+      "file" : "SampleMKV.mkv",
+      "passed" : true
+    },
+    {
+      "engine" : "vlc",
+      "file" : "SampleSBS.mkv",
+      "passed" : true
+    },
+    {
+      "engine" : "native",
+      "file" : "SampleSBS.mp4",
+      "passed" : true
+    },
+    {
+      "engine" : "vlc",
+      "file" : "SampleMKV.mkv",
+      "passed" : true
+    }
+  ],
+  "passed" : true,
+  "released" : true,
+  "sample" : "lifecycle"
+}

@@ -1,0 +1,47 @@
+{
+  "source": "https://download.blender.org/demo/movies/BBB/bbb_sunflower_1080p_30fps_stereo_abl.mp4.zip",
+  "license": "https://creativecommons.org/licenses/by/3.0/",
+  "licenseEvidence": "https://peach.blender.org/about/",
+  "attribution": "(c) 2008 Blender Foundation / www.bigbuckbunny.org; CC BY 3.0; Sunflower stereo by Janus Kristensen (2013). Excerpt 00:20-01:20, resized and repacked to Full SBS.",
+  "sourceIntervalSeconds": [
+    20,
+    80
+  ],
+  "layout": "Full SBS, left eye first",
+  "perEyeSize": [
+    960,
+    540
+  ],
+  "fps": 30,
+  "outputs": {
+    "BBB-SBS-60s.mp4": {
+      "sha256": "812565998ac017c2b2330c8994b0f1d35114e9420c13d717a726d50bac2ffa5d",
+      "bytes": 18730658,
+      "fullDecode": "passed"
+    },
+    "BBB-SBS-60s.mkv": {
+      "sha256": "123a88a668d07ae8293ea3ce704ad31fccfe73da4b6ddbba1ce7aee6097afd15",
+      "bytes": 18697745,
+      "fullDecode": "passed"
+    }
+  },
+  "originalContainerMetadata": {
+    "major_brand": "isom",
+    "minor_version": "1",
+    "compatible_brands": "isomavc1",
+    "creation_time": "2013-12-16T17:46:34.000000Z",
+    "title": "Big Buck Bunny, Sunflower version",
+    "artist": "Blender Foundation 2008, Janus Bager Kristensen 2013",
+    "comment": "Creative Commons Attribution 3.0 - http://bbb3d.renderfarming.net",
+    "genre": "Animation",
+    "composer": "Sacha Goedegebure"
+  },
+  "manualObservation": {
+    "feedback": "立体感和声音都正常",
+    "scope": "User viewed the real film excerpt after automated checks; no per-engine subjective distinction was supplied."
+  },
+  "deviceReports": [
+    "bbb-native.json",
+    "bbb-vlc.json"
+  ]
+}

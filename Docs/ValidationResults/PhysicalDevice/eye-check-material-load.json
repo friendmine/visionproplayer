@@ -1,0 +1,19 @@
+{
+  "afterSeekSeconds": 6.768452167,
+  "durationSeconds": 12,
+  "engine": "native",
+  "environment": "physical-device",
+  "error": null,
+  "frameSize": "1280 × 360 → 左右眼各 640 × 360",
+  "passed": true,
+  "pauseHeld": true,
+  "resumed": true,
+  "runID": "a9809de6-9e9f-408a-ad7a-d9089a5fd09b",
+  "sample": "sbs-native",
+  "scope": "Playback transport / frame submission only; stereo perception and audio require manual verification.",
+  "seekable": true,
+  "startedSeconds": 1.226165417,
+  "submittedStereoFrames": 62,
+  "systemVersion": "Version 27.0.1 (Build 24M372)",
+  "timestamp": "2026-10-31T04:50:30Z"
+}

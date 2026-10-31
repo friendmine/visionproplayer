@@ -1,0 +1,38 @@
+# Third-party dependencies
+
+## VLCKit / libVLC
+
+- Provider: VideoLAN
+- Source: https://github.com/videolan/vlckit
+- Pinned revision: `2e0868f5ed40fe59cd92f377645fdcc260c6e759`
+- Binary referenced by that revision: `VLCKit-4.0-20260929-1631.zip`
+- Expected SHA-256: `f37c8dbdd4427d1a3f5d75dc4b8bd1ae863cef4426f9a405a2fd1c5c9012f1fb`
+- VLCKit repository license: LGPL 2.1 or later; consult the exact upstream COPYING and licenses of bundled components before redistribution.
+- Binaries are fetched by Swift Package Manager; they are not checked into this repository.
+
+This document records dependency provenance, not a determination that a particular distribution satisfies all third-party obligations.
+
+## Reference documentation
+
+- Apple: https://developer.apple.com/documentation/visionos/displaying-a-stereoscopic-image-in-visionos
+- Apple: https://developer.apple.com/documentation/avkit/adopting-the-system-player-interface-in-visionos
+- Apple: https://developer.apple.com/documentation/shadergraph/realitykit/camera-index-switch-(realitykit)
+
+The small StereoMaterial.usda graph is authored for this project using documented shader node identifiers. No Apple sample image assets are bundled.
+
+## Synthetic media
+
+The four bundled test clips are generated locally by Scripts/generate_samples.py and Scripts/generate_stereo_sample.py using FFmpeg test patterns, sine tones and a project-authored stereo depth scene. No downloaded film is bundled inside the app. FFmpeg and Pillow are development-time generators only.
+
+## Downloaded Big Buck Bunny stereo test excerpt
+
+- Original: Big Buck Bunny, © 2008 Blender Foundation / www.bigbuckbunny.org.
+- Sunflower stereoscopic release: Janus Kristensen, 2013.
+- Source: https://download.blender.org/demo/movies/BBB/bbb_sunflower_1080p_30fps_stereo_abl.mp4.zip
+- License: Creative Commons Attribution 3.0, https://creativecommons.org/licenses/by/3.0/
+- Original license statement: https://peach.blender.org/about/
+- Changes: excerpt 00:20–01:20; above/below left-first stereo rearranged to Full SBS left-first; resized to 1920×540 (960×540 per eye); encoded H.264/AAC; MP4 and remuxed MKV.
+- The full download is about 434 MB. Only the source prefix needed for this excerpt was retrieved and extracted; the remaining download was stopped. The derived 60-second files each passed complete decoding. The partial archive is explicitly named `.zip.partial`.
+- Local files: `.build/TestMedia/BBB-SBS-60s.mp4`, `.mkv`, `BBB-SBS-60s-LICENSE.txt`. These are copied to the installed app's Documents directory, not added to its bundle.
+- Attribution is included in the playback UI, media metadata, and the companion license text. Provenance and SHA-256 values are recorded in `ValidationResults/PhysicalDevice/bbb-source.json`.
+- Reproduce from the official extracted stereo MP4 using `python3 Scripts/prepare_bbb_sample.py <source.mp4>`.

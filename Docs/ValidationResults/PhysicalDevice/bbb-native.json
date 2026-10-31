@@ -1,0 +1,20 @@
+{
+  "afterSeekSeconds": 30.744750834,
+  "durationSeconds": 60,
+  "engine": "native",
+  "environment": "physical-device",
+  "error": null,
+  "frameSize": "1920 × 540 → 左右眼各 960 × 540",
+  "passed": true,
+  "pauseHeld": true,
+  "resumed": true,
+  "runID": "2719a0bc-1225-4af8-89b1-c6b54833a7c4",
+  "sample": "bbb-native",
+  "scope": "Playback transport / frame submission only; stereo perception and audio require manual verification.",
+  "seekable": true,
+  "sourceFile": "BBB-SBS-60s.mp4",
+  "startedSeconds": 1.221316334,
+  "submittedStereoFrames": 78,
+  "systemVersion": "Version 27.0.1 (Build 24M372)",
+  "timestamp": "2026-10-31T05:38:56Z"
+}
