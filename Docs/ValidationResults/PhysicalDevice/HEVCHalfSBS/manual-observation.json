@@ -1,0 +1,42 @@
+{
+  "recordedAt": "2026-10-31T06:02:13.984805+00:00",
+  "source": "User feedback while viewing the installed app on physical Vision Pro",
+  "scope": "30-second BBB excerpts, 1920x1080, 30 fps, SDR, AAC stereo; HEVC Main 8-bit",
+  "checks": [
+    {
+      "samples": [
+        "hevc-mp4",
+        "hevc-mkv"
+      ],
+      "askedAbout": [
+        "picture",
+        "audible audio"
+      ],
+      "userReply": "两种都正常",
+      "passed": true
+    },
+    {
+      "samples": [
+        "half-h264-native",
+        "half-h264-vlc",
+        "half-hevc-native",
+        "half-hevc-vlc"
+      ],
+      "askedAbout": [
+        "stereo depth",
+        "normal object proportions",
+        "no flickering",
+        "no vertical stripes",
+        "no obvious stutter",
+        "audible audio"
+      ],
+      "userReply": "四种都正常",
+      "passed": true
+    }
+  ],
+  "limitations": [
+    "No Main 10 or HDR validation",
+    "No 4K/8K or high-bitrate long-film validation",
+    "No objective audio synchronization or sustained performance measurement"
+  ]
+}

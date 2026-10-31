@@ -36,3 +36,11 @@ The four bundled test clips are generated locally by Scripts/generate_samples.py
 - Local files: `.build/TestMedia/BBB-SBS-60s.mp4`, `.mkv`, `BBB-SBS-60s-LICENSE.txt`. These are copied to the installed app's Documents directory, not added to its bundle.
 - Attribution is included in the playback UI, media metadata, and the companion license text. Provenance and SHA-256 values are recorded in `ValidationResults/PhysicalDevice/bbb-source.json`.
 - Reproduce from the official extracted stereo MP4 using `python3 Scripts/prepare_bbb_sample.py <source.mp4>`.
+
+### H.265 and Half SBS compatibility excerpts
+
+- Same source, authors and CC BY 3.0 license. Excerpt 00:20–00:50, 30 fps, AAC stereo audio.
+- `BBB-HEVC-2D-30s`: original left-eye view, 1920×1080, H.265 Main 8-bit, MP4 (`hvc1`) and remuxed MKV.
+- `BBB-H264-HalfSBS-30s` / `BBB-HEVC-HalfSBS-30s`: left-first Half SBS, 1920×1080 total, 960×1080 horizontally squeezed per eye. H.264 High / H.265 Main 8-bit respectively, MP4 and remuxed MKV. Playback restores each eye to 16:9.
+- Reproduce using `python3 Scripts/prepare_compatibility_samples.py <source.mp4>`. Requires macOS FFmpeg with VideoToolbox HEVC, libx264 and stereo3d support. The script checks codec, profile, dimensions, pixel format, square pixels, duration and complete decoding of all six files.
+- Files remain in `.build/TestMedia/` and device Documents. Attribution is present in the media metadata and UI; `compatibility-samples.json` accompanies the copied files. Provenance and hashes: `ValidationResults/PhysicalDevice/HEVCHalfSBS/fixtures.json`.

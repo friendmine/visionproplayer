@@ -1,0 +1,20 @@
+{
+  "afterSeekSeconds": 30.477135,
+  "durationSeconds": 60.021,
+  "engine": "vlc",
+  "environment": "physical-device",
+  "error": null,
+  "frameSize": "1920 × 540 → 左右眼各 960 × 540",
+  "passed": true,
+  "pauseHeld": true,
+  "resumed": true,
+  "runID": "240138b6-0c2d-488a-8353-6d30d26828b7",
+  "sample": "bbb-vlc",
+  "scope": "Playback transport / frame submission only; stereo perception and audio require manual verification.",
+  "seekable": true,
+  "sourceFile": "BBB-SBS-60s.mkv",
+  "startedSeconds": 1.013527,
+  "submittedStereoFrames": 75,
+  "systemVersion": "Version 27.0.1 (Build 24M372)",
+  "timestamp": "2026-10-31T05:45:48Z"
+}

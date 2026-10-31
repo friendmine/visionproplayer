@@ -40,7 +40,11 @@ final class StereoRenderer {
         entity.model = ModelComponent(mesh: .generatePlane(width: 1, height: 1), materials: [])
     }
 
-    func fit(in size: SIMD3<Float>, aspect: Float) {
+    func fit(in size: SIMD3<Float>, centeredAt center: SIMD3<Float>, aspect: Float) {
+        // The SwiftUI black backing and window glass occupy the window plane.
+        // Keep an explicit physical gap to prevent coplanar depth fighting,
+        // including when SwiftUI updates the layout or the user resizes it.
+        entity.position = center + SIMD3<Float>(0, 0, 0.005)
         let width = min(abs(size.x), abs(size.y) * aspect)
         entity.scale = [max(0.01, width), max(0.01, width / aspect), 1]
     }
@@ -134,19 +138,23 @@ struct StereoPlayerView: View {
             RealityView { content in
                 do {
                     try await renderer.prepare()
+                    guard !Task.isCancelled, model.request?.id == request.id else { return }
                     content.add(renderer.entity)
                     let bounds = content.convert(geometry.frame(in: .local), from: .local, to: content)
-                    renderer.entity.position = bounds.center
-                    renderer.fit(in: bounds.extents, aspect: aspect)
+                    renderer.fit(in: bounds.extents, centeredAt: bounds.center, aspect: aspect)
                     renderer.setEyeCheck(model.eyeCheck)
                     ready = true
+                } catch is CancellationError {
+                    // Removing the old view during engine fallback cancels material loading.
                 } catch {
-                    model.rendererError = error.localizedDescription
+                    if model.request?.id == request.id, !Task.isCancelled {
+                        model.rendererError = error.localizedDescription
+                    }
                 }
             } update: { content in
+                guard model.request?.id == request.id else { return }
                 let bounds = content.convert(geometry.frame(in: .local), from: .local, to: content)
-                renderer.entity.position = bounds.center
-                renderer.fit(in: bounds.extents, aspect: aspect)
+                renderer.fit(in: bounds.extents, centeredAt: bounds.center, aspect: aspect)
                 do { try renderer.bindEyes(swapped: model.swapEyes) }
                 catch { model.rendererError = error.localizedDescription }
                 renderer.setEyeCheck(model.eyeCheck)
@@ -154,8 +162,9 @@ struct StereoPlayerView: View {
             .frame(width: CGFloat(geometry.size.width), height: CGFloat(geometry.size.height))
             .frame(depth: 0)
         }
-        // Keep the screen on the window plane; the default 3D depth otherwise
-        // moves it toward the viewer and can magnify it over the transport controls.
+        // Keep layout anchored at the window plane, with only the renderer's
+        // explicit 5 mm gap. Default 3D depth would push the screen much farther
+        // toward the viewer and magnify it over the transport controls.
         .frame(depth: 0)
         .task(id: ready) {
             guard ready else { return }
@@ -169,6 +178,7 @@ struct StereoPlayerView: View {
                             aspect = request.layout.displayAspect(width: width, height: height)
                             model.frameSize = "\(width) × \(height) → 左右眼各 \(width / 2) × \(height)"
                             model.renderedFrames += 1
+                            model.stereoDisplayAspect = Double(renderer.entity.scale.x / renderer.entity.scale.y)
                         }
                     } catch {
                         model.rendererError = error.localizedDescription

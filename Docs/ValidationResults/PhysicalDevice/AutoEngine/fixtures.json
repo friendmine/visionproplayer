@@ -1,0 +1,14 @@
+{
+  "source": "Project-generated Sample2D.mp4, 12 seconds; MPEG-4 Part 2 / DX50 + MP3 in AVI. MP4-named copy has identical AVI bytes to exercise native failure.",
+  "generator": "Scripts/prepare_routing_sample.py",
+  "files": {
+    "FallbackProbe.avi": {
+      "bytes": 5748732,
+      "sha256": "ccb0305732f3e750254fca15a0b44b0a524268c2bc60fd71eed89c1502678455"
+    },
+    "FallbackProbe.mp4": {
+      "bytes": 5748732,
+      "sha256": "ccb0305732f3e750254fca15a0b44b0a524268c2bc60fd71eed89c1502678455"
+    }
+  }
+}

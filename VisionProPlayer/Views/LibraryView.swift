@@ -28,13 +28,19 @@ struct LibraryView: View {
                 Menu("真实 3D 短片") {
                     Button("Big Buck Bunny · 原生") { openDownloadedStereo(engine: .native) }
                     Button("Big Buck Bunny · VLC") { openDownloadedStereo(engine: .vlc) }
+                    Divider()
+                    Section("H.265 / Half SBS 验证") {
+                        ForEach(CompatibilitySample.allCases) { sample in
+                            Button(sample.title) { openCompatibility(sample) }
+                        }
+                    }
                 }.disabled(model.isClosing)
             }
             HStack {
-                Picker("播放引擎", selection: $model.engineChoice) {
+                Picker("打开影片时", selection: $model.engineChoice) {
                     ForEach(PlaybackEngine.allCases) { Text($0.title).tag($0) }
                 }.frame(maxWidth: 250)
-                Picker("视频格式", selection: $model.layoutChoice) {
+                Picker("影片格式", selection: $model.layoutChoice) {
                     ForEach(StereoLayout.allCases) { Text($0.title).tag($0) }
                 }.frame(maxWidth: 360)
                 Toggle("交换左右眼", isOn: $model.swapEyes).toggleStyle(.button)
@@ -47,7 +53,7 @@ struct LibraryView: View {
                     Text(model.eyeCheck
                          ? "分别闭眼检查：左眼应为纯红，右眼应为纯蓝；绿色表示单眼渲染。关闭检查后恢复视频。"
                          : (model.request?.url.lastPathComponent.hasPrefix("BBB-") == true
-                            ? "Big Buck Bunny 立体片段 · Full SBS · 60 秒。左右眼检查可单独验证眼别。"
+                            ? "Big Buck Bunny · \(model.request?.layout.title ?? "SBS")。左右眼检查可单独验证眼别。"
                             : "立体演示：金球在近处、青球在中间、紫球在远处。左右眼检查可单独验证眼别。"))
                         .font(.caption).foregroundStyle(.secondary)
                 }
@@ -93,6 +99,11 @@ struct LibraryView: View {
             } else {
                 Text(model.isClosing ? "正在释放播放器…" : "引擎与格式选择应用于下次打开。测试按钮使用预设配置。")
                     .font(.caption).foregroundStyle(.secondary)
+            }
+            Text("以上选择用于下次打开自己的影片；测试按钮不会更改这些设置。")
+                .font(.caption).foregroundStyle(.secondary)
+            if let notice = model.playbackNotice {
+                Text(notice).font(.caption).foregroundStyle(.secondary)
             }
             if let error = model.errorMessage ?? model.rendererError {
                 Text(error).foregroundStyle(.red).font(.callout).textSelection(.enabled)
@@ -155,10 +166,17 @@ struct LibraryView: View {
                 model.errorMessage = "缺少内置测试片，请运行 Scripts/generate_samples.sh 后重新编译。"
                 return
             }
-            model.layoutChoice = layout; model.engineChoice = engine
-            model.open(url, layout: layout, engine: engine)
+            model.openSample(url, layout: layout, engine: engine)
         } label: { Label(title, systemImage: icon).frame(maxWidth: .infinity) }
             .disabled(model.isClosing)
+    }
+
+    private func openCompatibility(_ sample: CompatibilitySample) {
+        guard FileManager.default.fileExists(atPath: sample.url.path) else {
+            model.errorMessage = "尚未传入兼容性测试片：\(sample.url.lastPathComponent)"
+            return
+        }
+        model.openSample(sample.url, layout: sample.layout, engine: sample.engine)
     }
 
     private func openDownloadedStereo(engine: PlaybackEngine) {
@@ -168,11 +186,7 @@ struct LibraryView: View {
             model.errorMessage = "测试短片尚未传入此设备。请先将 BBB-SBS-60s.\(ext) 放入本 App 的 Documents。"
             return
         }
-        model.eyeCheck = false
-        model.swapEyes = false
-        model.layoutChoice = .fullSBS
-        model.engineChoice = engine
-        model.open(url, layout: .fullSBS, engine: engine)
+        model.openSample(url, layout: .fullSBS, engine: engine)
     }
 
     private func openURL() {

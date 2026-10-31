@@ -9,6 +9,8 @@ extension PlayerModel {
               request == nil else { return }
         let name = arguments[index + 1]
         if name == "lifecycle" { await runLifecycleProbe(); return }
+        if name == "routing" { await runRoutingProbe(); return }
+        let compatibility = CompatibilitySample(rawValue: name)
         let configuration: (String, String, StereoLayout, PlaybackEngine)
         switch name {
         case "2d": configuration = ("Sample2D", "mp4", .flat, .native)
@@ -17,17 +19,19 @@ extension PlayerModel {
         case "sbs-vlc": configuration = ("SampleSBS", "mkv", .fullSBS, .vlc)
         case "bbb-native": configuration = ("BBB-SBS-60s", "mp4", .fullSBS, .native)
         case "bbb-vlc": configuration = ("BBB-SBS-60s", "mkv", .fullSBS, .vlc)
-        default: return
+        default:
+            guard let compatibility else { return }
+            configuration = (compatibility.fileStem, compatibility.fileExtension, compatibility.layout, compatibility.engine)
         }
-        let isDownloadedClip = name.hasPrefix("bbb-")
+        let isDownloadedClip = name.hasPrefix("bbb-") || compatibility != nil
         let sourceURL = isDownloadedClip
             ? URL.documentsDirectory.appending(path: "\(configuration.0).\(configuration.1)")
             : Bundle.main.url(forResource: configuration.0, withExtension: configuration.1)
         guard let url = sourceURL, FileManager.default.fileExists(atPath: url.path) else { return }
-        let expectedDuration = isDownloadedClip ? 60.0 : 12.0
-        let expectedFrameSize = isDownloadedClip
-            ? "1920 × 540 → 左右眼各 960 × 540"
-            : "1280 × 360 → 左右眼各 640 × 360"
+        let expectedDuration = compatibility != nil ? 30.0 : (isDownloadedClip ? 60.0 : 12.0)
+        let expectedFrameSize = compatibility != nil ? "1920 × 1080 → 左右眼各 960 × 1080"
+            : (isDownloadedClip ? "1920 × 540 → 左右眼各 960 × 540" : "1280 × 360 → 左右眼各 640 × 360")
+        eyeCheck = false; swapEyes = false
         layoutChoice = configuration.2; engineChoice = configuration.3
         open(url, layout: configuration.2, engine: configuration.3)
         // Wait for actual startup, with a bounded deadline. A missing frame is a failure for SBS.
@@ -36,15 +40,19 @@ extension PlayerModel {
             if elapsed > 1.0 || errorMessage != nil { break }
         }
         let started = elapsed
+        let framesAtStart = renderedFrames
         let canSeek = isSeekable
         seek(to: 0.5)
         try? await Task.sleep(for: .seconds(1))
         let afterSeek = elapsed
+        let framesAfterSeek = renderedFrames
         if isPlaying { togglePlayback() }
         try? await Task.sleep(for: .milliseconds(400))
         let pausedTime = elapsed
         try? await Task.sleep(for: .milliseconds(700))
         let pauseHeld = !isPlaying && abs(elapsed - pausedTime) < 0.2
+        let pausedEndTime = elapsed
+        let framesBeforeResume = renderedFrames
         if !isPlaying { togglePlayback() }
         try? await Task.sleep(for: .seconds(1))
         let resumed = isPlaying && elapsed > pausedTime
@@ -54,12 +62,18 @@ extension PlayerModel {
             && abs(duration - expectedDuration) < 0.2
             && afterSeek > expectedDuration / 2 - 1 && afterSeek < expectedDuration / 2 + 3
             && pauseHeld && resumed && error == nil
-            && (!configuration.2.isStereo || (frames > 5 && frameSize == expectedFrameSize))
+            && (!configuration.2.isStereo || (frames > 5 && frameSize == expectedFrameSize
+                && framesAfterSeek > framesAtStart && frames > framesBeforeResume
+                && abs(stereoDisplayAspect - 16.0 / 9.0) < 0.01))
         let report: [String: Any] = smokeMetadata().merging([
             "sample": name, "engine": configuration.3.rawValue,
             "sourceFile": url.lastPathComponent,
+            "layout": configuration.2.rawValue, "displayAspect": stereoDisplayAspect,
             "startedSeconds": started, "durationSeconds": duration, "seekable": canSeek,
             "afterSeekSeconds": afterSeek, "pauseHeld": pauseHeld, "resumed": resumed,
+            "pausedStartSeconds": pausedTime, "pausedEndSeconds": pausedEndTime,
+            "framesAtStart": framesAtStart, "framesAfterSeek": framesAfterSeek,
+            "framesBeforeResume": framesBeforeResume,
             "submittedStereoFrames": frames, "frameSize": frameSize,
             "error": error as Any? ?? NSNull(), "passed": success,
             "scope": "Playback transport / frame submission only; stereo perception and audio require manual verification."
@@ -72,6 +86,101 @@ extension PlayerModel {
         #endif
     }
     #if DEBUG
+    private func runRoutingProbe() async {
+        var checks: [[String: Any]] = []
+        func record(_ check: [String: Any]) {
+            checks.append(check.merging(["engine": request?.engine.rawValue ?? "none",
+                "layout": request?.layout.rawValue ?? "none", "frames": renderedFrames,
+                "frameSize": frameSize, "aspect": stereoDisplayAspect, "notice": playbackNotice ?? "",
+                "error": errorMessage ?? rendererError ?? "", "state": stateText,
+                "timestamp": ISO8601DateFormatter().string(from: Date())]) { old, _ in old })
+            let progress = smokeMetadata().merging(["checks": checks, "state": stateText,
+                "engine": request?.engine.rawValue ?? "none", "error": errorMessage ?? ""]) { _, new in new }
+            if let data = try? JSONSerialization.data(withJSONObject: progress, options: [.prettyPrinted, .sortedKeys]) {
+                try? data.write(to: URL.documentsDirectory.appending(path: "routing-progress.json"), options: .atomic)
+            }
+        }
+        func waitUntil(_ predicate: () -> Bool) async {
+            for _ in 0..<100 {
+                if predicate() { return }
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+        }
+        guard let sample = Bundle.main.url(forResource: "SampleSBS", withExtension: "mp4") else { return }
+        engineChoice = .automatic; layoutChoice = .flat
+        openSample(sample, layout: .fullSBS, engine: .native)
+        await waitForPendingChange()
+        await waitUntil { elapsed > 0.5 }
+        record(["name": "sample-preserves-user-preferences", "passed":
+            engineChoice == .automatic && layoutChoice == .flat && request?.engine == .native
+            && request?.layout == .fullSBS && renderedFrames > 0])
+
+        open(URL.documentsDirectory.appending(path: "FallbackProbe.avi"))
+        await waitForPendingChange()
+        await waitUntil { elapsed > 1 || errorMessage != nil }
+        record(["name": "avi-routes-directly-to-vlc-in-2d", "passed":
+            request?.engine == .vlc && request?.layout == .flat && elapsed > 1
+            && errorMessage == nil && playbackNotice == nil])
+
+        // An AVI/DivX fixture with an MP4 suffix forces a real AVPlayer failure.
+        open(URL.documentsDirectory.appending(path: "FallbackProbe.mp4"))
+        await waitForPendingChange()
+        let beganWithNative = request?.engine == .native || isSwitchingEngine
+        await waitUntil { request?.engine == .vlc && elapsed > 1 }
+        let didFallback = request?.engine == .vlc && playbackNotice != nil && elapsed > 1 && errorMessage == nil
+        seek(to: 0.5)
+        try? await Task.sleep(for: .seconds(1))
+        let sought = elapsed > 5 && elapsed < 9
+        if isPlaying { togglePlayback() }
+        try? await Task.sleep(for: .milliseconds(500))
+        let paused = elapsed
+        try? await Task.sleep(for: .milliseconds(500))
+        let held = !isPlaying && abs(elapsed - paused) < 0.2
+        if !isPlaying { togglePlayback() }
+        try? await Task.sleep(for: .seconds(1))
+        record(["name": "native-failure-falls-back-once-and-controls-work", "beganWithNative": beganWithNative,
+            "fallbackNotice": playbackNotice ?? "", "seekWorked": sought, "pauseHeld": held,
+            "passed": beganWithNative && didFallback && sought && held && isPlaying && elapsed > paused])
+
+        open(URL.documentsDirectory.appending(path: "FallbackProbe.mp4"), layout: .halfSBS)
+        await waitForPendingChange()
+        await waitUntil { request?.engine == .vlc && renderedFrames > 5 }
+        record(["name": "fallback-preserves-stereo-layout", "passed":
+            request?.engine == .vlc && request?.layout == .halfSBS && renderedFrames > 5
+            && frameSize == "960 × 540 → 左右眼各 480 × 540" && abs(stereoDisplayAspect - 16.0 / 9.0) < 0.01
+            && errorMessage == nil && rendererError == nil && playbackNotice != nil])
+
+        open(URL.documentsDirectory.appending(path: "deliberately-missing-routing-probe.mp4"))
+        await waitForPendingChange()
+        await waitUntil { request?.engine == .vlc && errorMessage != nil }
+        let failedID = request?.id
+        try? await Task.sleep(for: .seconds(1))
+        record(["name": "both-engines-fail-without-retry-loop", "passed":
+            request?.id == failedID && request?.engine == .vlc && errorMessage != nil && !isSwitchingEngine])
+
+        open(URL.documentsDirectory.appending(path: "FallbackProbe.mp4"))
+        await waitForPendingChange()
+        stop()
+        await waitForPendingChange()
+        try? await Task.sleep(for: .milliseconds(500))
+        record(["name": "stop-cancels-pending-native-failure", "passed":
+            request == nil && vlc == nil && nativePlayer == nil && !isSwitchingEngine])
+
+        open(URL.documentsDirectory.appending(path: "FallbackProbe.mp4"))
+        await waitForPendingChange()
+        openSample(sample, layout: .fullSBS, engine: .native)
+        await waitForPendingChange()
+        await waitUntil { renderedFrames > 5 }
+        record(["name": "new-file-wins-over-stale-failure", "passed":
+            request?.url == sample && request?.engine == .native && renderedFrames > 5 && playbackNotice == nil
+            && engineChoice == .automatic && layoutChoice == .flat])
+        let report = smokeMetadata().merging(["sample": "routing", "checks": checks,
+            "passed": checks.allSatisfy { $0["passed"] as? Bool == true }]) { _, new in new }
+        if let data = try? JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted, .sortedKeys]) {
+            try? data.write(to: URL.documentsDirectory.appending(path: "smoke-routing.json"), options: .atomic)
+        }
+    }
+
     private func smokeMetadata() -> [String: Any] {
         #if targetEnvironment(simulator)
         let environment = "simulator"

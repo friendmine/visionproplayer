@@ -43,4 +43,39 @@ struct PlaybackRequest: Identifiable {
     let layout: StereoLayout
     let swapEyes: Bool
     let securityScoped: Bool
+    var allowsNativeFallback = false
+}
+
+/// Documents-based real-film fixtures shared by manual and automated checks.
+enum CompatibilitySample: String, CaseIterable, Identifiable {
+    case hevcMP4 = "hevc-mp4"
+    case hevcMKV = "hevc-mkv"
+    case halfH264Native = "half-h264-native"
+    case halfH264VLC = "half-h264-vlc"
+    case halfHEVCNative = "half-hevc-native"
+    case halfHEVCVLC = "half-hevc-vlc"
+
+    var id: String { rawValue }
+    var engine: PlaybackEngine {
+        switch self {
+        case .hevcMP4, .halfH264Native, .halfHEVCNative: .native
+        default: .vlc
+        }
+    }
+    var layout: StereoLayout {
+        self == .hevcMP4 || self == .hevcMKV ? .flat : .halfSBS
+    }
+    var fileStem: String {
+        switch self {
+        case .hevcMP4, .hevcMKV: "BBB-HEVC-2D-30s"
+        case .halfH264Native, .halfH264VLC: "BBB-H264-HalfSBS-30s"
+        case .halfHEVCNative, .halfHEVCVLC: "BBB-HEVC-HalfSBS-30s"
+        }
+    }
+    var fileExtension: String { engine == .native ? "mp4" : "mkv" }
+    var url: URL { URL.documentsDirectory.appending(path: "\(fileStem).\(fileExtension)") }
+    var title: String {
+        let codec = fileStem.contains("H264") ? "H.264" : "H.265"
+        return "\(codec) \(fileExtension.uppercased()) · \(layout.isStereo ? "Half SBS" : "2D")"
+    }
 }

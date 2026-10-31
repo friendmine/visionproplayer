@@ -1,0 +1,42 @@
+{
+  "checks": [
+    {
+      "name": "sample-preserves-user-preferences",
+      "passed": true
+    },
+    {
+      "name": "avi-routes-directly-to-vlc-in-2d",
+      "passed": true
+    },
+    {
+      "beganWithNative": true,
+      "fallbackNotice": "原生播放失败，已自动切换到 VLC。",
+      "name": "native-failure-falls-back-once-and-controls-work",
+      "passed": true,
+      "pauseHeld": true,
+      "seekWorked": true
+    },
+    {
+      "name": "fallback-preserves-stereo-layout",
+      "passed": false
+    },
+    {
+      "name": "both-engines-fail-without-retry-loop",
+      "passed": false
+    },
+    {
+      "name": "stop-cancels-pending-native-failure",
+      "passed": true
+    },
+    {
+      "name": "new-file-wins-over-stale-failure",
+      "passed": true
+    }
+  ],
+  "environment": "physical-device",
+  "passed": false,
+  "runID": "c4e9b81f-6d4d-43c7-a823-6f091a15f827",
+  "sample": "routing",
+  "systemVersion": "Version 27.0.1 (Build 24M372)",
+  "timestamp": "2026-10-31T06:22:13Z"
+}

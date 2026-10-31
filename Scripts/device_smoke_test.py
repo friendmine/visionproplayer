@@ -12,7 +12,8 @@ import uuid
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("device", help="CoreDevice identifier or UDID")
-    parser.add_argument("sample", choices=["2d", "mkv", "sbs-native", "sbs-vlc", "bbb-native", "bbb-vlc", "lifecycle"])
+    parser.add_argument("sample", choices=["2d", "mkv", "sbs-native", "sbs-vlc", "bbb-native", "bbb-vlc", "lifecycle", "routing",
+                                           "hevc-mp4", "hevc-mkv", "half-h264-native", "half-h264-vlc", "half-hevc-native", "half-hevc-vlc"])
     args = parser.parse_args()
     bundle = "com.jeff.visionproplayer"
     output = Path(__file__).resolve().parent.parent / ".build/physical-validation"
@@ -46,7 +47,8 @@ def main():
         if result.returncode:
             raise SystemExit(result.stdout + result.stderr)
         print(f"Started {args.sample} on physical Vision Pro (run {run_id})", flush=True)
-        deadline = time.monotonic() + 55
+        report_timeout = 95 if args.sample == "routing" else 55
+        deadline = time.monotonic() + report_timeout
         local = Path(temporary) / "report.json"
         while time.monotonic() < deadline:
             time.sleep(2)
@@ -66,7 +68,7 @@ def main():
             print(destination)
             print(json.dumps(report, ensure_ascii=False, indent=2))
             raise SystemExit(0 if report.get("passed") else 1)
-        raise SystemExit("No current report received within 55 seconds. Keep the headset awake and the app visible.\n"
+        raise SystemExit(f"No current report received within {report_timeout} seconds. Keep the headset awake and the app visible.\n"
                          + result.stdout + result.stderr)
 
 

@@ -1,0 +1,31 @@
+{
+  "checks": [
+    {
+      "engine": "vlc",
+      "file": "SampleMKV.mkv",
+      "passed": true
+    },
+    {
+      "engine": "vlc",
+      "file": "SampleSBS.mkv",
+      "passed": true
+    },
+    {
+      "engine": "native",
+      "file": "SampleSBS.mp4",
+      "passed": true
+    },
+    {
+      "engine": "vlc",
+      "file": "SampleMKV.mkv",
+      "passed": true
+    }
+  ],
+  "environment": "physical-device",
+  "passed": true,
+  "released": true,
+  "runID": "896c1271-21b0-4e3f-9053-e59316aa11a4",
+  "sample": "lifecycle",
+  "systemVersion": "Version 27.0.1 (Build 24M372)",
+  "timestamp": "2026-10-31T06:25:41Z"
+}

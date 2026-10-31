@@ -104,14 +104,31 @@ static void VPPDisplay(void *opaque, void *picture) {
     [mailbox publish:snapshot];
     CVPixelBufferRelease(snapshot);
 }
+@interface VPPPlaybackEvents : NSObject
+@property (nonatomic, strong) dispatch_semaphore_t stopped;
+@property (atomic) BOOL failed;
+@end
+@implementation VPPPlaybackEvents
+@end
+
 static void VPPStateChanged(void *opaque, libvlc_state_t state) {
+    VPPPlaybackEvents *events = (__bridge VPPPlaybackEvents *)opaque;
+    if (state == libvlc_Error) events.failed = YES;
     if (state == libvlc_Stopped) {
-        dispatch_semaphore_signal((__bridge dispatch_semaphore_t)opaque);
+        dispatch_semaphore_signal(events.stopped);
+    }
+}
+static void VPPMediaStopping(void *opaque, libvlc_media_t *media, libvlc_stopping_reason_t reason) {
+    // libVLC 4 may already be Stopped by the next UI poll. Keep the error until
+    // an explicit retry; otherwise a missing/invalid file looks like normal EOF.
+    if (reason == libvlc_stopping_reason_error) {
+        ((__bridge VPPPlaybackEvents *)opaque).failed = YES;
     }
 }
 static const struct libvlc_media_player_cbs VPPCallbacks = {
     .version = 0,
     .on_state_changed = VPPStateChanged,
+    .on_media_stopping = VPPMediaStopping,
 };
 
 @implementation VPPVLCSession {
@@ -120,15 +137,16 @@ static const struct libvlc_media_player_cbs VPPCallbacks = {
     VPPFrameMailbox *_mailbox;
     UIView *_drawable;
     BOOL _closing;
-    dispatch_semaphore_t _stopSignal;
+    VPPPlaybackEvents *_events;
 }
 - (instancetype)initWithURL:(NSURL *)url stereo:(BOOL)stereo error:(NSError **)error {
     if (!(self = [super init])) return nil;
     const char *normal[] = {"--no-video-title-show", "--no-osd"};
     const char *sbs[] = {"--no-video-title-show", "--no-osd", "--avcodec-hw=none"};
     _instance = libvlc_new(stereo ? 3 : 2, stereo ? sbs : normal);
-    _stopSignal = dispatch_semaphore_create(0);
-    if (_instance) _player = libvlc_media_player_new(_instance, &VPPCallbacks, (__bridge void *)_stopSignal);
+    _events = [VPPPlaybackEvents new];
+    _events.stopped = dispatch_semaphore_create(0);
+    if (_instance) _player = libvlc_media_player_new(_instance, &VPPCallbacks, (__bridge void *)_events);
     if (!_player) {
         if (error) *error = [NSError errorWithDomain:@"VisionPlayer.VLC" code:1 userInfo:@{NSLocalizedDescriptionKey:@"无法初始化 VLCKit"}];
         return nil;
@@ -152,7 +170,12 @@ static const struct libvlc_media_player_cbs VPPCallbacks = {
     _drawable = view;
     libvlc_media_player_set_nsobject(_player, (__bridge void *)view);
 }
-- (void)play { if (_player) libvlc_media_player_play(_player); }
+- (void)play {
+    if (_player) {
+        _events.failed = NO;
+        if (libvlc_media_player_play(_player) != 0) _events.failed = YES;
+    }
+}
 - (void)setPaused:(BOOL)paused { if (_player) libvlc_media_player_set_pause(_player, paused); }
 - (void)seekToFraction:(double)fraction {
     if (_player && self.seekable) libvlc_media_player_set_position(_player, MAX(0, MIN(1, fraction)), false);
@@ -162,9 +185,10 @@ static const struct libvlc_media_player_cbs VPPCallbacks = {
 - (double)durationSeconds { return _player ? MAX(0, libvlc_media_player_get_length(_player)) / 1000000.0 : 0; }
 - (BOOL)playing { return _player && libvlc_media_player_is_playing(_player); }
 - (BOOL)seekable { return _player && libvlc_media_player_is_seekable(_player); }
-- (BOOL)failed { return _player && libvlc_media_player_get_state(_player) == libvlc_Error; }
+- (BOOL)failed { return _player && (_events.failed || libvlc_media_player_get_state(_player) == libvlc_Error); }
 - (NSString *)stateText {
     if (!_player) return @"已关闭";
+    if (self.failed) return @"播放失败：请检查文件、编码或网络地址";
     switch (libvlc_media_player_get_state(_player)) {
         case libvlc_Opening: return @"正在打开";
         case libvlc_Playing: return @"播放中";
@@ -185,11 +209,13 @@ static const struct libvlc_media_player_cbs VPPCallbacks = {
     // Keep the callback context and drawable alive through asynchronous libVLC 4 shutdown.
     VPPFrameMailbox *mailbox = _mailbox;
     UIView *drawable = _drawable;
-    dispatch_semaphore_t stopped = _stopSignal;
+    VPPPlaybackEvents *events = _events;
+    dispatch_semaphore_t stopped = events.stopped;
     _mailbox = nil; _drawable = nil;
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         __attribute__((objc_precise_lifetime)) VPPFrameMailbox *retainedMailbox = mailbox;
         __attribute__((objc_precise_lifetime)) UIView *retainedDrawable = drawable;
+        __attribute__((objc_precise_lifetime)) VPPPlaybackEvents *retainedEvents = events;
         if (player) {
             while (dispatch_semaphore_wait(stopped, DISPATCH_TIME_NOW) == 0) {}
             if (libvlc_media_player_stop_async(player) == 0) {
@@ -200,7 +226,7 @@ static const struct libvlc_media_player_cbs VPPCallbacks = {
         }
         if (instance) libvlc_release(instance);
         // Captures are intentionally referenced after player release.
-        (void)retainedMailbox; (void)retainedDrawable;
+        (void)retainedMailbox; (void)retainedDrawable; (void)retainedEvents;
         dispatch_async(dispatch_get_main_queue(), completion);
     });
 }

@@ -1,0 +1,6 @@
+{
+  "change": "Place stereo video plane 0.005 m in front of the window backing in initial and updated layout.",
+  "feedback": "修改后的这个版本表现非常好，没有任何问题了。",
+  "result": "User confirmed flicker/stripe issue resolved on the updated physical-device build.",
+  "scope": "Current physical-device playback observation; not a claim of exhaustive viewing-angle or long-duration coverage."
+}

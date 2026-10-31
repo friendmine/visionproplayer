@@ -9,12 +9,15 @@
 3. 选择 Apple Vision Pro 模拟器并运行；真机运行需在 Signing & Capabilities 选择自己的开发团队。
 4. 首页提供 **2D 测试、MKV 测试、SBS · 原生、SBS · VLC** 四个入口。
 5. **真实 3D 短片** 菜单可播放已传入 Documents 的 Big Buck Bunny 60 秒立体片段，分别选择原生 MP4 或 VLC MKV；自动使用 Full SBS。片源与署名见 `Docs/THIRD_PARTY.md`。
+6. 同一菜单的 **H.265 / Half SBS 验证** 区提供六段 30 秒片段：H.265 2D MP4/MKV，以及 H.264、H.265 各自的 Half SBS MP4/MKV。需先运行 `Scripts/prepare_compatibility_samples.py` 并传入生成文件；按钮自动设置对应引擎和布局。测试范围为 1080p、30 fps、SDR，H.265 Main 8-bit；实际验收状态见验证文档。
 
 当前最低部署版本为 visionOS 2.0。开发和编译使用 Xcode 27 / visionOS 27 SDK；旧版本运行兼容性尚未验证。
 
 已在 visionOS 27.0.1 的实体 Vision Pro 上完成签名安装，并通过初始四条内置播放路径及连续切换的自动检查。用户确认 2D 可以观看，并在换用三球景深片后分别确认原生 SBS MP4 和 VLC SBS MKV 都有前后层次；新版 VLC 自动复测也通过。具体证据及复现限制见 `Docs/VALIDATION.md`。
 
 另外已将官方 Big Buck Bunny 立体版制作成一分钟 Full SBS 片段并传入真机：原生 MP4 与 VLC MKV 自动检查通过，用户观看后确认立体感和声音正常。
+
+新增六组 H.265 / Half SBS 真机自动检查也全部通过：H.265 2D MP4/MKV，以及 H.264、H.265 各自的 Half SBS MP4/MKV，均完成启动、跳转、暂停和继续检查，Half SBS 另验证帧更新与实际 16:9 显示比例。用户已确认两组 2D 画面和声音正常，四组 Half SBS 的立体感、比例和声音正常，且无闪烁、竖纹或明显卡顿。本轮范围为 30 秒、1080p SDR、HEVC Main 8-bit，不能扩展为所有 H.265 文件兼容。
 
 也可执行：
 
@@ -26,7 +29,8 @@
 
 - 本地文件选择、HTTP(S) 地址输入、自动或手动引擎选择。
 - 原生普通视频使用全屏 `AVPlayerViewController`。
-- MKV 等扩展名自动选择 VLCKit；普通格式默认原生。**自动选择只是扩展名策略，不是完整媒体能力探测，也不会自动失败重试。**
+- 默认自动选择引擎：MKV / AVI 等先用 VLCKit，其余先用原生。自动模式下，原生明确报告打开或播放失败时切到 VLC 一次；VLC 仍失败就显示错误，不循环重试。普通缓冲不触发回退；手动指定引擎和测试片预设保持指定路径。
+- 测试按钮只为当前测试片指定引擎和布局，不改动打开自己影片时的引擎、2D / SBS 选择。下拉选项用于下一次打开，当前使用的引擎和格式显示在影片状态中。
 - VLCKit 平面播放直接嵌入 UIView；自定义 SBS 使用官方框架导出的 libVLC C API。
 - SBS 的原生和 VLC 两种来源共用 RealityKit 左右眼材质；支持 Full SBS、Half SBS、交换左右眼。
 - 播放 / 暂停、进度跳转、状态和错误提示；后台暂停，关闭时释放播放资源及文件访问权限。

@@ -1,0 +1,95 @@
+{
+  "source": "https://download.blender.org/demo/movies/BBB/bbb_sunflower_1080p_30fps_stereo_abl.mp4.zip",
+  "license": "https://creativecommons.org/licenses/by/3.0/",
+  "attribution": "(c) 2008 Blender Foundation / www.bigbuckbunny.org; CC BY 3.0; Sunflower stereo by Janus Bager Kristensen (2013). Excerpt 00:20-00:50; left-eye 2D or Half SBS; transcoded for compatibility testing.",
+  "sourceIntervalSeconds": [
+    20,
+    50
+  ],
+  "outputs": {
+    "BBB-HEVC-2D-30s.mp4": {
+      "codec": "hevc",
+      "profile": "Main",
+      "pixelFormat": "yuv420p",
+      "width": 1920,
+      "height": 1080,
+      "fps": "30/1",
+      "duration": 30.0,
+      "audio": "aac",
+      "layout": "flat",
+      "bytes": 15840358,
+      "sha256": "89e516b2cb3d8ac0e9d1dd90c8a6ef11418b078b077be356e05c446e34dd7d0d",
+      "fullDecode": "passed"
+    },
+    "BBB-HEVC-2D-30s.mkv": {
+      "codec": "hevc",
+      "profile": "Main",
+      "pixelFormat": "yuv420p",
+      "width": 1920,
+      "height": 1080,
+      "fps": "30/1",
+      "duration": 30.021,
+      "audio": "aac",
+      "layout": "flat",
+      "bytes": 15830974,
+      "sha256": "eee40849a2334931b166215c6b26f95cd18a230e157b9c7465a8a8cf4e189815",
+      "fullDecode": "passed"
+    },
+    "BBB-H264-HalfSBS-30s.mp4": {
+      "codec": "h264",
+      "profile": "High",
+      "pixelFormat": "yuv420p",
+      "width": 1920,
+      "height": 1080,
+      "fps": "30/1",
+      "duration": 30.0,
+      "audio": "aac",
+      "layout": "halfSBS",
+      "bytes": 18855588,
+      "sha256": "5f6bf13e5159a19903f7f09d247d83ccd50f6af7b36f909ea638752c8b421c1f",
+      "fullDecode": "passed"
+    },
+    "BBB-H264-HalfSBS-30s.mkv": {
+      "codec": "h264",
+      "profile": "High",
+      "pixelFormat": "yuv420p",
+      "width": 1920,
+      "height": 1080,
+      "fps": "30/1",
+      "duration": 30.021,
+      "audio": "aac",
+      "layout": "halfSBS",
+      "bytes": 18839039,
+      "sha256": "4f4b52c0a3adc041729f82faeb927959a290b34725c7347c4f34c22f143b8872",
+      "fullDecode": "passed"
+    },
+    "BBB-HEVC-HalfSBS-30s.mp4": {
+      "codec": "hevc",
+      "profile": "Main",
+      "pixelFormat": "yuv420p",
+      "width": 1920,
+      "height": 1080,
+      "fps": "30/1",
+      "duration": 30.0,
+      "audio": "aac",
+      "layout": "halfSBS",
+      "bytes": 15839065,
+      "sha256": "a7a985d5bc2a94ee674f606525f61cad2a2a32a6cae7b4797dba0697197341e3",
+      "fullDecode": "passed"
+    },
+    "BBB-HEVC-HalfSBS-30s.mkv": {
+      "codec": "hevc",
+      "profile": "Main",
+      "pixelFormat": "yuv420p",
+      "width": 1920,
+      "height": 1080,
+      "fps": "30/1",
+      "duration": 30.021,
+      "audio": "aac",
+      "layout": "halfSBS",
+      "bytes": 15829695,
+      "sha256": "71851f7ecfb63beb21dc4977dd8aa2a21bcbd7d50158deb1d61c3788803b6083",
+      "fullDecode": "passed"
+    }
+  }
+}
