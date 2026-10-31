@@ -1,6 +1,7 @@
 import Foundation
+import CoreGraphics
 
-enum PlaybackEngine: String, CaseIterable, Identifiable {
+enum PlaybackEngine: String, CaseIterable, Identifiable, Codable {
     case automatic, native, vlc
     var id: Self { self }
     var title: String {
@@ -17,22 +18,35 @@ enum PlaybackEngine: String, CaseIterable, Identifiable {
     }
 }
 
-enum StereoLayout: String, CaseIterable, Identifiable {
-    case flat, halfSBS, fullSBS
+enum StereoLayout: String, CaseIterable, Identifiable, Codable {
+    case flat, halfSBS, fullSBS, halfOU, fullOU
     var id: Self { self }
     var title: String {
         switch self {
-        case .flat: "2D / 原生空间视频"
-        case .halfSBS: "Half SBS（左右压缩）"
-        case .fullSBS: "Full SBS（左右完整）"
+        case .flat: "普通 2D"
+        case .halfSBS: "左右 3D · 半宽"
+        case .fullSBS: "左右 3D · 全宽"
+        case .halfOU: "上下 3D · 半高"
+        case .fullOU: "上下 3D · 全高"
         }
     }
     var isStereo: Bool { self != .flat }
 
+    var isTopBottom: Bool { self == .halfOU || self == .fullOU }
+
+    // Coordinates after the renderer's vertical orientation correction: y=0
+    // is the source's top. CGImage thumbnails also address their top at y=0.
+    func eyeRegions(width: Int, height: Int) -> (left: CGRect, right: CGRect) {
+        let w = isStereo && !isTopBottom ? width / 2 : width
+        let h = isTopBottom ? height / 2 : height
+        return (CGRect(x: 0, y: 0, width: w, height: h),
+                CGRect(x: isStereo && !isTopBottom ? w : 0, y: isTopBottom ? h : 0, width: w, height: h))
+    }
+
     func displayAspect(width: Int, height: Int) -> Float {
         guard width > 0, height > 0 else { return 16 / 9 }
         let aspect = Float(width) / Float(height)
-        return self == .fullSBS ? aspect / 2 : aspect
+        return self == .fullSBS ? aspect / 2 : (self == .fullOU ? aspect * 2 : aspect)
     }
 }
 
@@ -44,6 +58,10 @@ struct PlaybackRequest: Identifiable {
     let swapEyes: Bool
     let securityScoped: Bool
     var allowsNativeFallback = false
+    var converts2D = false
+    var libraryID: UUID?
+    var isCinema = false
+    var usesTextureOutput: Bool { layout.isStereo || converts2D || isCinema }
 }
 
 /// Documents-based real-film fixtures shared by manual and automated checks.

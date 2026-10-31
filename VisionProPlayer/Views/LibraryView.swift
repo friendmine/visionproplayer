@@ -5,196 +5,219 @@ struct LibraryView: View {
     @Bindable var model: PlayerModel
     @Environment(\.scenePhase) private var scenePhase
     @State private var importing = false
-    @State private var urlText = ""
-    @State private var isDragging = false
-    @State private var seekValue = 0.0
+    @State private var settings = false
+    @State private var linkSheet = false
+    @State private var editingLink: LibraryFilm?
+    @State private var relocating: UUID?
+    @State private var search = ""
+    @State private var filter = "全部"
+    @State private var renaming: LibraryFilm?
+    @State private var removing: LibraryFilm?
 
+    private var visibleFilms: [LibraryFilm] {
+        model.library.recent.filter {
+            (filter != "收藏" || $0.favorite) && (filter != "网络" || $0.isNetwork)
+            && (search.isEmpty || $0.title.localizedStandardContains(search))
+        }
+    }
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Vision Player Lab").font(.largeTitle.bold())
-                    Text("2D · MKV · SBS 3D 播放验证").foregroundStyle(.secondary)
-                }
-                Spacer()
-                Button { importing = true } label: { Label("打开文件", systemImage: "folder") }
-                    .disabled(model.isClosing)
-            }
-            HStack(spacing: 12) {
-                sampleButton("2D 测试", icon: "play.rectangle", name: "Sample2D", ext: "mp4", layout: .flat, engine: .native)
-                sampleButton("MKV 测试", icon: "film.stack", name: "SampleMKV", ext: "mkv", layout: .flat, engine: .vlc)
-                sampleButton("SBS · 原生", icon: "vision.pro", name: "SampleSBS", ext: "mp4", layout: .fullSBS, engine: .native)
-                sampleButton("SBS · VLC", icon: "vision.pro", name: "SampleSBS", ext: "mkv", layout: .fullSBS, engine: .vlc)
-                Menu("真实 3D 短片") {
-                    Button("Big Buck Bunny · 原生") { openDownloadedStereo(engine: .native) }
-                    Button("Big Buck Bunny · VLC") { openDownloadedStereo(engine: .vlc) }
-                    Divider()
-                    Section("H.265 / Half SBS 验证") {
-                        ForEach(CompatibilitySample.allCases) { sample in
-                            Button(sample.title) { openCompatibility(sample) }
+        NavigationStack {
+            Group {
+                if model.showingPlayer {
+                    PlayerScreen(model: model)
+                } else {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 28) {
+                            if model.library.films.isEmpty {
+                                ContentUnavailableView {
+                                    Label("你的私人影院", systemImage: "film.stack")
+                                } description: {
+                                    Text("打开一部影片开始观看。进度和画面设置会为你保留。")
+                                } actions: {
+                                    Button("打开影片", systemImage: "folder") { importing = true }.buttonStyle(.borderedProminent)
+                                    Button("播放视频链接", systemImage: "link") { editingLink = nil; linkSheet = true }
+                                }.frame(minHeight: 380)
+                            } else {
+                                if search.isEmpty, filter == "全部", let film = model.library.recent.first(where: { $0.resumable }) {
+                                    VStack(alignment: .leading, spacing: 14) {
+                                        Text("继续观看").font(.title2.bold())
+                                        Button { model.openFilm(film) } label: {
+                                            HStack(spacing: 24) {
+                                                FilmPoster(film: film, library: model.library).frame(width: 290, height: 165)
+                                                VStack(alignment: .leading, spacing: 12) {
+                                                    Text(film.title).font(.title2).lineLimit(2)
+                                                    Text("上次看到 \(PlayerModel.clock(film.position))").foregroundStyle(.secondary)
+                                                    ProgressView(value: min(1, film.position / max(1, film.duration)))
+                                                    Label("继续播放", systemImage: "play.fill")
+                                                }.padding(.trailing, 24)
+                                                Spacer(minLength: 0)
+                                            }.padding(12).background(.thinMaterial, in: RoundedRectangle(cornerRadius: 24))
+                                        }.buttonStyle(.plain)
+                                    }
+                                }
+                                HStack {
+                                    Text(filter == "全部" ? "最近打开" : filter).font(.title2.bold())
+                                    Spacer()
+                                    Picker("片库分类", selection: $filter) {
+                                        ForEach(["全部", "收藏", "网络"], id: \.self) { Text($0) }
+                                    }.pickerStyle(.segmented).frame(width: 300)
+                                }
+                                if visibleFilms.isEmpty {
+                                    ContentUnavailableView(search.isEmpty ? "这里还没有影片" : "没有找到影片", systemImage: search.isEmpty ? "film" : "magnifyingglass")
+                                }
+                                LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 22)], spacing: 24) {
+                                    ForEach(visibleFilms) { film in
+                                        Button { model.openFilm(film) } label: {
+                                            VStack(alignment: .leading, spacing: 9) {
+                                                FilmPoster(film: film, library: model.library).frame(height: 150)
+                                                HStack {
+                                                    Text(film.title).lineLimit(1).font(.headline)
+                                                    if film.favorite { Image(systemName: "heart.fill").foregroundStyle(.pink) }
+                                                }
+                                                Text("\(film.preferences.layout.isStereo ? "3D" : "2D") · \(film.sourceDescription)")
+                                                    .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                                if film.duration > 0 { ProgressView(value: min(1, film.position / film.duration)).tint(.secondary) }
+                                            }.padding(12).background(.thinMaterial, in: RoundedRectangle(cornerRadius: 22))
+                                        }.buttonStyle(.plain)
+                                            .contextMenu {
+                                                Button("从头播放", systemImage: "play") { model.openFilm(film, fromStart: true) }
+                                                Button(film.favorite ? "取消收藏" : "收藏", systemImage: film.favorite ? "heart.slash" : "heart") { model.library.update(film.id) { $0.favorite.toggle() } }
+                                                Button("重命名", systemImage: "pencil") { renaming = film }
+                                                if film.isNetwork {
+                                                    Button("编辑网络来源", systemImage: "link") { editingLink = film; linkSheet = true }
+                                                } else {
+                                                    Button("重新定位文件", systemImage: "folder") { relocating = film.id; importing = true }
+                                                }
+                                                Button("从片库移除", systemImage: "minus.circle", role: .destructive) { removing = film }
+                                            }
+                                            .task { model.library.makeThumbnail(for: film) }
+                                    }
+                                }
+                            }
+                            if let error = model.library.error { Text(error).foregroundStyle(.orange).font(.caption) }
+                        }.padding(28)
+                    }
+                    .navigationTitle("Vision Player")
+                    .searchable(text: $search, prompt: "搜索影片")
+                    .toolbar {
+                        ToolbarItemGroup(placement: .topBarTrailing) {
+                            Button("设置", systemImage: "gearshape") { settings = true }
+                            Menu {
+                                Button("打开文件", systemImage: "folder") { relocating = nil; importing = true }
+                                Button("视频链接", systemImage: "link") { editingLink = nil; linkSheet = true }
+                            } label: { Label("打开影片", systemImage: "plus") }
                         }
                     }
-                }.disabled(model.isClosing)
-            }
-            HStack {
-                Picker("打开影片时", selection: $model.engineChoice) {
-                    ForEach(PlaybackEngine.allCases) { Text($0.title).tag($0) }
-                }.frame(maxWidth: 250)
-                Picker("影片格式", selection: $model.layoutChoice) {
-                    ForEach(StereoLayout.allCases) { Text($0.title).tag($0) }
-                }.frame(maxWidth: 360)
-                Toggle("交换左右眼", isOn: $model.swapEyes).toggleStyle(.button)
-                    .disabled(model.eyeCheck)
-                Spacer()
-            }
-            if model.request?.layout.isStereo == true {
-                HStack {
-                    Toggle("左右眼检查", isOn: $model.eyeCheck).toggleStyle(.button)
-                    Text(model.eyeCheck
-                         ? "分别闭眼检查：左眼应为纯红，右眼应为纯蓝；绿色表示单眼渲染。关闭检查后恢复视频。"
-                         : (model.request?.url.lastPathComponent.hasPrefix("BBB-") == true
-                            ? "Big Buck Bunny · \(model.request?.layout.title ?? "SBS")。左右眼检查可单独验证眼别。"
-                            : "立体演示：金球在近处、青球在中间、紫球在远处。左右眼检查可单独验证眼别。"))
-                        .font(.caption).foregroundStyle(.secondary)
                 }
-            }
-            HStack {
-                TextField("https://… 视频地址", text: $urlText)
-                    .textInputAutocapitalization(.never).autocorrectionDisabled()
-                Button("打开地址") { openURL() }.disabled(model.isClosing || urlText.isEmpty)
-            }
-            playbackSurface
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .frame(minHeight: 260)
-                .background(.black.opacity(0.85), in: RoundedRectangle(cornerRadius: 20))
-                .clipShape(RoundedRectangle(cornerRadius: 20))
-            if let request = model.request {
-                HStack {
-                    Button { model.togglePlayback() } label: {
-                        Image(systemName: model.isPlaying ? "pause.fill" : "play.fill")
-                    }
-                    Text(PlayerModel.clock(model.elapsed)).monospacedDigit()
-                    Slider(value: $seekValue, in: 0...1, onEditingChanged: { editing in
-                        isDragging = editing
-                        if !editing { model.seek(to: seekValue) }
-                    }).disabled(!model.isSeekable)
-                    Text(PlayerModel.clock(model.duration)).monospacedDigit()
-                    Button("停止") { model.stop() }
-                }
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(request.url.lastPathComponent.isEmpty ? "网络视频" : request.url.lastPathComponent)
-                        .lineLimit(1).font(.headline)
-                    if request.url.lastPathComponent.hasPrefix("BBB-") {
-                        Text("© 2008 Blender Foundation · www.bigbuckbunny.org · CC BY 3.0")
-                        Text("Sunflower 立体版：Janus B. Kristensen，2013。测试版剪辑、缩放并重排为 SBS。")
-                    }
-                    Text("\(request.engine.title) · \(request.layout.title) · \(model.stateText)")
-                    if request.layout.isStereo {
-                        Text("\(model.frameSize) · 已提交 \(model.renderedFrames) 帧")
-                        Text(request.engine == .vlc
-                            ? "实验路径：VLC 软件解码 → SDR BGRA → 左右眼纹理，输出最长边上限 1920。"
-                            : "实验路径：AVPlayer 视频帧 → SDR 左右眼纹理。立体效果需真机确认。")
-                    }
-                }.font(.caption).foregroundStyle(.secondary)
-            } else {
-                Text(model.isClosing ? "正在释放播放器…" : "引擎与格式选择应用于下次打开。测试按钮使用预设配置。")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
-            Text("以上选择用于下次打开自己的影片；测试按钮不会更改这些设置。")
-                .font(.caption).foregroundStyle(.secondary)
-            if let notice = model.playbackNotice {
-                Text(notice).font(.caption).foregroundStyle(.secondary)
-            }
-            if let error = model.errorMessage ?? model.rendererError {
-                Text(error).foregroundStyle(.red).font(.callout).textSelection(.enabled)
             }
         }
-        .padding(28)
         .fileImporter(isPresented: $importing, allowedContentTypes: [.movie, .video, .data]) { result in
+            defer { relocating = nil }
             switch result {
-            case .success(let url): model.open(url)
+            case .success(let url):
+                if let id = relocating {
+                    do { try model.library.relocate(id, to: url); if let film = model.library.film(id) { model.openFilm(film) } }
+                    catch { model.errorMessage = error.localizedDescription }
+                } else { model.importFilm(url) }
             case .failure(let error): model.errorMessage = error.localizedDescription
             }
         }
-        .fullScreenCover(isPresented: $model.nativePresented, onDismiss: {
-            // Dismissing native full-screen playback stops audio as well.
-            if model.request?.engine == .native && model.request?.layout == .flat { model.stop() }
-        }) {
-            if let player = model.nativePlayer {
-                ZStack(alignment: .topLeading) {
-                    NativePlayerView(player: player)
-                    Button("返回片库", systemImage: "chevron.backward") { model.nativePresented = false }
-                        .padding(24)
-                }
-            }
+        .sheet(isPresented: $settings) { SettingsView(model: model) { settings = false } }
+        .sheet(isPresented: $linkSheet) { NetworkSourceSheet(model: model, existing: editingLink) }
+        .sheet(item: $renaming) { film in RenameFilmSheet(library: model.library, film: film) }
+        .confirmationDialog("从片库移除？原始影片文件不会被删除。", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }), titleVisibility: .visible) {
+            Button("移除记录", role: .destructive) { if let film = removing { model.library.remove(film.id) }; removing = nil }
         }
-        .onChange(of: model.progress) { _, value in if !isDragging { seekValue = value } }
-        .onChange(of: scenePhase) { _, phase in if phase == .background { model.pauseForBackground() } }
-        .onDisappear { if !model.nativePresented { model.stop() } }
+        .alert("无法打开影片", isPresented: Binding(get: { model.errorMessage != nil && !model.showingPlayer }, set: { if !$0 { model.errorMessage = nil } })) {
+            if let id = model.missingFilmID { Button("重新定位文件") { relocating = id; importing = true } }
+            Button("好", role: .cancel) { model.errorMessage = nil }
+        } message: { Text(model.errorMessage ?? "") }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .background && !model.cinemaActive { model.pauseForBackground(); model.checkpoint() }
+        }
+        .onDisappear { if !model.cinemaActive { model.pauseForBackground(); model.checkpoint() } }
         .task { await model.runSmokeTestIfRequested() }
     }
+}
 
-    @ViewBuilder private var playbackSurface: some View {
-        if let request = model.request {
-            if request.layout.isStereo {
-                StereoPlayerView(model: model, request: request).id(request.id)
-                    .padding(20)
-            } else if request.engine == .vlc {
-                VLCPlayerView(model: model).id(request.id)
-            } else {
-                VStack(spacing: 16) {
-                    Image(systemName: "play.rectangle.fill").font(.system(size: 50))
-                    Button("打开系统播放器") { model.nativePresented = true }
+struct FilmPoster: View {
+    let film: LibraryFilm
+    let library: MediaLibrary
+    var body: some View {
+        let _ = library.thumbnailRevision
+        GeometryReader { geometry in
+            ZStack {
+                LinearGradient(colors: [.indigo.opacity(0.4), .black.opacity(0.7)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                if let image = posterImage {
+                    let aspect = image.size.width / image.size.height * (film.preferences.layout == .halfSBS ? 2 : (film.preferences.layout == .halfOU ? 0.5 : 1))
+                    Image(uiImage: image).resizable().aspectRatio(aspect, contentMode: .fill)
+                } else {
+                    Image(systemName: film.isNetwork ? "network" : "film").font(.system(size: 38)).foregroundStyle(.white.opacity(0.65))
                 }
+            }.frame(width: geometry.size.width, height: geometry.size.height)
+                .clipped().clipShape(RoundedRectangle(cornerRadius: 15))
+        }
+    }
+    private var posterImage: UIImage? {
+        guard let image = UIImage(contentsOfFile: library.thumbnailURL(film.id).path) else { return nil }
+        guard film.preferences.layout.isStereo, let source = image.cgImage,
+              let left = source.cropping(to: film.preferences.layout.eyeRegions(width: source.width, height: source.height).left) else { return image }
+        return UIImage(cgImage: left)
+    }
+}
+
+struct RenameFilmSheet: View {
+    let library: MediaLibrary
+    let film: LibraryFilm
+    @Environment(\.dismiss) private var dismiss
+    @State private var title = ""
+    var body: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            Text("重命名影片").font(.title2)
+            TextField("影片名称", text: $title).textFieldStyle(.roundedBorder)
+            Text("只修改片库中的名称，不更改原文件。 ").font(.caption).foregroundStyle(.secondary)
+            HStack { Button("取消") { dismiss() }; Spacer(); Button("保存") { library.update(film.id) { $0.title = title.trimmingCharacters(in: .whitespacesAndNewlines) }; dismiss() }.buttonStyle(.borderedProminent).disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) }
+        }.padding(32).frame(width: 480).onAppear { title = film.title }
+    }
+}
+
+struct NetworkSourceSheet: View {
+    @Bindable var model: PlayerModel
+    let existing: LibraryFilm?
+    @Environment(\.dismiss) private var dismiss
+    @State private var address = ""
+    @State private var name = ""
+    @State private var error: String?
+    var body: some View {
+        VStack(alignment: .leading, spacing: 22) {
+            Text(existing == nil ? "视频链接" : "编辑网络来源").font(.title2)
+            TextField("https://…", text: $address).textInputAutocapitalization(.never).autocorrectionDisabled().textFieldStyle(.roundedBorder)
+            TextField("名称（可选）", text: $name).textFieldStyle(.roundedBorder)
+            Text("输入视频直链或 HLS 地址。局域网文件也可通过系统“文件”中的服务器连接打开。").font(.callout).foregroundStyle(.secondary)
+            if let error { Text(error).foregroundStyle(.red) }
+            HStack {
+                Button("取消") { dismiss() }; Spacer()
+                Button("保存到片库") { save(play: false) }
+                Button("播放") { save(play: true) }.buttonStyle(.borderedProminent)
             }
-        } else {
-            VStack(spacing: 12) {
-                Image(systemName: "vision.pro").font(.system(size: 54)).foregroundStyle(.cyan)
-                Text("从一个短测试片开始").font(.title2)
-                Text("2D 片含彩条和音调；SBS 片展示近、中、远三层球体。")
-                    .foregroundStyle(.secondary)
-                Text("当前是验证工程，尚未完成真机格式兼容认证。")
-                    .font(.caption).foregroundStyle(.secondary)
-            }.padding()
-        }
+        }.padding(32).frame(width: 620)
+            .onAppear { address = existing?.location ?? ""; name = existing?.title ?? "" }
     }
-
-    private func sampleButton(_ title: String, icon: String, name: String, ext: String,
-                              layout: StereoLayout, engine: PlaybackEngine) -> some View {
-        Button {
-            guard let url = Bundle.main.url(forResource: name, withExtension: ext) else {
-                model.errorMessage = "缺少内置测试片，请运行 Scripts/generate_samples.sh 后重新编译。"
-                return
-            }
-            model.openSample(url, layout: layout, engine: engine)
-        } label: { Label(title, systemImage: icon).frame(maxWidth: .infinity) }
-            .disabled(model.isClosing)
-    }
-
-    private func openCompatibility(_ sample: CompatibilitySample) {
-        guard FileManager.default.fileExists(atPath: sample.url.path) else {
-            model.errorMessage = "尚未传入兼容性测试片：\(sample.url.lastPathComponent)"
-            return
+    private func save(play: Bool) {
+        guard let url = URL(string: address.trimmingCharacters(in: .whitespacesAndNewlines)),
+              ["http", "https"].contains(url.scheme?.lowercased() ?? ""), url.host != nil, url.user == nil, url.password == nil else {
+            error = "请输入有效的 HTTP / HTTPS 视频地址；请勿在地址中填写账户密码。"; return
         }
-        model.openSample(sample.url, layout: sample.layout, engine: sample.engine)
-    }
-
-    private func openDownloadedStereo(engine: PlaybackEngine) {
-        let ext = engine == .vlc ? "mkv" : "mp4"
-        let url = URL.documentsDirectory.appending(path: "BBB-SBS-60s.\(ext)")
-        guard FileManager.default.fileExists(atPath: url.path) else {
-            model.errorMessage = "测试短片尚未传入此设备。请先将 BBB-SBS-60s.\(ext) 放入本 App 的 Documents。"
-            return
-        }
-        model.openSample(url, layout: .fullSBS, engine: engine)
-    }
-
-    private func openURL() {
-        guard let url = URL(string: urlText.trimmingCharacters(in: .whitespacesAndNewlines)),
-              ["http", "https"].contains(url.scheme?.lowercased() ?? ""), url.host != nil else {
-            model.errorMessage = "请输入有效的 HTTP 或 HTTPS 视频地址。"
-            return
-        }
-        model.open(url)
+        do {
+            let film: LibraryFilm
+            if let existing {
+                model.library.update(existing.id) {
+                    if $0.location != url.absoluteString { $0.position = 0; $0.duration = 0 }
+                    $0.location = url.absoluteString; $0.title = name.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty ?? url.lastPathComponent
+                }
+                film = model.library.film(existing.id)!
+            } else { film = try model.library.add(url, title: name) }
+            dismiss(); if play { model.openFilm(film) }
+        } catch { self.error = error.localizedDescription }
     }
 }

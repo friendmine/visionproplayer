@@ -1,0 +1,55 @@
+{
+  "recordedAt": "2026-10-31T09:41:12.722994+00:00",
+  "model": "Depth Anything V2 Small F16, Apple Core ML conversion",
+  "downloadURL": "https://ml-assets.apple.com/coreml/models/Image/DepthEstimation/DepthAnything/DepthAnythingV2SmallF16.mlpackage.zip",
+  "archiveSHA256": "8e875979ec82fa46f292468a7567a520b2aa07c41008c32141f3396da05a4067",
+  "input": {
+    "name": "image",
+    "width": 518,
+    "height": 392,
+    "pixelFormat": "BGRA8"
+  },
+  "output": {
+    "name": "depth",
+    "width": 518,
+    "height": 392,
+    "pixelFormat": "OneComponent16Half"
+  },
+  "computeUnits": "cpuAndNeuralEngine",
+  "video": {
+    "source": "BBB-HEVC-2D-30s.mp4/.mkv, original left eye only",
+    "size": [
+      1920,
+      1080
+    ],
+    "fps": 30,
+    "durationSeconds": 30,
+    "format": "HEVC Main 8-bit SDR, AAC"
+  },
+  "pipeline": {
+    "maxInFlightPredictions": 1,
+    "queuedFrames": 0,
+    "maxDepthAgeMSWhilePlaying": 150,
+    "outputMaxDimension": 1920,
+    "strength": 0.35
+  },
+  "visualInspection": "Corrected left/right textures inspected upright with full-frame color. GPU comparison matches the existing Core Image orientation and linear color. Headset wearer confirmed depth effect, smoothness and sound normal on both paths.",
+  "manualStatus": "passed",
+  "limitations": [
+    "10-second warmed-up Debug benchmark, not display scanout rate",
+    "No long-run thermal, HDR, 4K or 60fps validation",
+    "Recent depth reused across video frames; no motion compensation or generative disocclusion inpainting"
+  ],
+  "sourceSHA256": {
+    "VisionProPlayer/Rendering/DepthEstimator.swift": "4e64bd6f285486e45a056b081069f986f6a36ec9c9c94d6fb3e3ed3d6bda4c4e",
+    "VisionProPlayer/Rendering/DepthStereo.metal": "d2825dfb68114b8041e59bd325febc03b7279735b388eb47ccfd0d620901ca7e",
+    "VisionProPlayer/Rendering/StereoRenderer.swift": "d1ee796eb757dd7d4fbbec13caf52e0fbe8c9cc8f5d8bce6f1599a50f3a2bb11",
+    "VisionProPlayer/Playback/DepthSmokeTest.swift": "f83aba544185b23cfcb8a1f44a52e9e31cb764c41a0f5050839ae6909726cb95",
+    "Scripts/test_depth_warp.swift": "a4b89668723b4134bf7d3d51085a229ced7fd353df07b8185d7e48b2d23bb6bd"
+  },
+  "manualConfirmation": {
+    "recordedAt": "2026-10-31T09:42:43.311549+00:00",
+    "userResponse": "两条路径效果、流畅度和声音都正常",
+    "requestedChecks": "原生和 VLC 的普通 2D 转 3D；对比 0%、35%、60%，景深、播放流畅度和声音同步。"
+  }
+}

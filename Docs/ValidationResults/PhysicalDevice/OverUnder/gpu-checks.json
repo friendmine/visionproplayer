@@ -1,0 +1,7 @@
+{
+  "environment": "macOS Metal GPU",
+  "script": "Scripts/test_stereo_regions.swift",
+  "passedLayouts": ["fullOU", "halfOU", "fullSBS", "halfSBS", "flat"],
+  "checks": ["source top/left maps to left eye", "source bottom/right maps to right eye", "vertical gradient remains upright", "flat eyes match"],
+  "scope": "Pixel-level crop/orientation checks; not headset stereo perception"
+}

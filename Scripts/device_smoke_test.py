@@ -12,7 +12,8 @@ import uuid
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("device", help="CoreDevice identifier or UDID")
-    parser.add_argument("sample", choices=["2d", "mkv", "sbs-native", "sbs-vlc", "bbb-native", "bbb-vlc", "lifecycle", "routing",
+    parser.add_argument("--capture", action="store_true", help="Save the first converted eye textures in the app Documents directory (Debug only)")
+    parser.add_argument("sample", choices=["ou-native", "ou-vlc", "half-ou-native", "half-ou-vlc", "2d", "mkv", "sbs-native", "sbs-vlc", "bbb-native", "bbb-vlc", "lifecycle", "routing", "product", "depth-native", "depth-vlc",
                                            "hevc-mp4", "hevc-mkv", "half-h264-native", "half-h264-vlc", "half-hevc-native", "half-hevc-vlc"])
     args = parser.parse_args()
     bundle = "com.jeff.visionproplayer"
@@ -43,11 +44,11 @@ def main():
         run_id = str(uuid.uuid4())
         result = run("device", "process", "launch", "--device", selected,
                      "--terminate-existing", "--timeout", "20", bundle,
-                     "--smoke", args.sample, "--smoke-run-id", run_id)
+                     "--smoke", args.sample, "--smoke-run-id", run_id, *(["--depth-capture"] if args.capture else []))
         if result.returncode:
             raise SystemExit(result.stdout + result.stderr)
         print(f"Started {args.sample} on physical Vision Pro (run {run_id})", flush=True)
-        report_timeout = 95 if args.sample == "routing" else 55
+        report_timeout = 150 if args.sample == "product" else 120 if args.sample.startswith("depth-") else (95 if args.sample == "routing" else 55)
         deadline = time.monotonic() + report_timeout
         local = Path(temporary) / "report.json"
         while time.monotonic() < deadline:

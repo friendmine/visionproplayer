@@ -180,6 +180,31 @@ static const struct libvlc_media_player_cbs VPPCallbacks = {
 - (void)seekToFraction:(double)fraction {
     if (_player && self.seekable) libvlc_media_player_set_position(_player, MAX(0, MIN(1, fraction)), false);
 }
+- (NSArray<NSDictionary<NSString *, id> *> *)tracksForType:(libvlc_track_type_t)type {
+    if (!_player) return @[];
+    libvlc_media_tracklist_t *list = libvlc_media_player_get_tracklist(_player, type, false);
+    if (!list) return @[];
+    NSMutableArray *result = [NSMutableArray array];
+    for (size_t i = 0; i < libvlc_media_tracklist_count(list); i++) {
+        libvlc_media_track_t *track = libvlc_media_tracklist_at(list, i);
+        if (!track->psz_id) continue;
+        NSString *name = track->psz_name ? [NSString stringWithUTF8String:track->psz_name] : nil;
+        NSString *language = track->psz_language ? [NSString stringWithUTF8String:track->psz_language] : nil;
+        [result addObject:@{@"id": [NSString stringWithUTF8String:track->psz_id],
+                            @"title": name ?: language ?: [NSString stringWithFormat:@"轨道 %zu", i+1],
+                            @"selected": @(track->selected)}];
+    }
+    libvlc_media_tracklist_delete(list);
+    return result;
+}
+- (NSArray *)audioTracks { return [self tracksForType:libvlc_track_audio]; }
+- (NSArray *)subtitleTracks { return [self tracksForType:libvlc_track_text]; }
+- (void)selectAudioTrack:(NSString *)identifier {
+    if (_player) libvlc_media_player_select_tracks_by_ids(_player, libvlc_track_audio, identifier.UTF8String);
+}
+- (void)selectSubtitleTrack:(NSString *)identifier {
+    if (_player) libvlc_media_player_select_tracks_by_ids(_player, libvlc_track_text, identifier.UTF8String);
+}
 - (double)position { return _player ? MAX(0, libvlc_media_player_get_position(_player)) : 0; }
 - (double)elapsedSeconds { return _player ? MAX(0, libvlc_media_player_get_time(_player)) / 1000000.0 : 0; }
 - (double)durationSeconds { return _player ? MAX(0, libvlc_media_player_get_length(_player)) / 1000000.0 : 0; }

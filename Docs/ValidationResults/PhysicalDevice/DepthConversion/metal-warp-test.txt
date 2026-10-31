@@ -1,0 +1,1 @@
+PASS: zero-strength identity, near-depth eye direction, vertical orientation, finite border samples

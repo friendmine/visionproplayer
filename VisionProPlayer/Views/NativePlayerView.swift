@@ -26,3 +26,19 @@ struct VLCPlayerView: UIViewRepresentable {
     }
     func updateUIView(_ uiView: UIView, context: Context) {}
 }
+
+
+final class NativeVideoUIView: UIView {
+    override class var layerClass: AnyClass { AVPlayerLayer.self }
+    var videoLayer: AVPlayerLayer { layer as! AVPlayerLayer }
+}
+struct NativeVideoSurface: UIViewRepresentable {
+    let player: AVPlayer
+    func makeUIView(context: Context) -> NativeVideoUIView {
+        let view = NativeVideoUIView(); view.videoLayer.videoGravity = .resizeAspect
+        view.backgroundColor = .black; view.videoLayer.player = player
+        return view
+    }
+    func updateUIView(_ view: NativeVideoUIView, context: Context) { view.videoLayer.player = player }
+    static func dismantleUIView(_ view: NativeVideoUIView, coordinator: ()) { view.videoLayer.player = nil }
+}

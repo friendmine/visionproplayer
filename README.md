@@ -1,15 +1,17 @@
-# Vision Player Lab
+# Vision Player
 
-原生 visionOS 播放器验证工程：Apple AVPlayer / AVKit + 官方 VLCKit 4。
+原生 visionOS 播放器：片库、统一播放界面、左右 / 上下 3D、实验性 AI 立体效果与空间影院。底层使用 Apple AVPlayer + 官方 VLCKit 4。
 
 ## 打开和运行
 
-1. 用 Xcode 打开 `VisionProPlayer.xcodeproj`，选择 `VisionProPlayer` scheme。
+1. 先执行 `python3 Scripts/prepare_depth_model.py`，下载、校验并编译 Apple 提供的 Depth Anything V2 Small F16 模型（约 44 MB 下载）；随后用 Xcode 打开 `VisionProPlayer.xcodeproj`，选择 `VisionProPlayer` scheme。
 2. 等待 Swift Package 解析官方 VLCKit。初次下载约 880 MiB，展开后占用更多空间。
 3. 选择 Apple Vision Pro 模拟器并运行；真机运行需在 Signing & Capabilities 选择自己的开发团队。
-4. 首页提供 **2D 测试、MKV 测试、SBS · 原生、SBS · VLC** 四个入口。
-5. **真实 3D 短片** 菜单可播放已传入 Documents 的 Big Buck Bunny 60 秒立体片段，分别选择原生 MP4 或 VLC MKV；自动使用 Full SBS。片源与署名见 `Docs/THIRD_PARTY.md`。
-6. 同一菜单的 **H.265 / Half SBS 验证** 区提供六段 30 秒片段：H.265 2D MP4/MKV，以及 H.264、H.265 各自的 Half SBS MP4/MKV。需先运行 `Scripts/prepare_compatibility_samples.py` 并传入生成文件；按钮自动设置对应引擎和布局。测试范围为 1080p、30 fps、SDR，H.265 Main 8-bit；实际验收状态见验证文档。
+4. 首页用「打开影片」选择本地文件，或添加 HTTP(S) 视频链接。影片会进入片库，自动选择播放引擎。
+5. 点击影片直接观看；返回片库后可继续上次进度。长按影片可收藏、重命名、重新定位或移除记录，不删除原影片。
+6. 播放页的「画面」调整 2D / AI 立体、左右 / 上下格式和左右眼；「字幕与音轨」选择音轨、内嵌字幕，或导入 SRT / WebVTT。
+7. 「影院」选择现实或暗色环境，进入后可调整屏幕宽度、距离、高度，随时返回窗口。影院复用当前播放位置。
+8. 原有测试按钮移至 Debug 构建的「设置 → 诊断与测试」，不再占据日常界面。测试片不会写入用户影片的画面偏好。
 
 当前最低部署版本为 visionOS 2.0。开发和编译使用 Xcode 27 / visionOS 27 SDK；旧版本运行兼容性尚未验证。
 
@@ -27,25 +29,43 @@
 
 ## 已实现
 
-- 本地文件选择、HTTP(S) 地址输入、自动或手动引擎选择。
-- 原生普通视频使用全屏 `AVPlayerViewController`。
-- 默认自动选择引擎：MKV / AVI 等先用 VLCKit，其余先用原生。自动模式下，原生明确报告打开或播放失败时切到 VLC 一次；VLC 仍失败就显示错误，不循环重试。普通缓冲不触发回退；手动指定引擎和测试片预设保持指定路径。
-- 测试按钮只为当前测试片指定引擎和布局，不改动打开自己影片时的引擎、2D / SBS 选择。下拉选项用于下一次打开，当前使用的引擎和格式显示在影片状态中。
-- VLCKit 平面播放直接嵌入 UIView；自定义 SBS 使用官方框架导出的 libVLC C API。
-- SBS 的原生和 VLC 两种来源共用 RealityKit 左右眼材质；支持 Full SBS、Half SBS、交换左右眼。
-- 播放 / 暂停、进度跳转、状态和错误提示；后台暂停，关闭时释放播放资源及文件访问权限。
-- 内置四段自主生成的 12 秒测试片，无需下载外部影片。
+- 片库：最近打开、继续观看、缩略图、搜索、收藏、本地文件书签、网络来源的保存和编辑。
+- 每部影片分别保存播放进度、2D / SBS 格式、AI 开关和强度、左右眼交换以及外置字幕文件和时间偏移。
+- 统一的窗口播放器：播放/暂停、前后 10 秒、进度拖动、控件自动隐藏、重播、重试、返回片库；原生 2D 使用嵌入式 AVPlayerLayer。
+- 默认自动选择引擎：MKV / AVI 等先用 VLCKit，其余先用原生。原生明确报告失败时切到 VLC 一次；仍失败则显示错误，不循环重试。普通缓冲不触发回退。
+- 音轨选择、普通 2D 的内嵌字幕选择、SRT / WebVTT 导入和时间偏移。原生文本字幕和外置文本字幕由统一字幕层显示；VLC 自定义纹理路径（SBS、AI、影院）目前使用外置文本字幕，内嵌字幕暂不启用，避免错误裁切。
+- Full / Half SBS（左右）及 Full / Half OU（上下）两条引擎路径共用 RealityKit 每眼材质；保留屏幕与背景的物理间隔，避免闪烁。
+- 空间影院：现实 / 暗色环境、屏幕宽度 1.5–5 米、距离 2–6 米、高度 1–2.2 米；退出回到窗口，后台暂停。
+- 实验性普通 2D 转 3D：Depth Anything V2 Small 在本机估计深度，Metal 合成每眼画面；默认关闭、强度默认 35%，SBS 不重复转换。
+
+网络来源目前指 HTTP(S) 直链和引擎可播放的流地址，不包含独立的 SMB / WebDAV 服务器浏览器。内嵌字幕不覆盖所有图片字幕格式，音轨选择不会在重开影片后持久保存。空间影院和 AI 立体属于 SDR 自定义纹理路径。
+
+产品改版已安装真机：23 项片库与播放流程自动检查通过，基础播放、引擎回退和 AI 立体回归通过。用户已确认片库续播、画面切换、影院屏幕调整与返回、字幕和音轨切换均正常，详见验证记录。
+
+## 实验性 2D 转 3D
+
+打开普通 2D 影片，在「画面」中选择「AI 立体」。强度为 0 时两眼显示相同的完整画面；先从默认 35% 调整。测试菜单的「2D 转 3D · 原生 / VLC」使用 `BBB-HEVC-2D-30s.mp4/.mkv`，只取原片左眼作为普通 2D 输入，由模型重新合成立体视图，没有使用片源的另一眼。
+
+模型输入 518×392，深度输出为半精度单通道。视频纹理最长边限制为 1920，保持原始宽高比。Core ML 每次只计算一帧、不排队，视频刷新独立运行；播放中深度超过 150 ms 即暂用平面画面，跳转和检测到镜头切换会清空旧深度。深度做范围与时间平滑，Metal 按强度偏移像素并压低边缘位移。音频仍由当前播放引擎负责。帧率显示为最近约一秒的转换提交速率，不是头显刷新率。
+
+这是 SDR 实验路径，不会把片源改写成空间视频文件，也不是苹果空间照片的私有算法。单目深度不是真实测量；透明物体、头发、快速运动和遮挡边缘可能出现错误、拉伸或晃动。当前没有生成式补洞或运动补偿；为保持流畅，合成使用最近的深度，存在少量深度滞后。HDR、4K/60fps、长时间发热以及佩戴舒适度尚需单独验证。本轮 1080p/30fps 真机测试中，原生与 VLC 分别约 30.00 / 29.89 fps，用户确认两条路径的效果、流畅度和声音正常。此为短时提交速率，不是头显刷新率；具体范围与证据见 `Docs/VALIDATION.md`。
 
 | 按钮 | 文件内容 | 路径 |
 |---|---|---|
-| 2D 测试 | MP4 / H.264 / AAC / 960×540 | AVPlayer → AVKit |
+| 2D 测试 | MP4 / H.264 / AAC / 960×540 | AVPlayer → AVPlayerLayer |
 | MKV 测试 | MKV / H.264 / FLAC / 960×540 | libVLC → UIView |
 | SBS · 原生 | MP4 / H.264 / AAC / 1280×360 Full SBS | AVPlayerItemVideoOutput → RealityKit |
 | SBS · VLC | MKV / H.264 / AAC / 1280×360 Full SBS | libVLC vmem → RealityKit |
 
 2D 测试片含移动彩条和低音量测试音。SBS 测试片为原创景深场景：金球在近处、青球在中间、紫球在远处；使用两个平行视点及离轴投影，屏幕平面位于中景。旧版 SBS 彩条及 LEFT / RIGHT 大字已替换，避免把眼别标记的重影误当成播放错误。
 
-播放 SBS 后可点「左右眼检查」，分别闭眼观察纯色：左眼应为红色，右眼应为蓝色，绿色代表单眼渲染回退。此模式独立于视频纹理，关闭后恢复影片；它不证明视频裁切本身正确。
+开发版在「设置 → 诊断与测试」中可点「左右眼检查」，分别闭眼观察纯色：左眼应为红色，右眼应为蓝色，绿色代表单眼渲染回退。此模式独立于视频纹理，关闭后恢复影片；它不证明视频裁切本身正确。
+
+## 上下 3D（Over-Under / Top-Bottom）
+
+在「画面 → 影片格式」选择「上下 3D · 全高」或「上下 3D · 半高」。全高如 1920×2160，每眼 1920×1080；半高如 1920×1080，每眼存储 1920×540，显示时恢复高度。默认上半幅为左眼，下半幅为右眼；眼序相反时打开「交换左右眼」。设置按影片保存，窗口和影院共用。
+
+新导入且文件名包含 `full-ou`、`fullou`、`full-tab` 或 `_stereo_abl` 的影片默认全高上下；`half-ou`、`halfou`、`half-tab` 默认半高上下。其他命名仍需手动选择，不仅凭宽高猜测；已有片库记录保留原设置，需要手动切换一次。
 
 ## SBS 的边界
 
@@ -57,10 +77,10 @@
 - VLC：明确使用软件解码，输出 BGRA，最长边限制为 1920；内存中只保留最新待显示帧。音频由 VLC 自身播放和计时。
 - GPU 最多保留一组提交中的立体帧，慢时丢帧，不积压视频帧。
 - Full SBS 的显示宽高比是输入宽高比的一半；Half SBS 使用输入宽高比。支持常规方形像素、水平编码的 SBS；旋转元数据、非方形像素暂未处理。
-- 尚未实现 HDR / Dolby Vision 保真、上下格式、蓝光 MVC、180° / 360°、外置字幕和音轨选择 UI。SBS 内嵌字幕也未做每眼重新排版。
+- 尚未实现 HDR / Dolby Vision 保真、蓝光 MVC、180° / 360°。VLC SBS 内嵌字幕未做每眼重新排版，当前须使用外置文本字幕。
 - 自定义纹理路径不是 `VideoPlayerComponent(avPlayer:)`；后者不能直接接收这个 VLC 播放器。
 
-原生空间视频可尝试系统全屏播放器，但本工程没有附带 MV-HEVC 测试片，也没有将其列为已验证能力。
+本工程没有附带 MV-HEVC 测试片，当前统一播放界面未将原生空间视频的立体播放列为已验证能力。
 
 HTTP 地址可能受 Apple 网络安全策略限制，优先使用 HTTPS；本项目没有全局关闭系统网络安全限制。
 
@@ -71,8 +91,11 @@ HTTP 地址可能受 Apple 网络安全策略限制，优先使用 HTTPS；本�
 - `Playback/PlaybackOptions.swift`：引擎路由和立体布局。
 - `Bridge/VPPVLCSession.m`：官方 VLCKit 内的 libVLC 4 接口封装、异步停止、帧缓冲。
 - `Rendering/StereoRenderer.swift`：同一时间戳的两眼裁切、GPU 上传和 RealityKit 渲染。
+- `Rendering/DepthEstimator.swift` / `DepthStereo.metal`：Core ML 深度计算、单任务调度、深度平滑及双眼合成。
 - `Resources/StereoMaterial.usda`：每眼材质。
-- `Views/`：文件选择、测试入口、控制栏和播放器视图。
+- `Library/MediaLibrary.swift`：影片记录、文件访问书签、缩略图和持久化。
+- `Playback/PlayerExperience.swift` / `Subtitles.swift`：续播、每片设置、音轨和文本字幕。
+- `Views/`：片库、播放页、画面与字幕面板、设置和空间影院。
 
 上述目录均在 `VisionProPlayer/` 下。
 
@@ -84,6 +107,6 @@ HTTP 地址可能受 Apple 网络安全策略限制，优先使用 HTTPS；本�
 - 不要直接切换到 master；libVLC 4 的 C API 仍会变化。
 - `Scripts/generate_project.py` 用 Python 标准库生成项目，不需要安装 XcodeGen。添加源文件后重新运行即可；自定义签名配置后不要无意覆盖项目。
 - `Scripts/generate_samples.sh` 需要本机 ffmpeg 和 Python Pillow，仅用于重新生成测试片，不是 App 运行依赖。`Scripts/generate_stereo_sample.py` 可单独生成 SBS 演示片。
-- Debug 构建支持 `--smoke 2d|mkv|sbs-native|sbs-vlc|lifecycle` 开发验证参数；Release 不执行此逻辑。
+- Debug 构建支持 `--smoke 2d|mkv|sbs-native|sbs-vlc|lifecycle|routing|product|depth-native|depth-vlc` 开发验证参数；Release 不执行此逻辑。
 
 详见 `Docs/VALIDATION.md` 的实际验证结果和真机检查表。第三方信息见 `Docs/THIRD_PARTY.md`。

@@ -13,15 +13,19 @@ def add(name, body):
     key = uid(name); objects[key] = body; return key
 sources=[]; resources=[]; refs=[]
 for path in sorted((root/'VisionProPlayer').rglob('*')):
-    if not path.is_file(): continue
+    if not path.is_file() or path.name.startswith('.'): continue
     rel=path.relative_to(root).as_posix()
     ext=path.suffix
-    types={'.swift':'sourcecode.swift','.m':'sourcecode.c.objc','.h':'sourcecode.c.h','.usda':'text','.png':'image.png','.mp4':'file','.mkv':'file','.plist':'text.plist.xml'}
+    types={'.swift':'sourcecode.swift','.metal':'sourcecode.metal','.m':'sourcecode.c.objc','.h':'sourcecode.c.h','.usda':'text','.png':'image.png','.mp4':'file','.mkv':'file','.plist':'text.plist.xml'}
     ref=add(rel, f'isa = PBXFileReference; lastKnownFileType = {q(types.get(ext,"text"))}; path = {q(rel)}; sourceTree = SOURCE_ROOT;')
     refs.append(ref)
-    if ext in ('.swift','.m','.usda','.png','.mp4','.mkv'):
+    if ext in ('.swift','.metal','.m','.usda','.png','.mp4','.mkv','.txt'):
         build=add('build:'+rel, f'isa = PBXBuildFile; fileRef = {ref};')
-        (sources if ext in ('.swift','.m') else resources).append(build)
+        (sources if ext in ('.swift','.m','.metal') else resources).append(build)
+model_path = '.build/Models/DepthAnythingV2SmallF16.mlmodelc'
+model_ref = add(model_path, f'isa = PBXFileReference; lastKnownFileType = folder; path = {q(model_path)}; sourceTree = SOURCE_ROOT;')
+refs.append(model_ref)
+resources.append(add('build:'+model_path, f'isa = PBXBuildFile; fileRef = {model_ref};'))
 app=add('app','isa = PBXFileReference; explicitFileType = wrapper.application; path = VisionProPlayer.app; sourceTree = BUILT_PRODUCTS_DIR;')
 pkg=add('package','isa = XCRemoteSwiftPackageReference; repositoryURL = "https://github.com/videolan/vlckit.git"; requirement = {kind = revision; revision = 2e0868f5ed40fe59cd92f377645fdcc260c6e759; };')
 product=add('package-product',f'isa = XCSwiftPackageProductDependency; package = {pkg}; productName = VLCKit;')
@@ -39,8 +43,11 @@ for mode in ['Debug','Release']:
       'ARCHS':'arm64','SDKROOT':'xros','SUPPORTED_PLATFORMS':'xros xrsimulator','TARGETED_DEVICE_FAMILY':'7',
       'XROS_DEPLOYMENT_TARGET':'2.0','SWIFT_VERSION':'5.0','SWIFT_STRICT_CONCURRENCY':'targeted',
       'GENERATE_INFOPLIST_FILE':'YES','INFOPLIST_FILE':'VisionProPlayer/App/Info.plist',
-      'INFOPLIST_KEY_CFBundleDisplayName':'Vision Player Lab',
-      'MARKETING_VERSION':'0.1.0','CURRENT_PROJECT_VERSION':'1',
+      'INFOPLIST_KEY_CFBundleDisplayName':'Vision Player',
+      'INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace':'YES',
+      'INFOPLIST_KEY_UISupportsDocumentBrowser':'YES',
+      'INFOPLIST_KEY_NSLocalNetworkUsageDescription':'播放你选择的局域网视频地址。',
+      'MARKETING_VERSION':'0.2.0','CURRENT_PROJECT_VERSION':'2',
       'CODE_SIGN_STYLE':'Automatic','SWIFT_OBJC_BRIDGING_HEADER':'VisionProPlayer/Bridge/VisionProPlayer-Bridging-Header.h',
       'LD_RUNPATH_SEARCH_PATHS':'$(inherited) @executable_path/Frameworks',
       'SYSTEM_HEADER_SEARCH_PATHS':'$(inherited) $(BUILT_PRODUCTS_DIR)/VLCKit.framework/Headers','CLANG_ENABLE_MODULES':'YES','CLANG_ENABLE_OBJC_ARC':'YES',

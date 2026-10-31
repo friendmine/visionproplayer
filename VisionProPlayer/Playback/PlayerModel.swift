@@ -4,10 +4,40 @@ import SwiftUI
 
 @MainActor @Observable
 final class PlayerModel {
+    let library = MediaLibrary()
+    var showingPlayer = false
+    var missingFilmID: UUID?
+    var cinemaActive = false
+    var cinemaTransition = false
+    var audioTracks: [PlaybackTrack] = []
+    var subtitleTracks: [PlaybackTrack] = []
+    var selectedAudio = ""
+    var selectedSubtitle = "off"
+    var subtitleText = ""
+    var subtitleCues: [SubtitleCue] = []
+    var subtitleOffset = 0.0
+    @ObservationIgnored var audioGroup: AVMediaSelectionGroup?
+    @ObservationIgnored var subtitleGroup: AVMediaSelectionGroup?
+    @ObservationIgnored var captionReceiver: CaptionReceiver?
+    @ObservationIgnored var trackTask: Task<Void, Never>?
+    @ObservationIgnored var lastCheckpoint = 0.0
+    @ObservationIgnored var lastTrackRefresh = 0.0
     var engineChoice: PlaybackEngine = .automatic
     var layoutChoice: StereoLayout = .flat
     var swapEyes = false
     var eyeCheck = false
+    var depthEnabled = false
+    var depthStrength: Float = 0.35
+    var depthRevision = 0
+    var depthStatus = "等待转换"
+    var depthInferenceMS = 0.0
+    var depthDisplayFPS = 0.0
+    var depthPredictions = 0
+    var depthConvertedFrames = 0
+    var depthInferenceSamples: [Double] = []
+    var depthAgeSamples: [Double] = []
+    @ObservationIgnored let depthEstimator = DepthEstimator()
+    @ObservationIgnored private var depthFrameTimes: [Double] = []
     var request: PlaybackRequest?
     var nativePlayer: AVPlayer?
     var vlc: VPPVLCSession?
@@ -37,18 +67,47 @@ final class PlayerModel {
     @ObservationIgnored private var pendingVLCRecovery: (seconds: Double, playing: Bool)?
 
     /// Test presets never change the choices used for the user's next file.
-    func openSample(_ url: URL, layout: StereoLayout, engine: PlaybackEngine) {
+    func openSample(_ url: URL, layout: StereoLayout, engine: PlaybackEngine, convert2D: Bool = false) {
         eyeCheck = false
         swapEyes = false
-        open(url, layout: layout, engine: engine)
+        open(url, layout: layout, engine: engine, convert2D: convert2D)
     }
 
-    func open(_ url: URL, layout: StereoLayout? = nil, engine: PlaybackEngine? = nil) {
+    func setDepthConversion(_ enabled: Bool) {
+        depthEnabled = enabled
+        guard let current = request, !current.layout.isStereo, current.converts2D != enabled else { return }
+        if let id = current.libraryID { library.update(id) { $0.preferences.converts2D = enabled } }
+        reconfigure(layout: current.layout, conversion: enabled, cinema: current.isCinema)
+    }
+
+    func recordDepthPrediction(milliseconds: Double) {
+        depthPredictions += 1
+        depthInferenceMS = milliseconds
+        depthInferenceSamples.append(milliseconds)
+        if depthInferenceSamples.count > 600 { depthInferenceSamples.removeFirst() }
+    }
+
+    func recordConvertedFrame(age: Double) {
+        let now = ProcessInfo.processInfo.systemUptime
+        depthConvertedFrames += 1
+        depthFrameTimes.append(now)
+        depthFrameTimes.removeAll { now - $0 > 1 }
+        depthDisplayFPS = Double(max(0, depthFrameTimes.count - 1)) / max(0.001, now - (depthFrameTimes.first ?? now))
+        depthAgeSamples.append(age)
+        if depthAgeSamples.count > 600 { depthAgeSamples.removeFirst() }
+        depthStatus = "2D 转 3D · 实验性"
+    }
+
+    func open(_ url: URL, layout: StereoLayout? = nil, engine: PlaybackEngine? = nil, convert2D: Bool? = nil,
+              recovery: (seconds: Double, playing: Bool)? = nil, libraryID: UUID? = nil,
+              cinema: Bool = false, resolvedEngine: PlaybackEngine? = nil) {
+        showingPlayer = true
         // Take access before the fileImporter callback returns; release only after decoder shutdown.
         let scoped = url.isFileURL && url.startAccessingSecurityScopedResource()
         let selectedLayout = layout ?? layoutChoice
         let preference = engine ?? engineChoice
-        let selectedEngine = preference.resolved(for: url)
+        let selectedEngine = resolvedEngine ?? preference.resolved(for: url)
+        let conversion = (convert2D ?? depthEnabled) && !selectedLayout.isStereo
         openGeneration += 1
         let generation = openGeneration
         let previous = pendingOpen
@@ -69,17 +128,31 @@ final class PlayerModel {
             }
             self.start(PlaybackRequest(url: url, engine: selectedEngine, layout: selectedLayout,
                                        swapEyes: self.swapEyes, securityScoped: scoped,
-                                       allowsNativeFallback: preference == .automatic))
+                                       allowsNativeFallback: preference == .automatic, converts2D: conversion, libraryID: libraryID, isCinema: cinema), recovery: recovery)
         }
     }
 
     private func start(_ next: PlaybackRequest, recovery: (seconds: Double, playing: Bool)? = nil,
                        notice: String? = nil) {
         request = next
+        if let id = next.libraryID, let film = library.film(id) {
+            swapEyes = film.preferences.swapped
+            depthStrength = film.preferences.strength
+            subtitleOffset = film.preferences.subtitleOffset
+            if let file = film.preferences.subtitleFile,
+               let data = try? Data(contentsOf: library.subtitleURL(file)), let cues = try? SubtitleCue.parse(data) {
+                subtitleCues = cues; selectedSubtitle = "external"
+            }
+        }
+        lastCheckpoint = ProcessInfo.processInfo.systemUptime
         isSwitchingEngine = false
         playbackNotice = notice
         wantsPlayback = recovery?.playing ?? true
         pendingVLCRecovery = recovery
+        depthRevision += 1
+        depthStatus = next.converts2D ? "正在准备深度模型…" : "等待转换"
+        depthPredictions = 0; depthConvertedFrames = 0; depthFrameTimes = []; depthInferenceMS = 0; depthDisplayFPS = 0
+        depthInferenceSamples.removeAll(); depthAgeSamples.removeAll()
         errorMessage = nil; rendererError = nil
         renderedFrames = 0; stereoDisplayAspect = 0; frameSize = "等待视频帧"
         progress = 0; elapsed = 0; duration = 0
@@ -90,7 +163,7 @@ final class PlayerModel {
             try AVAudioSession.sharedInstance().setActive(true)
             if next.engine == .native {
                 let item = AVPlayerItem(url: next.url)
-                if next.layout.isStereo {
+                if next.usesTextureOutput {
                     let output = AVPlayerItemVideoOutput(pixelBufferAttributes: [
                         kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
                         kCVPixelBufferMetalCompatibilityKey as String: true
@@ -98,15 +171,35 @@ final class PlayerModel {
                     item.add(output)
                     videoOutput = output
                 }
+                let captions = AVPlayerItemLegibleOutput()
+                captions.suppressesPlayerRendering = true
+                let receiver = CaptionReceiver()
+                receiver.receive = { [weak self] text in
+                    Task { @MainActor [weak self] in
+                        guard let self, self.request?.id == next.id, self.selectedSubtitle != "external" else { return }
+                        self.subtitleText = text
+                    }
+                }
+                captions.setDelegate(receiver, queue: .main)
+                item.add(captions); captionReceiver = receiver
                 let player = AVPlayer(playerItem: item)
                 nativePlayer = player
                 nativeStatus = item.observe(\.status, options: [.initial, .new]) { [weak self] item, _ in
                     let failed = item.status == .failed
+                    let ready = item.status == .readyToPlay
                     let message = item.error?.localizedDescription
                     Task { @MainActor [weak self] in
                         guard let self, self.request?.id == next.id else { return }
+                        if ready { self.loadTracks() }
                         if failed {
                             self.nativeFailed(requestID: next.id, message: message ?? "原生播放器无法打开此文件。")
+                        } else if ready, let recovery, let player = self.nativePlayer {
+                            player.seek(to: CMTime(seconds: recovery.seconds, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
+                                Task { @MainActor [weak self] in
+                                    guard self?.request?.id == next.id else { return }
+                                    if recovery.playing { player.play() } else { player.pause() }
+                                }
+                            }
                         }
                     }
                 }
@@ -123,12 +216,12 @@ final class PlayerModel {
                         self?.stateText = "播放结束"
                     }
                 }
-                nativePresented = !next.layout.isStereo
-                player.play()
+                nativePresented = false
+                if recovery == nil { player.play() }
             } else {
-                vlc = try VPPVLCSession(url: next.url, stereo: next.layout.isStereo)
+                vlc = try VPPVLCSession(url: next.url, stereo: next.usesTextureOutput)
                 // Flat video starts after its UIView has attached; SBS starts with its frame mailbox.
-                if next.layout.isStereo { vlc?.play() }
+                if next.usesTextureOutput { vlc?.play() }
             }
             pollTask = Task { [weak self] in
                 while !Task.isCancelled {
@@ -171,7 +264,7 @@ final class PlayerModel {
                 return
             }
             self.start(PlaybackRequest(url: old.url, engine: .vlc, layout: old.layout,
-                                       swapEyes: old.swapEyes, securityScoped: old.securityScoped),
+                                       swapEyes: old.swapEyes, securityScoped: old.securityScoped, converts2D: old.converts2D, libraryID: old.libraryID, isCinema: old.isCinema),
                        recovery: (recovery.seconds, self.wantsPlayback), notice: "原生播放失败，已自动切换到 VLC。")
         }
     }
@@ -221,6 +314,10 @@ final class PlayerModel {
                 if !recovery.playing { vlc.setPaused(true) }
             }
         }
+        if selectedSubtitle == "external" { subtitleText = SubtitleCue.text(at: elapsed - subtitleOffset, in: subtitleCues) }
+        let now = ProcessInfo.processInfo.systemUptime
+        if duration > 0, now - lastCheckpoint > 5 { checkpoint(); lastCheckpoint = now }
+        if vlc != nil, now - lastTrackRefresh > 2 { loadTracks(); lastTrackRefresh = now }
     }
 
     func togglePlayback() {
@@ -240,6 +337,8 @@ final class PlayerModel {
 
     func seek(to fraction: Double) {
         guard isSeekable else { return }
+        depthRevision += 1
+        subtitleText = ""
         let bounded = min(1, max(0, fraction))
         if let player = nativePlayer {
             player.seek(to: CMTime(seconds: bounded * duration, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero)
@@ -275,6 +374,11 @@ final class PlayerModel {
     }
 
     private func shutdown(releaseSecurityScope: Bool = true) async {
+        checkpoint()
+        trackTask?.cancel(); trackTask = nil
+        audioGroup = nil; subtitleGroup = nil; captionReceiver = nil
+        audioTracks = []; subtitleTracks = []; selectedAudio = ""; selectedSubtitle = "off"
+        subtitleText = ""; subtitleCues = []; subtitleOffset = 0
         isClosing = true
         pollTask?.cancel(); pollTask = nil
         nativeStatus = nil
@@ -306,6 +410,6 @@ final class PlayerModel {
     static func clock(_ seconds: Double) -> String {
         guard seconds.isFinite, seconds >= 0 else { return "00:00" }
         let whole = Int(seconds)
-        return String(format: "%02d:%02d", whole / 60, whole % 60)
+        return whole >= 3600 ? String(format: "%d:%02d:%02d", whole / 3600, whole / 60 % 60, whole % 60) : String(format: "%02d:%02d", whole / 60, whole % 60)
     }
 }

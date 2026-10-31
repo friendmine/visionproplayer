@@ -14,6 +14,10 @@ NS_ASSUME_NONNULL_BEGIN
 /// Completion fires on the main queue after decoder callbacks have stopped and resources are released.
 - (void)closeWithCompletion:(void (^)(void))completion;
 - (nullable CVPixelBufferRef)copyLatestPixelBuffer CF_RETURNS_RETAINED;
+@property (nonatomic, readonly) NSArray<NSDictionary<NSString *, id> *> *audioTracks;
+@property (nonatomic, readonly) NSArray<NSDictionary<NSString *, id> *> *subtitleTracks;
+- (void)selectAudioTrack:(NSString *)identifier NS_SWIFT_NAME(selectAudioTrack(_:));
+- (void)selectSubtitleTrack:(NSString *)identifier NS_SWIFT_NAME(selectSubtitleTrack(_:));
 @property (nonatomic, readonly) double position;
 @property (nonatomic, readonly) double elapsedSeconds;
 @property (nonatomic, readonly) double durationSeconds;

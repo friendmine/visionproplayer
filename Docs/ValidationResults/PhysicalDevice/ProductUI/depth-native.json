@@ -1,0 +1,49 @@
+{
+  "benchmarkSeconds": 10.001610249993973,
+  "checks": [
+    {
+      "name": "model-and-render-started",
+      "passed": true
+    },
+    {
+      "name": "sustained-conversion",
+      "passed": true
+    },
+    {
+      "name": "seek-resets-depth-history",
+      "passed": true
+    },
+    {
+      "name": "pause-and-strength-redraw",
+      "passed": true
+    },
+    {
+      "name": "resume-conversion",
+      "passed": true
+    },
+    {
+      "name": "disable-preserves-position",
+      "passed": true
+    },
+    {
+      "name": "reenable-conversion",
+      "passed": true
+    }
+  ],
+  "convertedFramesInBenchmark": 297,
+  "depthAgeP95MS": 103.54654166440014,
+  "engine": "native",
+  "environment": "physical-device",
+  "error": "",
+  "frameSize": "2D 1920 × 1080 → AI 左右眼",
+  "inferenceMeanMS": 47.86511744974547,
+  "inferenceP95MS": 54.20083332865033,
+  "passed": true,
+  "runID": "db6105c3-c93a-443f-9d81-9a910778dccf",
+  "sample": "depth-native",
+  "scope": "10-second warmed-up submission benchmark, not headset scanout FPS or long-run thermal validation. Perceived depth, artifacts and audio sync need manual observation.",
+  "submittedFPS": 29.995170027764356,
+  "systemVersion": "Version 27.0.1 (Build 24M372)",
+  "thermalState": 0,
+  "timestamp": "2026-10-31T10:19:20Z"
+}

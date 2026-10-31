@@ -5,14 +5,33 @@ extension PlayerModel {
     func runSmokeTestIfRequested() async {
         #if DEBUG
         let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("--product-demo") {
+            for (name, title) in [("BBB-HEVC-2D-30s.mp4", "Big Buck Bunny"), ("BBB-SBS-60s.mp4", "Big Buck Bunny · 3D"), ("BBB-HEVC-2D-30s.mkv", "Big Buck Bunny · MKV"), ("ProductTracks.mp4", "字幕与双音轨演示")] {
+                let url = URL.documentsDirectory.appending(path: name)
+                if FileManager.default.fileExists(atPath: url.path) { _ = try? library.add(url, title: title) }
+            }
+        }
+        if arguments.contains("--ou-demo") {
+            let url = URL.documentsDirectory.appending(path: "BBB-Full-OU.mp4")
+            if let film = try? library.add(url, title: "Big Buck Bunny · 上下 3D") { openFilm(film) }
+        }
         guard let index = arguments.firstIndex(of: "--smoke"), arguments.indices.contains(index + 1),
               request == nil else { return }
         let name = arguments[index + 1]
+        if name == "product" { Task { await runProductProbe() }; return }
+        if name.hasPrefix("depth-") {
+            Task { await runDepthProbe(name: name) }
+            return
+        }
         if name == "lifecycle" { await runLifecycleProbe(); return }
         if name == "routing" { await runRoutingProbe(); return }
         let compatibility = CompatibilitySample(rawValue: name)
         let configuration: (String, String, StereoLayout, PlaybackEngine)
         switch name {
+        case "ou-native": configuration = ("BBB-Full-OU", "mp4", .fullOU, .native)
+        case "ou-vlc": configuration = ("BBB-Full-OU", "mp4", .fullOU, .vlc)
+        case "half-ou-native": configuration = ("BBB-Half-OU", "mp4", .halfOU, .native)
+        case "half-ou-vlc": configuration = ("BBB-Half-OU", "mp4", .halfOU, .vlc)
         case "2d": configuration = ("Sample2D", "mp4", .flat, .native)
         case "mkv": configuration = ("SampleMKV", "mkv", .flat, .vlc)
         case "sbs-native": configuration = ("SampleSBS", "mp4", .fullSBS, .native)
@@ -23,13 +42,16 @@ extension PlayerModel {
             guard let compatibility else { return }
             configuration = (compatibility.fileStem, compatibility.fileExtension, compatibility.layout, compatibility.engine)
         }
-        let isDownloadedClip = name.hasPrefix("bbb-") || compatibility != nil
+        let isOU = name.contains("ou-")
+        let isDownloadedClip = name.hasPrefix("bbb-") || compatibility != nil || isOU
         let sourceURL = isDownloadedClip
             ? URL.documentsDirectory.appending(path: "\(configuration.0).\(configuration.1)")
             : Bundle.main.url(forResource: configuration.0, withExtension: configuration.1)
         guard let url = sourceURL, FileManager.default.fileExists(atPath: url.path) else { return }
-        let expectedDuration = compatibility != nil ? 30.0 : (isDownloadedClip ? 60.0 : 12.0)
-        let expectedFrameSize = compatibility != nil ? "1920 × 1080 → 左右眼各 960 × 1080"
+        let expectedDuration = isOU ? 33.843 : compatibility != nil ? 30.0 : (isDownloadedClip ? 60.0 : 12.0)
+        let expectedFrameSize = isOU
+            ? (configuration.2 == .halfOU ? "1920 × 1080 → 左右眼各 1920 × 540" : (configuration.3 == .native ? "1920 × 2160 → 左右眼各 1920 × 1080" : "1706 × 1920 → 左右眼各 1706 × 960"))
+            : compatibility != nil ? "1920 × 1080 → 左右眼各 960 × 1080"
             : (isDownloadedClip ? "1920 × 540 → 左右眼各 960 × 540" : "1280 × 360 → 左右眼各 640 × 360")
         eyeCheck = false; swapEyes = false
         layoutChoice = configuration.2; engineChoice = configuration.3
@@ -181,7 +203,7 @@ extension PlayerModel {
         }
     }
 
-    private func smokeMetadata() -> [String: Any] {
+    func smokeMetadata() -> [String: Any] {
         #if targetEnvironment(simulator)
         let environment = "simulator"
         #else

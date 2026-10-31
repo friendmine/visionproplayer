@@ -1,0 +1,192 @@
+import Foundation
+import Observation
+import AVFoundation
+import UIKit
+
+struct FilmPreferences: Codable, Equatable {
+    var layout: StereoLayout = .flat
+    var converts2D = false
+    var strength: Float = 0.35
+    var swapped = false
+    var subtitleFile: String?
+    var subtitleOffset = 0.0
+}
+
+struct LibraryFilm: Identifiable, Codable, Equatable {
+    var id = UUID()
+    var title: String
+    var location: String
+    var bookmark: Data?
+    var favorite = false
+    var addedAt = Date()
+    var lastOpened: Date?
+    var position = 0.0
+    var duration = 0.0
+    var preferences = FilmPreferences()
+    var isNetwork: Bool { URL(string: location)?.isFileURL == false }
+    var completed: Bool { duration > 0 && position >= duration - min(10, duration * 0.05) }
+    var resumable: Bool { position > 2 && !completed }
+    var sourceDescription: String { isNetwork ? (URL(string: location)?.host ?? "网络影片") : "本地影片" }
+}
+
+@MainActor @Observable
+final class MediaLibrary {
+    private(set) var films: [LibraryFilm] = []
+    var error: String?
+    var thumbnailRevision = 0
+    var resumePlayback = true { didSet { defaults.set(resumePlayback, forKey: "resumePlayback") } }
+    var screenWidth: Float = 3 { didSet { defaults.set(screenWidth, forKey: "screenWidth") } }
+    var screenDistance: Float = 3 { didSet { defaults.set(screenDistance, forKey: "screenDistance") } }
+    var screenHeight: Float = 1.5 { didSet { defaults.set(screenHeight, forKey: "screenHeight") } }
+    var darkCinema = false { didSet { defaults.set(darkCinema, forKey: "darkCinema") } }
+    private var persistenceAvailable = true
+    private let root: URL
+    private let defaults: UserDefaults
+    private var thumbnailTasks: [UUID: Task<Void, Never>] = [:]
+
+    init(root: URL? = nil, defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        self.root = root ?? URL.applicationSupportDirectory.appending(path: "MediaLibrary", directoryHint: .isDirectory)
+        resumePlayback = defaults.object(forKey: "resumePlayback") as? Bool ?? true
+        screenWidth = min(5, max(1.5, defaults.float(forKey: "screenWidth") == 0 ? 3 : defaults.float(forKey: "screenWidth")))
+        screenDistance = min(6, max(2, defaults.float(forKey: "screenDistance") == 0 ? 3 : defaults.float(forKey: "screenDistance")))
+        screenHeight = min(2.2, max(1, defaults.float(forKey: "screenHeight") == 0 ? 1.5 : defaults.float(forKey: "screenHeight")))
+        darkCinema = defaults.bool(forKey: "darkCinema")
+        do {
+            try FileManager.default.createDirectory(at: self.root, withIntermediateDirectories: true)
+            let file = self.root.appending(path: "library.json")
+            if FileManager.default.fileExists(atPath: file.path) {
+                films = try JSONDecoder().decode([LibraryFilm].self, from: Data(contentsOf: file))
+            }
+        } catch {
+            // Preserve unreadable records before allowing a fresh library to be saved.
+            let source = self.root.appending(path: "library.json")
+            do {
+                if FileManager.default.fileExists(atPath: source.path) {
+                    try FileManager.default.copyItem(at: source, to: self.root.appending(path: "library-recovery-\(UUID().uuidString).json"))
+                    self.error = "无法读取片库记录，已保留恢复副本。原影片未被更改。"
+                } else { persistenceAvailable = false; self.error = "无法访问片库存储。" }
+            } catch {
+                persistenceAvailable = false
+                self.error = "无法读取片库记录，原记录已保留，暂不覆盖保存。"
+            }
+        }
+    }
+    var recent: [LibraryFilm] { films.sorted { ($0.lastOpened ?? $0.addedAt) > ($1.lastOpened ?? $1.addedAt) } }
+    func film(_ id: UUID) -> LibraryFilm? { films.first { $0.id == id } }
+    func thumbnailURL(_ id: UUID) -> URL { root.appending(path: "\(id.uuidString).jpg") }
+    func subtitleURL(_ name: String) -> URL { root.appending(path: name) }
+    private func save() {
+        guard persistenceAvailable else { return }
+        do { try JSONEncoder().encode(films).write(to: root.appending(path: "library.json"), options: .atomic) }
+        catch { self.error = "无法保存片库记录：\(error.localizedDescription)" }
+    }
+    func update(_ id: UUID, _ change: (inout LibraryFilm) -> Void) {
+        guard let index = films.firstIndex(where: { $0.id == id }) else { return }
+        change(&films[index]); save()
+    }
+    @discardableResult func add(_ url: URL, title: String? = nil) throws -> LibraryFilm {
+        if let existing = films.first(where: { $0.location == url.absoluteString }) { return existing }
+        // App updates may relocate its container. Resolve bookmarks before adding
+        // another record for the same file under its new absolute path.
+        if url.isFileURL {
+            for existing in films where URL(string: existing.location)?.lastPathComponent == url.lastPathComponent {
+                if let resolved = try? resolve(existing), resolved.standardizedFileURL == url.standardizedFileURL {
+                    update(existing.id) { $0.location = url.absoluteString }
+                    return film(existing.id) ?? existing
+                }
+            }
+        }
+        let scoped = url.isFileURL && url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        let bookmark = url.isFileURL ? try url.bookmarkData(options: .minimalBookmark, includingResourceValuesForKeys: nil, relativeTo: nil) : nil
+        var film = LibraryFilm(title: title?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty ?? url.deletingPathExtension().lastPathComponent.nilIfEmpty ?? "网络影片",
+                               location: url.absoluteString, bookmark: bookmark)
+        // Only explicit naming conventions are hints; never infer SBS just from width.
+        let name = url.lastPathComponent.lowercased()
+        if name.contains("halfsbs") || name.contains("hsbs") || name.contains("half-sbs") { film.preferences.layout = .halfSBS }
+        else if name.contains("fullsbs") || name.contains("full-sbs") || name.hasPrefix("bbb-sbs-") { film.preferences.layout = .fullSBS }
+        else if name.contains("half-ou") || name.contains("halfou") || name.contains("half-tab") { film.preferences.layout = .halfOU }
+        else if name.contains("full-ou") || name.contains("fullou") || name.contains("full-tab") || name.contains("_stereo_abl") { film.preferences.layout = .fullOU }
+        films.insert(film, at: 0); save()
+        return film
+    }
+    func resolve(_ film: LibraryFilm) throws -> URL {
+        var stale = false
+        let url: URL
+        if let bookmark = film.bookmark {
+            url = try URL(resolvingBookmarkData: bookmark, options: .withoutUI, relativeTo: nil, bookmarkDataIsStale: &stale)
+        } else if let direct = URL(string: film.location) { url = direct }
+        else { throw LibraryError.unavailable }
+        let scoped = url.isFileURL && url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        if url.isFileURL {
+            guard FileManager.default.isReadableFile(atPath: url.path) else { throw LibraryError.unavailable }
+            if stale {
+                let renewed = try url.bookmarkData(options: .minimalBookmark, includingResourceValuesForKeys: nil, relativeTo: nil)
+                update(film.id) { $0.bookmark = renewed; $0.location = url.absoluteString }
+            }
+        }
+        return url
+    }
+    func relocate(_ id: UUID, to url: URL) throws {
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        let bookmark = try url.bookmarkData(options: .minimalBookmark, includingResourceValuesForKeys: nil, relativeTo: nil)
+        update(id) { $0.bookmark = bookmark; $0.location = url.absoluteString }
+        try? FileManager.default.removeItem(at: thumbnailURL(id))
+    }
+    func remove(_ id: UUID) {
+        // Removing a library record never removes its source movie.
+        thumbnailTasks[id]?.cancel(); thumbnailTasks[id] = nil
+        films.removeAll { $0.id == id }; save()
+        try? FileManager.default.removeItem(at: thumbnailURL(id))
+    }
+    func makeThumbnail(for film: LibraryFilm) {
+        guard !film.isNetwork, thumbnailTasks[film.id] == nil,
+              !FileManager.default.fileExists(atPath: thumbnailURL(film.id).path) else { return }
+        thumbnailTasks[film.id] = Task { [weak self] in
+            guard let self else { return }
+            defer { self.thumbnailTasks[film.id] = nil }
+            do {
+                let url = try self.resolve(film)
+                let scoped = url.startAccessingSecurityScopedResource()
+                defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+                let generator = AVAssetImageGenerator(asset: AVURLAsset(url: url))
+                generator.appliesPreferredTrackTransform = true
+                generator.maximumSize = CGSize(width: 600, height: 340)
+                let result = try await generator.image(at: CMTime(seconds: 1, preferredTimescale: 600))
+                guard !Task.isCancelled, self.film(film.id) != nil else { return }
+                if let data = UIImage(cgImage: result.image).jpegData(compressionQuality: 0.75) {
+                    try data.write(to: self.thumbnailURL(film.id), options: .atomic)
+                    // Publish a change so visible thumbnails reload.
+                    self.thumbnailRevision += 1
+                }
+            } catch { /* Unsupported thumbnail codecs retain a neutral poster. */ }
+        }
+    }
+    func importSubtitle(_ url: URL, for id: UUID) throws -> [SubtitleCue] {
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        if let size = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize, size > 5_000_000 { throw LibraryError.subtitleTooLarge }
+        let data = try Data(contentsOf: url, options: .mappedIfSafe)
+        guard data.count <= 5_000_000 else { throw LibraryError.subtitleTooLarge }
+        let cues = try SubtitleCue.parse(data)
+        let name = "\(id.uuidString)-subtitles.srt"
+        try data.write(to: subtitleURL(name), options: .atomic)
+        update(id) { $0.preferences.subtitleFile = name }
+        return cues
+    }
+    enum LibraryError: LocalizedError {
+        case unavailable, subtitleTooLarge, invalidSubtitle
+        var errorDescription: String? {
+            switch self {
+            case .unavailable: "找不到这部影片，或访问权限已失效。请重新定位文件。"
+            case .subtitleTooLarge: "字幕文件过大，请选择小于 5 MB 的 SRT 或 WebVTT 文件。"
+            case .invalidSubtitle: "无法读取字幕，请选择 UTF-8 或 UTF-16 编码的 SRT / WebVTT 文件。"
+            }
+        }
+    }
+}
+
+extension String { var nilIfEmpty: String? { isEmpty ? nil : self } }

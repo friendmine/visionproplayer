@@ -12,6 +12,18 @@
 
 This document records dependency provenance, not a determination that a particular distribution satisfies all third-party obligations.
 
+## Depth Anything V2 Small
+
+- Authors: Lihe Yang, Bingyi Kang, Zilong Huang, Xiaogang Xu, Jiashi Feng, Hengshuang Zhao.
+- Upstream: https://github.com/DepthAnything/Depth-Anything-V2
+- Apple Core ML conversion/model card: https://huggingface.co/apple/coreml-depth-anything-v2-small
+- Download: https://ml-assets.apple.com/coreml/models/Image/DepthEstimation/DepthAnything/DepthAnythingV2SmallF16.mlpackage.zip
+- Pinned archive SHA-256: `8e875979ec82fa46f292468a7567a520b2aa07c41008c32141f3396da05a4067`.
+- Small model license: Apache 2.0. Full upstream license is retained in `Licenses/DepthAnythingV2-Apache-2.0.txt` and bundled as `DepthAnythingV2-License.txt`. Other model sizes have different licensing; this project only uses Small.
+- `Scripts/prepare_depth_model.py` downloads, verifies and compiles the F16 package. Downloaded weights and compiled model remain in ignored `.build/Models/`; the compiled model is bundled into the app at build time. No model weights are committed to Git.
+- Runtime metadata: BGRA image input 518×392; one-component Float16 depth image output 518×392. Uses Core ML CPU/Neural Engine, not a network inference service.
+- Metal warping, temporal smoothing, scheduling and UI are project-authored; this does not reproduce or claim access to Apple's private spatial-photo conversion pipeline.
+
 ## Reference documentation
 
 - Apple: https://developer.apple.com/documentation/visionos/displaying-a-stereoscopic-image-in-visionos
