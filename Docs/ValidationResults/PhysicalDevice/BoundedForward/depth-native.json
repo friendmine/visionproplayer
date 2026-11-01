@@ -1,0 +1,96 @@
+{
+  "benchmarkSeconds": 10.000394375005271,
+  "checks": [
+    {
+      "name": "model-and-render-started",
+      "passed": true
+    },
+    {
+      "endClock": {},
+      "endMedia": 13.376432834,
+      "name": "sustained-conversion",
+      "passed": true,
+      "startClock": {},
+      "startMedia": 3.284819543
+    },
+    {
+      "name": "high-relief-sustained-conversion",
+      "passed": true
+    },
+    {
+      "name": "seek-resets-depth-history",
+      "passed": true
+    },
+    {
+      "name": "paused-picture-stays-static",
+      "passed": true
+    },
+    {
+      "name": "pause-and-strength-redraw",
+      "passed": true
+    },
+    {
+      "name": "paused-pop-out-redraw",
+      "passed": true
+    },
+    {
+      "name": "paused-relief-sweep-keeps-position",
+      "passed": true
+    },
+    {
+      "elapsed": 6,
+      "framesSinceSeek": 2,
+      "name": "paused-seek-updates-then-settles",
+      "passed": true,
+      "playing": false,
+      "position": 0.2,
+      "settledDepthUpdates": 0,
+      "settledFrameUpdates": 0,
+      "state": "已暂停",
+      "updated": true
+    },
+    {
+      "clock": {},
+      "continuous": true,
+      "elapsed": 7.298114834,
+      "name": "resume-conversion",
+      "newDepthPredictions": 20,
+      "passed": true,
+      "pausedElapsed": 6,
+      "playing": true
+    },
+    {
+      "name": "disable-preserves-position",
+      "passed": true
+    },
+    {
+      "name": "reenable-conversion",
+      "passed": true
+    }
+  ],
+  "convertedFramesInBenchmark": 298,
+  "depthAgeP95MS": 104.28833332844079,
+  "depthMapping": "anchored-relief-v2",
+  "engine": "native",
+  "environment": "physical-device",
+  "error": "",
+  "frameSize": "2D 1920 × 1080 → AI 左右眼",
+  "highReliefConvertedFrames": 237,
+  "highReliefFPS": 29.989005124834915,
+  "highReliefSeconds": 8.002933041658252,
+  "inferenceMeanMS": 45.44774718512624,
+  "inferenceP95MS": 53.039624996017665,
+  "passed": true,
+  "pausedDepthUpdates": 0,
+  "pausedFrameUpdates": 0,
+  "popOut": 0.6000000238418579,
+  "projectionSampling": "bounded-forward-msaa-v2",
+  "runID": "1fbb4e50-72c1-4955-81c8-7d8890120878",
+  "sample": "depth-native",
+  "scope": "10-second warmed-up submission benchmark, not headset scanout FPS or long-run thermal validation. Perceived depth, artifacts and audio sync need manual observation.",
+  "screenWidthMeters": 0.6535947918891907,
+  "submittedFPS": 29.99881692164184,
+  "systemVersion": "Version 27.0.1 (Build 24M372)",
+  "thermalState": 0,
+  "timestamp": "2026-11-01T14:30:43Z"
+}

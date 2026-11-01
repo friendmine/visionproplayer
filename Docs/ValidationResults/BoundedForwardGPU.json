@@ -1,0 +1,16 @@
+{
+  "projectionSampling": "bounded-forward-msaa-v2",
+  "environment": "Mac Metal GPU",
+  "contourCases": 864,
+  "contourFailures": 0,
+  "worstReverseContrast": 0,
+  "adversarialFields": 15,
+  "maximumDisparitySlope": 0.45000052,
+  "scope": "GPU fixtures only; no headset scanout or wearer acceptance",
+  "log": "PASS: identity, eye direction, orientation/color, pop-out, disparity cap, full coverage, continuous silhouettes and edge-preserving depth\nContour cases: 864, failures: 0, worst reverse contrast: 0.0\nPASS: diagonal contours, both edge directions, depth/color offsets, weak/default/high relief and screen caps\nPASS: 15 adversarial disparity fields, zero identity, caps, fixed endpoints, repeatability; maximum slope: 0.45000052\n",
+  "sha256": {
+    "VisionProPlayer/Rendering/DepthStereo.metal": "7ab4b26038b3f6ee393a4f95c49d9ac6dc4f29f3514a6cc2fcadc6c6579c940b",
+    "VisionProPlayer/Rendering/StereoReprojector.swift": "1751647271a9c032e0543515d2cb6d57eb1cd0fb94a3d5f9bf3f823d57de60b9",
+    "Scripts/test_depth_warp.swift": "ff3df623d745bc62895b3130c80f4c2b4c57f8481ac398ce72b39615b7be7575"
+  }
+}

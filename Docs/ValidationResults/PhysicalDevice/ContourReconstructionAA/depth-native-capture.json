@@ -1,0 +1,13 @@
+{
+  "displayMipLevels" : 11,
+  "frontLimit" : 0.039999999105930328,
+  "height" : 1080,
+  "mapping" : "anchored-relief-v2",
+  "popOut" : 0.60000002384185791,
+  "projectionSampling" : "bracketed-contours-aa-v1",
+  "rearLimit" : 0.012000000104308128,
+  "runID" : "79c371d4-ba79-4455-a071-25bfcf535c5d",
+  "strength" : 0.34999999403953552,
+  "timestamp" : "2026-11-01T14:01:26Z",
+  "width" : 1920
+}

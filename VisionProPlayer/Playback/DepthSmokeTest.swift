@@ -23,6 +23,7 @@ extension PlayerModel {
         await waitUntil { depthPredictions > warmCount + 8 || rendererError != nil }
         let start = ProcessInfo.processInfo.systemUptime, startFrames = renderedFrames, startInferences = depthPredictions
         let startMedia = elapsed
+        let startClock = vlc?.clockDiagnostics ?? [:]
         let convertedStart = depthConvertedFrames
         depthInferenceSamples.removeAll(); depthAgeSamples.removeAll()
         try? await Task.sleep(for: .seconds(10))
@@ -33,17 +34,37 @@ extension PlayerModel {
         let p95 = times.isEmpty ? 0 : times[min(times.count - 1, Int(Double(times.count) * 0.95))]
         let age95 = ages.isEmpty ? 0 : ages[min(ages.count - 1, Int(Double(ages.count) * 0.95))]
         checks.append(["name": "sustained-conversion", "passed": fps >= 24 && fps <= 36 && depthConvertedFrames > convertedStart + 200 && depthPredictions > startInferences + 100
-            && elapsed > startMedia + 8 && rendererError == nil && errorMessage == nil && abs(stereoDisplayAspect - 16.0 / 9.0) < 0.01])
+            && elapsed > startMedia + 8 && rendererError == nil && errorMessage == nil && abs(stereoDisplayAspect - 16.0 / 9.0) < 0.01, "startMedia": startMedia, "endMedia": elapsed, "startClock": startClock, "endClock": vlc?.clockDiagnostics ?? [:]])
         let convertedDuringBenchmark = depthConvertedFrames - convertedStart
+        // Exercise larger disocclusions separately from the default benchmark.
+        depthStrength = 0.6; depthPopOut = 1
+        seek(to: 0.1)
+        let highWarm = depthPredictions
+        await waitUntil { depthPredictions > highWarm + 8 || rendererError != nil }
+        let highStart = ProcessInfo.processInfo.systemUptime, highFrames = renderedFrames
+        let highConverted = depthConvertedFrames, highMedia = elapsed
+        try? await Task.sleep(for: .seconds(8))
+        let highSeconds = ProcessInfo.processInfo.systemUptime - highStart
+        let highFPS = Double(renderedFrames - highFrames) / highSeconds
+        let highConvertedCount = depthConvertedFrames - highConverted
+        checks.append(["name": "high-relief-sustained-conversion", "passed": highFPS >= 24 && highFPS <= 36
+            && highConvertedCount > 160 && elapsed > highMedia + 6 && rendererError == nil && errorMessage == nil])
+        depthStrength = 0.35; depthPopOut = 0.6
         let revision = depthRevision
         seek(to: 0.5)
         try? await Task.sleep(for: .seconds(1))
         checks.append(["name": "seek-resets-depth-history", "passed": depthRevision > revision && elapsed > 14 && elapsed < 18])
         if isPlaying { togglePlayback() }
         try? await Task.sleep(for: .milliseconds(500))
-        let paused = elapsed
+        var paused = elapsed
         try? await Task.sleep(for: .milliseconds(700))
         let held = !isPlaying && abs(elapsed - paused) < 0.2
+        let settledFrames = renderedFrames, settledPredictions = depthPredictions
+        try? await Task.sleep(for: .seconds(2))
+        let pausedFrameUpdates = renderedFrames - settledFrames
+        let pausedDepthUpdates = depthPredictions - settledPredictions
+        checks.append(["name": "paused-picture-stays-static", "passed": pausedFrameUpdates == 0 && pausedDepthUpdates == 0
+            && !isPlaying && abs(elapsed - paused) < 0.2])
         let oldFrames = renderedFrames
         depthStrength = 0
         await waitUntil(seconds: 2) { renderedFrames > oldFrames }
@@ -56,12 +77,41 @@ extension PlayerModel {
         depthPopOut = 1
         await waitUntil(seconds: 2) { renderedFrames > beforePop }
         checks.append(["name": "paused-pop-out-redraw", "passed": renderedFrames > beforePop && !isPlaying && abs(elapsed - paused) < 0.2])
-        depthPopOut = 0.6
         depthStrength = 0.35
+        var redraws = true
+        for amount: Float in [0, 0.6, 1] {
+            let before = renderedFrames
+            depthPopOut = amount
+            await waitUntil(seconds: 2) { renderedFrames > before }
+            redraws = redraws && renderedFrames > before && !isPlaying && abs(elapsed - paused) < 0.2
+        }
+        checks.append(["name": "paused-relief-sweep-keeps-position", "passed": redraws])
+        depthPopOut = 0.6
+        let beforePausedSeek = renderedFrames
+        seek(to: 0.2)
+        await waitUntil { renderedFrames > beforePausedSeek && abs(elapsed - 6) < 0.6 }
+        let pausedSeekUpdated = renderedFrames > beforePausedSeek && abs(elapsed - 6) < 0.6 && !isPlaying
+        try? await Task.sleep(for: .seconds(1))
+        paused = elapsed
+        let seekSettledFrames = renderedFrames, seekSettledDepth = depthPredictions
+        try? await Task.sleep(for: .seconds(1))
+        checks.append(["name": "paused-seek-updates-then-settles", "passed": pausedSeekUpdated
+            && renderedFrames == seekSettledFrames && depthPredictions == seekSettledDepth && !isPlaying,
+            "updated": pausedSeekUpdated, "elapsed": elapsed, "position": progress, "playing": isPlaying,
+            "state": stateText, "framesSinceSeek": renderedFrames - beforePausedSeek,
+            "settledFrameUpdates": renderedFrames - seekSettledFrames, "settledDepthUpdates": depthPredictions - seekSettledDepth])
         let beforeResume = depthPredictions
         if !isPlaying { togglePlayback() }
-        await waitUntil(seconds: 3) { depthPredictions > beforeResume + 5 }
-        checks.append(["name": "resume-conversion", "passed": isPlaying && elapsed > paused && depthPredictions > beforeResume])
+        let resumeStart = ProcessInfo.processInfo.systemUptime
+        var resumeContinuous = true
+        repeat {
+            let age = ProcessInfo.processInfo.systemUptime - resumeStart
+            resumeContinuous = resumeContinuous && elapsed >= paused - 0.25 && elapsed <= paused + age + 0.75
+            try? await Task.sleep(for: .milliseconds(100))
+        } while ProcessInfo.processInfo.systemUptime - resumeStart < 1.5
+        checks.append(["name": "resume-conversion", "passed": resumeContinuous && isPlaying && elapsed > paused && elapsed < paused + 3.5 && depthPredictions > beforeResume,
+            "continuous": resumeContinuous,
+            "elapsed": elapsed, "pausedElapsed": paused, "playing": isPlaying, "newDepthPredictions": depthPredictions - beforeResume, "clock": vlc?.clockDiagnostics ?? [:]])
 
         let beforeOff = elapsed
         setDepthConversion(false)
@@ -73,8 +123,10 @@ extension PlayerModel {
         await waitUntil { depthPredictions > 5 }
         checks.append(["name": "reenable-conversion", "passed": request?.converts2D == true && depthPredictions > 5 && rendererError == nil])
         let report = smokeMetadata().merging([
-            "sample": name, "engine": engine.rawValue, "checks": checks, "popOut": depthPopOut, "screenWidthMeters": depthScreenWidthMeters,
-            "benchmarkSeconds": seconds, "submittedFPS": fps, "inferenceMeanMS": mean,
+            "sample": name, "engine": engine.rawValue, "depthMapping": "anchored-relief-v2", "projectionSampling": "bounded-forward-msaa-v2", "checks": checks, "popOut": depthPopOut, "screenWidthMeters": depthScreenWidthMeters,
+            "benchmarkSeconds": seconds, "submittedFPS": fps,
+            "pausedFrameUpdates": pausedFrameUpdates, "pausedDepthUpdates": pausedDepthUpdates,
+            "highReliefSeconds": highSeconds, "highReliefFPS": highFPS, "highReliefConvertedFrames": highConvertedCount, "inferenceMeanMS": mean,
             "inferenceP95MS": p95, "depthAgeP95MS": age95, "convertedFramesInBenchmark": convertedDuringBenchmark,
             "frameSize": frameSize, "thermalState": ProcessInfo.processInfo.thermalState.rawValue,
             "error": errorMessage ?? rendererError ?? "", "passed": checks.allSatisfy { $0["passed"] as? Bool == true },

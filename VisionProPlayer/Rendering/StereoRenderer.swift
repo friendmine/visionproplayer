@@ -33,7 +33,7 @@ final class StereoRenderer {
     private var rightTexture: TextureResource?
     private var textureCache: CVMetalTextureCache?
     private var depthPipeline: MTLComputePipelineState?
-    private var warpPipeline: MTLComputePipelineState?
+    private var reprojector: StereoReprojector?
     private var depthHistory: [MTLTexture] = []
     private var depthIndex = 0
     private var depthHistoryValid = false
@@ -47,10 +47,9 @@ final class StereoRenderer {
         commandQueue = queue
         CVMetalTextureCacheCreate(nil, nil, device, nil, &textureCache)
         if let library = device.makeDefaultLibrary(),
-           let stabilize = library.makeFunction(name: "stabilizeDepth"),
-           let warp = library.makeFunction(name: "synthesizeStereo") {
+           let stabilize = library.makeFunction(name: "stabilizeDepth") {
             depthPipeline = try await device.makeComputePipelineState(function: stabilize)
-            warpPipeline = try await device.makeComputePipelineState(function: warp)
+            reprojector = try StereoReprojector(device: device, library: library)
         }
         ciContext = CIContext(mtlDevice: device, options: [.cacheIntermediates: false])
         material = try await ShaderGraphMaterial(named: "/Root/StereoMaterial", from: "StereoMaterial.usda")
@@ -70,9 +69,21 @@ final class StereoRenderer {
     }
 
     private func makeTexture(width: Int, height: Int) throws -> (TextureResource, LowLevelTexture) {
+        // A high-resolution eye image needs lower-resolution levels when it
+        // occupies fewer display pixels, especially at a small window or angle.
+        let levels = 1 + Int(floor(log2(Double(max(width, height)))))
         let surface = try LowLevelTexture(descriptor: .init(pixelFormat: .rgba16Float,
-            width: width, height: height, textureUsage: [.shaderRead, .renderTarget, .shaderWrite]))
+            width: width, height: height, mipmapLevelCount: levels,
+            textureUsage: [.shaderRead, .renderTarget, .shaderWrite]))
         return (try TextureResource(from: surface), surface)
+    }
+
+    private func generateDisplayMipmaps(_ left: MTLTexture, _ right: MTLTexture, using commands: MTLCommandBuffer) throws {
+        guard let blit = commands.makeBlitCommandEncoder() else { throw RenderError.unavailable }
+        // Both eyes and all mip levels publish in the same command buffer.
+        blit.generateMipmaps(for: left)
+        blit.generateMipmaps(for: right)
+        blit.endEncoding()
     }
 
     func bindEyes(swapped: Bool) throws {
@@ -123,6 +134,7 @@ final class StereoRenderer {
         rightDestination.colorSpace = colorSpace
         _ = try context.startTask(toRender: leftImage, to: leftDestination)
         _ = try context.startTask(toRender: rightImage, to: rightDestination)
+        try generateDisplayMipmaps(left, right, using: commands)
         inFlight = true
         let retained = RetainedVideoFrame(buffer)
         commands.addCompletedHandler { [weak self, retained] command in
@@ -166,7 +178,7 @@ final class StereoRenderer {
     }
 
     func renderConverted(_ buffer: CVPixelBuffer, depth: EstimatedDepth, strength: Float, popOut: Float, distance: Float?, swapped: Bool) throws -> Bool {
-        guard !inFlight, let queue = commandQueue, let depthPipeline, let warpPipeline else { return false }
+        guard !inFlight, let queue = commandQueue, let depthPipeline, let reprojector else { return false }
         let sourceWidth = CVPixelBufferGetWidth(buffer), sourceHeight = CVPixelBufferGetHeight(buffer)
         let scale = min(1.0, 1920.0 / Double(max(sourceWidth, sourceHeight)))
         let width = max(2, Int(Double(sourceWidth) * scale)), height = max(2, Int(Double(sourceHeight) * scale))
@@ -195,23 +207,20 @@ final class StereoRenderer {
         encoder.setBytes(&params, length: MemoryLayout<SIMD4<Float>>.stride, index: 0)
         encoder.dispatchThreads(MTLSize(width: dw, height: dh, depth: 1), threadsPerThreadgroup: MTLSize(width: 16, height: 8, depth: 1))
         encoder.endEncoding()
-        guard let warp = commands.makeComputeCommandEncoder() else { throw RenderError.unavailable }
         let left = leftSurface.replace(using: commands), right = rightSurface.replace(using: commands)
-        warp.setComputePipelineState(warpPipeline)
-        warp.setTexture(color.0, index: 0); warp.setTexture(smooth, index: 1)
-        warp.setTexture(left, index: 2); warp.setTexture(right, index: 3)
         // Bound physical disparity as screens grow. In cinema also cap its
         // angular extent using the configured viewing distance (not head tracking).
         let limits = disparityLimits(distance: distance)
-        var warpParams = SIMD4<Float>(max(0, min(1, strength)), max(0, min(1, popOut)),
+        let warpParams = SIMD4<Float>(max(0, min(1, strength)), max(0, min(1, popOut)),
                                      limits.x, limits.y)
-        warp.setBytes(&warpParams, length: MemoryLayout<SIMD4<Float>>.stride, index: 0)
-        warp.dispatchThreads(MTLSize(width: width, height: height, depth: 1), threadsPerThreadgroup: MTLSize(width: 16, height: 8, depth: 1))
-        warp.endEncoding()
+        try reprojector.encode(color: color.0, depth: smooth, parameters: warpParams,
+                               left: left, right: right, commands: commands)
+        try generateDisplayMipmaps(left, right, using: commands)
         depthIndex = 1 - depthIndex; depthHistoryValid = true; inFlight = true
         let input = RetainedVideoFrame(buffer, textureReference: color.1), output = RetainedVideoFrame(depth.buffer, textureReference: raw.1)
         let capture = !debugCaptured && ProcessInfo.processInfo.arguments.contains("--depth-capture")
         debugCaptured = debugCaptured || capture
+        let capturedParameters = warpParams
         commands.addCompletedHandler { [weak self, input, output] command in
             _ = input; _ = output
             let failure = command.status == .error ? (command.error?.localizedDescription ?? "3D 合成失败") : nil
@@ -220,12 +229,27 @@ final class StereoRenderer {
                 self.failure = failure
                 #if DEBUG
                 if capture, let context = self.ciContext {
-                    for (name, texture) in [("left", left), ("right", right)] {
-                        if let image = CIImage(mtlTexture: texture, options: [.colorSpace: self.colorSpace]) {
-                            try? context.writePNGRepresentation(of: image.oriented(.downMirrored),
+                    let manifestURL = URL.documentsDirectory.appending(path: "depth-capture.json")
+                    try? FileManager.default.removeItem(at: manifestURL)
+                    do {
+                        guard failure == nil else { throw RenderError.invalidFrame }
+                        for (name, texture) in [("left", left), ("right", right)] {
+                            guard let image = CIImage(mtlTexture: texture, options: [.colorSpace: self.colorSpace]) else { throw RenderError.invalidFrame }
+                            try context.writePNGRepresentation(of: image.oriented(.downMirrored),
                                 to: URL.documentsDirectory.appending(path: "depth-\(name).png"), format: .RGBA8,
                                 colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!)
                         }
+                        let arguments = ProcessInfo.processInfo.arguments
+                        let runID = arguments.firstIndex(of: "--smoke-run-id").flatMap { arguments.indices.contains($0 + 1) ? arguments[$0 + 1] : nil } ?? "manual"
+                        let metadata: [String: Any] = ["runID": runID, "mapping": "anchored-relief-v2", "projectionSampling": "bounded-forward-msaa-v2",
+                            "strength": capturedParameters.x, "popOut": capturedParameters.y,
+                            "frontLimit": capturedParameters.z, "rearLimit": capturedParameters.w,
+                            "width": width, "height": height, "displayMipLevels": left.mipmapLevelCount, "timestamp": ISO8601DateFormatter().string(from: Date())]
+                        try JSONSerialization.data(withJSONObject: metadata, options: [.prettyPrinted, .sortedKeys]).write(to: manifestURL, options: .atomic)
+                    } catch {
+                        // Diagnostic capture must not stop playback. No manifest
+                        // means this run's eye images cannot be accepted as evidence.
+                        try? FileManager.default.removeItem(at: manifestURL)
                     }
                 }
                 #endif

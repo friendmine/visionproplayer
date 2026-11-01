@@ -1,0 +1,14 @@
+{
+  "displayAnisotropy" : 8,
+  "displayFilterBias" : 0.5,
+  "displayMipLevels" : 11,
+  "frontLimit" : 0.039999999105930328,
+  "height" : 1080,
+  "mapping" : "anchored-relief-v2",
+  "popOut" : 0.60000002384185791,
+  "rearLimit" : 0.012000000104308128,
+  "runID" : "e267728e-001b-44a1-95c0-57f50d186077",
+  "strength" : 0.34999999403953552,
+  "timestamp" : "2026-11-01T13:34:25Z",
+  "width" : 1920
+}

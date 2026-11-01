@@ -1,0 +1,77 @@
+{
+  "benchmarkSeconds": 10.002603750006529,
+  "checks": [
+    {
+      "name": "model-and-render-started",
+      "passed": true
+    },
+    {
+      "name": "sustained-conversion",
+      "passed": true
+    },
+    {
+      "name": "high-relief-sustained-conversion",
+      "passed": true
+    },
+    {
+      "name": "seek-resets-depth-history",
+      "passed": true
+    },
+    {
+      "name": "paused-picture-stays-static",
+      "passed": true
+    },
+    {
+      "name": "pause-and-strength-redraw",
+      "passed": true
+    },
+    {
+      "name": "paused-pop-out-redraw",
+      "passed": true
+    },
+    {
+      "name": "paused-relief-sweep-keeps-position",
+      "passed": true
+    },
+    {
+      "name": "paused-seek-updates-then-settles",
+      "passed": false
+    },
+    {
+      "name": "resume-conversion",
+      "passed": false
+    },
+    {
+      "name": "disable-preserves-position",
+      "passed": true
+    },
+    {
+      "name": "reenable-conversion",
+      "passed": true
+    }
+  ],
+  "convertedFramesInBenchmark": 296,
+  "depthAgeP95MS": 102.71137500240002,
+  "depthMapping": "anchored-relief-v2",
+  "engine": "vlc",
+  "environment": "physical-device",
+  "error": "",
+  "frameSize": "2D 1920 × 1080 → AI 左右眼",
+  "highReliefConvertedFrames": 237,
+  "highReliefFPS": 29.866349336349344,
+  "highReliefSeconds": 8.002317166668945,
+  "inferenceMeanMS": 41.539036666411754,
+  "inferenceP95MS": 47.374208326800726,
+  "passed": false,
+  "pausedDepthUpdates": 0,
+  "pausedFrameUpdates": 0,
+  "popOut": 0.6000000238418579,
+  "runID": "a399b7f2-b8f3-463a-bf1d-cc86ab53f7f3",
+  "sample": "depth-vlc",
+  "scope": "10-second warmed-up submission benchmark, not headset scanout FPS or long-run thermal validation. Perceived depth, artifacts and audio sync need manual observation.",
+  "screenWidthMeters": 0.6535947918891907,
+  "submittedFPS": 29.792242844749847,
+  "systemVersion": "Version 27.0.1 (Build 24M372)",
+  "thermalState": 0,
+  "timestamp": "2026-11-01T11:19:23Z"
+}

@@ -219,7 +219,7 @@ struct DepthEffectControls: View {
             Slider(value: $model.depthPopOut, in: 0...1, onEditingChanged: { editing in
                 if !editing { model.savePicturePreferences() }
             }).accessibilityLabel("出屏程度")
-            Text("向右把景深范围移到屏幕前。0 为原来的平衡效果；强度为 0 时保持平面。窗口较小时，放大窗口更容易看出差别。").font(.caption).foregroundStyle(.secondary)
+            Text("向右让前景更靠近你，并保留远景在屏幕后。立体强度调节前后层次；强度为 0 时保持平面。").font(.caption).foregroundStyle(.secondary)
             Button("恢复默认立体效果") {
                 model.depthStrength = 0.35; model.depthPopOut = 0; model.savePicturePreferences()
             }

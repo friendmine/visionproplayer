@@ -1,0 +1,89 @@
+{
+  "benchmarkSeconds": 10.00028579166974,
+  "checks": [
+    {
+      "name": "model-and-render-started",
+      "passed": true
+    },
+    {
+      "name": "sustained-conversion",
+      "passed": true
+    },
+    {
+      "name": "high-relief-sustained-conversion",
+      "passed": true
+    },
+    {
+      "name": "seek-resets-depth-history",
+      "passed": true
+    },
+    {
+      "name": "paused-picture-stays-static",
+      "passed": true
+    },
+    {
+      "name": "pause-and-strength-redraw",
+      "passed": true
+    },
+    {
+      "name": "paused-pop-out-redraw",
+      "passed": true
+    },
+    {
+      "name": "paused-relief-sweep-keeps-position",
+      "passed": true
+    },
+    {
+      "elapsed": 15.758081,
+      "framesSinceSeek": 2,
+      "name": "paused-seek-updates-then-settles",
+      "passed": false,
+      "playing": false,
+      "position": 0.5249019353119483,
+      "settledDepthUpdates": 0,
+      "settledFrameUpdates": 0,
+      "state": "已暂停",
+      "updated": false
+    },
+    {
+      "elapsed": 6.286138,
+      "name": "resume-conversion",
+      "newDepthPredictions": 7,
+      "passed": false,
+      "pausedElapsed": 15.758081,
+      "playing": true
+    },
+    {
+      "name": "disable-preserves-position",
+      "passed": true
+    },
+    {
+      "name": "reenable-conversion",
+      "passed": true
+    }
+  ],
+  "convertedFramesInBenchmark": 297,
+  "depthAgeP95MS": 103.36787501000799,
+  "depthMapping": "anchored-relief-v2",
+  "engine": "vlc",
+  "environment": "physical-device",
+  "error": "",
+  "frameSize": "2D 1920 × 1080 → AI 左右眼",
+  "highReliefConvertedFrames": 237,
+  "highReliefFPS": 29.994801994524092,
+  "highReliefSeconds": 8.001386375006405,
+  "inferenceMeanMS": 38.96748876094965,
+  "inferenceP95MS": 43.55866665719077,
+  "passed": false,
+  "pausedDepthUpdates": 0,
+  "pausedFrameUpdates": 0,
+  "popOut": 0.6000000238418579,
+  "runID": "1cfe02bb-7297-4af9-a73b-d751fb4bfc58",
+  "sample": "depth-vlc",
+  "scope": "10-second warmed-up submission benchmark, not headset scanout FPS or long-run thermal validation. Perceived depth, artifacts and audio sync need manual observation.",
+  "screenWidthMeters": 0.6535947322845459,
+  "submittedFPS": 29.899145507328168,
+  "systemVersion": "Version 27.0.1 (Build 24M372)",
+  "thermalState": 0,
+  "timestamp": "2026-11-01T11:23:33Z"
+}

@@ -25,5 +25,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) BOOL seekable;
 @property (nonatomic, readonly) NSString *stateText;
 @property (nonatomic, readonly) BOOL failed;
+@property (nonatomic, readonly) NSDictionary<NSString *, id> *clockDiagnostics;
 @end
 NS_ASSUME_NONNULL_END
