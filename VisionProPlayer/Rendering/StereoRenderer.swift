@@ -180,7 +180,7 @@ final class StereoRenderer {
         return [min(distance == nil ? 0.04 : 0.03, front / widthMeters), min(0.012, rear / widthMeters)]
     }
 
-    func renderConverted(_ buffer: CVPixelBuffer, depth: EstimatedDepth, strength: Float, popOut: Float, protectProportions: Bool, distance: Float?, swapped: Bool) throws -> Bool {
+    func renderConverted(_ buffer: CVPixelBuffer, depth: EstimatedDepth, strength: Float, popOut: Float, protectProportions: Bool, distance: Float?, swapped: Bool, disparityGain: Float = 1) throws -> Bool {
         guard !inFlight, let queue = commandQueue, let depthPipeline, let reprojector,
               let context = ciContext, let videoColorConverter else { return false }
         let sourceWidth = CVPixelBufferGetWidth(buffer), sourceHeight = CVPixelBufferGetHeight(buffer)
@@ -227,7 +227,7 @@ final class StereoRenderer {
         let limits = disparityLimits(distance: distance)
         let warpParams = SIMD4<Float>(max(0, min(1, strength)), max(0, min(1, popOut)),
                                      limits.x, limits.y)
-        try reprojector.encode(color: color, depth: smooth, parameters: warpParams, protectProportions: protectProportions, sourceIsLinear: true,
+        try reprojector.encode(color: color, depth: smooth, parameters: warpParams, protectProportions: protectProportions, sourceIsLinear: true, disparityGain: disparityGain,
                                left: left, right: right, commands: commands)
         try generateDisplayMipmaps(left, right, using: commands)
         depthIndex = nextDepthIndex; depthHistoryValid = true; processedDepthBuffer = depth.buffer; inFlight = true
@@ -256,7 +256,7 @@ final class StereoRenderer {
                         let arguments = ProcessInfo.processInfo.arguments
                         let runID = arguments.firstIndex(of: "--smoke-run-id").flatMap { arguments.indices.contains($0 + 1) ? arguments[$0 + 1] : nil } ?? "manual"
                         let metadata: [String: Any] = ["runID": runID, "mapping": "anchored-relief-v2", "projectionSampling": "proportion-protected-forward-v1", "proportionProtection": protectProportions,
-                            "strength": capturedParameters.x, "popOut": capturedParameters.y,
+                            "strength": capturedParameters.x, "popOut": capturedParameters.y, "disparityGain": disparityGain,
                             "frontLimit": capturedParameters.z, "rearLimit": capturedParameters.w,
                             "width": width, "height": height, "displayMipLevels": left.mipmapLevelCount, "timestamp": ISO8601DateFormatter().string(from: Date())]
                         try JSONSerialization.data(withJSONObject: metadata, options: [.prettyPrinted, .sortedKeys]).write(to: manifestURL, options: .atomic)
@@ -380,7 +380,10 @@ struct StereoPlayerView: View {
         .task(id: ready) {
             guard ready else { return }
             var lastBuffer: CVPixelBuffer?
-            let stream = DepthStream(estimator: model.depthEstimator, requestID: request.id) { [model] ms in
+            let stream = DepthStream(estimator: model.depthEstimator, requestID: request.id, onSceneReset: { [model] in
+                guard model.request?.id == request.id else { return }
+                model.depthSceneResets += 1
+            }) { [model] ms in
                 guard model.request?.id == request.id else { return }
                 model.recordDepthPrediction(milliseconds: ms)
             }
@@ -391,6 +394,7 @@ struct StereoPlayerView: View {
             var lastProportionProtection: Bool?
             var lastDisparityLimits = SIMD2<Float>(repeating: -1)
             var lastRevision = model.depthRevision
+            var presentation = DepthPresentationEnvelope()
             while !Task.isCancelled, model.request?.id == request.id {
                 if let failure = renderer.failure { model.rendererError = failure; return }
                 if !renderer.canRender {
@@ -413,8 +417,11 @@ struct StereoPlayerView: View {
                         var rendered = false
                         if request.converts2D && model.depthStrength > 0 {
                             if newBuffer != nil || strengthChanged { stream.offer(buffer, revision: model.depthRevision) }
-                            if let latest = stream.latest, ProcessInfo.processInfo.systemUptime - latest.capturedAt <= 0.15 || !model.isPlaying {
-                                rendered = try renderer.renderConverted(buffer, depth: latest.depth, strength: model.depthStrength, popOut: model.depthPopOut, protectProportions: model.depthProportionProtection, distance: immersive ? model.library.screenDistance : nil, swapped: model.swapEyes)
+                            let now = ProcessInfo.processInfo.systemUptime
+                            let gain = presentation.update(now: now, capturedAt: stream.latest?.capturedAt,
+                                                           generation: stream.generation, playing: model.isPlaying)
+                            if let latest = stream.latest, now - latest.capturedAt <= 0.15 || !model.isPlaying {
+                                rendered = try renderer.renderConverted(buffer, depth: latest.depth, strength: model.depthStrength, popOut: model.depthPopOut, protectProportions: model.depthProportionProtection, distance: immersive ? model.library.screenDistance : nil, swapped: model.swapEyes, disparityGain: gain)
                                 model.depthStatus = "Depth Anything V2 Small · 本机转换"
                                 if rendered, newBuffer != nil {
                                     model.recordConvertedFrame(age: (ProcessInfo.processInfo.systemUptime - latest.capturedAt) * 1000)
@@ -422,6 +429,10 @@ struct StereoPlayerView: View {
                             } else {
                                 rendered = try renderer.render(buffer, swapped: model.swapEyes, layout: .flat)
                                 model.depthStatus = "正在更新深度 · 暂用平面画面"
+                            }
+                            if rendered, newBuffer != nil {
+                                model.depthGainSamples.append(gain)
+                                if model.depthGainSamples.count > 600 { model.depthGainSamples.removeFirst() }
                             }
                             lastDepthVersion = stream.version
                         } else {

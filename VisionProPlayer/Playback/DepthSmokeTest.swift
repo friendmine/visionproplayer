@@ -3,8 +3,10 @@ import Foundation
 extension PlayerModel {
     #if DEBUG
     func runDepthProbe(name: String) async {
-        let engine: PlaybackEngine = name == "depth-vlc" ? .vlc : .native
+        let engine: PlaybackEngine = name.hasSuffix("vlc") ? .vlc : .native
         let sample: CompatibilitySample = engine == .vlc ? .hevcMKV : .hevcMP4
+        let source = name.hasPrefix("depth-motion-")
+            ? URL.documentsDirectory.appending(path: engine == .vlc ? "BBB-Motion-2D-30s.mkv" : "BBB-Motion-2D-30s.mp4") : sample.url
         var checks: [[String: Any]] = []
         func waitUntil(seconds: Double = 10, _ predicate: () -> Bool) async {
             let deadline = ProcessInfo.processInfo.systemUptime + seconds
@@ -15,7 +17,7 @@ extension PlayerModel {
         depthPopOut = 0.6
         depthStrength = 0.35
         depthProportionProtection = true
-        openSample(sample.url, layout: .flat, engine: engine, convert2D: true)
+        openSample(source, layout: .flat, engine: engine, convert2D: true)
         await waitForPendingChange()
         await waitUntil(seconds: 45) { depthPredictions > 8 || rendererError != nil || errorMessage != nil }
         checks.append(["name": "model-and-render-started", "passed": depthPredictions > 8 && rendererError == nil && errorMessage == nil])
@@ -26,11 +28,14 @@ extension PlayerModel {
         let startMedia = elapsed
         let startClock = vlc?.clockDiagnostics ?? [:]
         let convertedStart = depthConvertedFrames
-        depthInferenceSamples.removeAll(); depthAgeSamples.removeAll()
+        let resetStart = depthSceneResets
+        depthInferenceSamples.removeAll(); depthAgeSamples.removeAll(); depthGainSamples.removeAll()
         try? await Task.sleep(for: .seconds(10))
         let seconds = ProcessInfo.processInfo.systemUptime - start
         let fps = Double(renderedFrames - startFrames) / seconds
         let times = depthInferenceSamples.sorted(), ages = depthAgeSamples.sorted()
+        let gains = depthGainSamples.sorted()
+        let sceneResets = depthSceneResets - resetStart
         let mean = times.reduce(0, +) / Double(max(1, times.count))
         let p95 = times.isEmpty ? 0 : times[min(times.count - 1, Int(Double(times.count) * 0.95))]
         let age95 = ages.isEmpty ? 0 : ages[min(ages.count - 1, Int(Double(ages.count) * 0.95))]
@@ -148,6 +153,12 @@ extension PlayerModel {
         let report = smokeMetadata().merging([
             "sample": name, "engine": engine.rawValue, "depthMapping": "anchored-relief-v2", "projectionSampling": "proportion-protected-forward-v1", "proportionProtection": depthProportionProtection, "checks": checks, "popOut": depthPopOut, "screenWidthMeters": depthScreenWidthMeters,
             "benchmarkSeconds": seconds, "submittedFPS": fps,
+            "temporalPolicy": "motion-aware-cuts-continuous-history-v1",
+            "sourceFile": source.lastPathComponent, "sceneResetsInBenchmark": sceneResets,
+            "depthGainMinimum": gains.first ?? 0,
+            "depthGainMedian": gains.isEmpty ? 0 : gains[gains.count / 2],
+            "depthGainBelowHalfFrames": gains.filter { $0 < 0.5 }.count,
+            "depthGainSamples": gains.count,
             "pausedFrameUpdates": pausedFrameUpdates, "pausedDepthUpdates": pausedDepthUpdates,
             "highReliefSeconds": highSeconds, "highReliefFPS": highFPS, "highReliefConvertedFrames": highConvertedCount, "inferenceMeanMS": mean,
             "inferenceP95MS": p95, "depthAgeP95MS": age95, "convertedFramesInBenchmark": convertedDuringBenchmark,

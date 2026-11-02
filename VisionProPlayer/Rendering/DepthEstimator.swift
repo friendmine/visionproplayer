@@ -24,7 +24,6 @@ actor DepthEstimator {
     private let colorSpace = CGColorSpace(name: CGColorSpace.sRGB)!
     private var previousID: UUID?
     private var previousRevision = -1
-    private var previousLuma: [Float] = []
     private var lower: Float = 0
     private var upper: Float = 1
 
@@ -59,10 +58,10 @@ actor DepthEstimator {
         let scaled = image.transformed(by: CGAffineTransform(scaleX: CGFloat(width) / image.extent.width,
                                                              y: CGFloat(height) / image.extent.height))
         context.render(scaled, to: inputBuffer, bounds: CGRect(x: 0, y: 0, width: width, height: height), colorSpace: colorSpace)
-        let luma = Self.lumaSamples(inputBuffer)
-        let sceneDifference = previousLuma.count == luma.count
-            ? zip(luma, previousLuma).reduce(Float(0)) { $0 + abs($1.0 - $1.1) } / Float(luma.count) : 1
-        let reset = previousID != input.requestID || previousRevision != input.revision || sceneDifference > 0.16
+        // The stream checks every offered video frame, including those skipped
+        // by inference. Do not detect cuts again between sparse model inputs:
+        // their larger motion used to trigger additional false resets.
+        let reset = previousID != input.requestID || previousRevision != input.revision
         let prediction = try model.prediction(from: MLDictionaryFeatureProvider(dictionary: ["image": MLFeatureValue(pixelBuffer: inputBuffer)]))
         try Task.checkCancellation()
         guard let depth = prediction.featureValue(for: "depth")?.imageBufferValue else { throw DepthError.invalidOutput }
@@ -71,7 +70,7 @@ actor DepthEstimator {
         let low = values[values.count / 20], high = max(low + 0.0001, values[values.count * 19 / 20])
         lower = reset ? low : lower * 0.85 + low * 0.15
         upper = reset ? high : upper * 0.85 + high * 0.15
-        previousID = input.requestID; previousRevision = input.revision; previousLuma = luma
+        previousID = input.requestID; previousRevision = input.revision
         return EstimatedDepth(buffer: depth, lower: lower, upper: max(lower + 0.0001, upper),
             resetHistory: reset, milliseconds: (ProcessInfo.processInfo.systemUptime - began) * 1000)
     }
@@ -81,12 +80,19 @@ actor DepthEstimator {
         defer { CVPixelBufferUnlockBaseAddress(buffer, .readOnly) }
         guard let base = CVPixelBufferGetBaseAddress(buffer)?.assumingMemoryBound(to: UInt8.self) else { return [] }
         var result: [Float] = []
-        for gy in 0..<12 {
-            let y = gy * CVPixelBufferGetHeight(buffer) / 12
-            for gx in 0..<16 {
-                let x = gx * CVPixelBufferGetWidth(buffer) / 16
-                let p = y * CVPixelBufferGetBytesPerRow(buffer) + x * 4
-                result.append((Float(base[p]) + Float(base[p+1]) * 2 + Float(base[p+2])) / 1020)
+        let width = CVPixelBufferGetWidth(buffer), height = CVPixelBufferGetHeight(buffer)
+        let stride = CVPixelBufferGetBytesPerRow(buffer)
+        for gy in 0..<DepthSceneChange.rows {
+            for gx in 0..<DepthSceneChange.columns {
+                // Sample a small area, not one aliased pixel of a moving texture.
+                var sum: Float = 0
+                for sy in 0..<3 { for sx in 0..<3 {
+                    let x = min(width - 1, (gx * 6 + sx * 2 + 1) * width / (DepthSceneChange.columns * 6))
+                    let y = min(height - 1, (gy * 6 + sy * 2 + 1) * height / (DepthSceneChange.rows * 6))
+                    let p = y * stride + x * 4
+                    sum += (Float(base[p]) + Float(base[p+1]) * 2 + Float(base[p+2])) / 1020
+                }}
+                result.append(sum / 9)
             }
         }
         return result
@@ -134,16 +140,18 @@ final class DepthStream {
     private let estimator: DepthEstimator
     private let requestID: UUID
     private let onPrediction: (Double) -> Void
+    private let onSceneReset: () -> Void
     private var job: Task<Void, Never>?
     private var token = 0
+    var generation: Int { token }
     private var revision = -1
     private var signature: [Float] = []
     private(set) var latest: Result?
     private(set) var version = 0
     private(set) var error: String?
 
-    init(estimator: DepthEstimator, requestID: UUID, onPrediction: @escaping (Double) -> Void) {
-        self.estimator = estimator; self.requestID = requestID; self.onPrediction = onPrediction
+    init(estimator: DepthEstimator, requestID: UUID, onSceneReset: @escaping () -> Void = {}, onPrediction: @escaping (Double) -> Void) {
+        self.estimator = estimator; self.requestID = requestID; self.onPrediction = onPrediction; self.onSceneReset = onSceneReset
     }
     func reset(revision: Int) {
         self.revision = revision; token += 1; latest = nil; signature = []; version += 1
@@ -151,9 +159,9 @@ final class DepthStream {
     func offer(_ buffer: CVPixelBuffer, revision: Int) {
         if self.revision != revision { reset(revision: revision) }
         let newSignature = DepthEstimator.lumaSamples(buffer)
-        if signature.count == newSignature.count, !signature.isEmpty {
-            let change = zip(signature, newSignature).reduce(Float(0)) { $0 + abs($1.0 - $1.1) } / Float(signature.count)
-            if change > 0.16 { token += 1; latest = nil; version += 1 }
+        if !signature.isEmpty, DepthSceneChange.detected(previous: signature, current: newSignature) {
+            token += 1; latest = nil; version += 1
+            onSceneReset()
         }
         signature = newSignature
         guard job == nil else { return }

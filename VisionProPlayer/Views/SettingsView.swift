@@ -113,6 +113,12 @@ struct DiagnosticsView: View {
             Section("AI 立体") {
                 Button("2D 转 3D · 原生") { play(CompatibilitySample.hevcMP4.url, .flat, .native, depth: true) }
                 Button("2D 转 3D · VLC") { play(CompatibilitySample.hevcMKV.url, .flat, .vlc, depth: true) }
+                ForEach([PlaybackEngine.native, .vlc]) { engine in
+                    let url = URL.documentsDirectory.appending(path: engine == .vlc ? "BBB-Motion-2D-30s.mkv" : "BBB-Motion-2D-30s.mp4")
+                    if FileManager.default.fileExists(atPath: url.path) {
+                        Button("运动与切镜头 · \(engine.title)") { play(url, .flat, engine, depth: true) }
+                    }
+                }
             }
         }.navigationTitle("诊断与测试")
     }

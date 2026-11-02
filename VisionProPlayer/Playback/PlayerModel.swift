@@ -41,6 +41,8 @@ final class PlayerModel {
     var depthConvertedFrames = 0
     var depthInferenceSamples: [Double] = []
     var depthAgeSamples: [Double] = []
+    @ObservationIgnored var depthGainSamples: [Float] = []
+    @ObservationIgnored var depthSceneResets = 0
     @ObservationIgnored let depthEstimator = DepthEstimator()
     @ObservationIgnored private var depthFrameTimes: [Double] = []
     var request: PlaybackRequest?
@@ -172,7 +174,8 @@ final class PlayerModel {
         depthRevision += 1
         depthStatus = next.converts2D ? "正在准备深度模型…" : "等待转换"
         depthPredictions = 0; depthConvertedFrames = 0; depthFrameTimes = []; depthInferenceMS = 0; depthDisplayFPS = 0
-        depthInferenceSamples.removeAll(); depthAgeSamples.removeAll()
+        depthInferenceSamples.removeAll(); depthAgeSamples.removeAll(); depthGainSamples.removeAll()
+        depthSceneResets = 0
         errorMessage = nil; rendererError = nil
         renderedFrames = 0; stereoDisplayAspect = 0; frameSize = "等待视频帧"
         progress = 0; elapsed = 0; duration = 0

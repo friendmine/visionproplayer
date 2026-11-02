@@ -21,8 +21,13 @@ kernel void stabilizeDepth(texture2d<float, access::sample> raw [[texture(0)]],
     }
     float d = value / weight;
     float old = previous.sample(linearClamp, uv).r;
-    // Smooth small variations, but follow moving depth boundaries without a long trail.
-    if (params.z < 0.5 && abs(old - d) < 0.08) d = mix(old, d, 0.4);
+    // Continuous history weighting avoids the old 0.08 hard threshold, where
+    // nearly identical changes abruptly switched from blending to no history.
+    // Large boundary changes use current depth immediately, without a trail.
+    if (params.z < 0.5) {
+        float history = 0.70 * (1.0 - smoothstep(0.025, 0.10, abs(old - d)));
+        d = mix(d, old, history);
+    }
     output.write(half4(half(d),0,0,1), p);
 }
 
@@ -157,7 +162,7 @@ vertex ProjectedVertex projectStereoVertex(uint id [[vertex_id]],
         + field.sample(linearClamp, sampleUV + float2(0, 1.0 / size.y)).r * 0.25
         + field.sample(linearClamp, sampleUV - float2(0, 1.0 / size.y)).r * 0.25;
     ProjectedVertex out;
-    out.position = float4(2.0 * (uv.x + grid.z * shift) - 1.0, 1.0 - 2.0 * uv.y, 0.5, 1.0);
+    out.position = float4(2.0 * (uv.x + grid.z * shift * grid.w) - 1.0, 1.0 - 2.0 * uv.y, 0.5, 1.0);
     out.uv = uv;
     return out;
 }

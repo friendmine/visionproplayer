@@ -1,0 +1,99 @@
+{
+  "date": "2026-11-02",
+  "environment": "Mac GPU and offline video decoding",
+  "passed": true,
+  "temporalPolicy": "motion-aware-cuts-continuous-history-v1",
+  "synthetic": {
+    "translatedScenes": 18,
+    "legacyFalseCuts": 16,
+    "newFalseCuts": 0,
+    "unrelatedCuts": 8,
+    "noiseOutputToInputRMS": 0.17944363,
+    "recoveryFrameRates": [
+      24,
+      30,
+      60
+    ],
+    "checks": [
+      "exposure and black transition",
+      "150ms expiry",
+      "cut reset",
+      "paused immediate settling",
+      "continuous history weight",
+      "moving depth boundary",
+      "linear final disparity gain",
+      "opaque full coverage"
+    ]
+  },
+  "motionFixture": {
+    "frames": 900,
+    "insertedCuts": [
+      6,
+      12,
+      18,
+      24
+    ],
+    "newCuts": [
+      0.16666666666666666,
+      6,
+      7.766666666666667,
+      12,
+      13.466666666666667,
+      18,
+      24
+    ],
+    "oldCuts": [
+      0.16666666666666666,
+      6,
+      7.766666666666667,
+      12,
+      13.466666666666667,
+      18,
+      24
+    ],
+    "passed": true,
+    "readerStatus": 2,
+    "scope": "Offline decoded motion fixture; does not measure headset perception"
+  },
+  "regressions": {
+    "contourCases": 864,
+    "adversarialFields": 15,
+    "proportionCases": 126,
+    "colorComparisons": 41,
+    "maximumLinearRGBAError": 3.8146973e-06
+  },
+  "sourceSHA256": {
+    "VisionProPlayer/Rendering/DepthTemporalPolicy.swift": "83728f61787a6976ccb730ccd99b12a56dfa7fe82c02f412eb0a4938c499e893",
+    "VisionProPlayer/Rendering/DepthEstimator.swift": "d54a516faebd65b5afcb8fcbeb20b9251f7d5575fa3764fdb4dacc4dac73bfb1",
+    "VisionProPlayer/Rendering/DepthStereo.metal": "150b0c8f449c317887b2dde3720e428737c0bbb022c03707cf263285fe343a96",
+    "VisionProPlayer/Rendering/StereoReprojector.swift": "62102d16ba3db0f383ac87935691416e1889af7b7e9f636fcca17cbe2b63fb22",
+    "VisionProPlayer/Rendering/StereoRenderer.swift": "60d853c4b5f4957ee7a9c78a4996b69ee18c94cbdea2300fdce4c81f1e96c77b",
+    "VisionProPlayer/Rendering/VideoColorConverter.swift": "00307c9729825d370d0d2eb6265ba11b9fb2c5ae75de9f038b1910f19576b430",
+    "Scripts/test_depth_temporal.swift": "b1c5f75ca94bd5a74e1a5488a049abf54f3b31da74c72d278bacf8f496eba4ab",
+    "Scripts/test_motion_scenes.swift": "8c7296b49732e8fb380ed2f96eddf8ec23db3bd1d6ef305611557f3b91784e5e",
+    "Scripts/prepare_motion_sample.py": "a6199eb8c93a0087ff77f3fc9210da2230f38675854f9a093afab42234afe847"
+  },
+  "physicalDeviceStatus": "Native and VLC each passed 13 automated checks on physical Vision Pro. Wearer subsequently clarified the apparent artifact was character movement and confirmed playback is now normal; own-video proportions, window and cinema playback were also reported normal.",
+  "physicalDeviceReports": [
+    "PhysicalDevice/DepthTemporalStability/depth-motion-native.json",
+    "PhysicalDevice/DepthTemporalStability/depth-motion-vlc.json"
+  ],
+  "wearerAcceptance": {
+    "date": "2026-11-02",
+    "passed": true,
+    "initialMotionFixtureFeedback": "出现拖影、闪动或卡顿",
+    "clarifiedMotionFixtureFeedback": "现在好了，原来是人物的运动",
+    "followUpFeedback": "现在好了",
+    "ownVideoFeedback": "比例自然，窗口和影院都正常",
+    "scope": "Acceptance limited to the tested scenes and user observations. User corrected the earlier artifact report; no additional rendering code change occurred between reports. No quantitative perceptual improvement or exhaustive engine-specific 2D/AI comparison is inferred."
+  },
+  "sourceCadenceCheck": {
+    "frames": 900,
+    "nominalFPS": 30,
+    "minimumFrameIntervalSeconds": 0.033333,
+    "maximumFrameIntervalSeconds": 0.033334,
+    "irregularIntervals": 0,
+    "blackDetection": "No black intervals reported with duration >=0.03s and pixel threshold 0.02 (ffmpeg blackdetect defaults otherwise).",
+    "scope": "Offline input file only; does not establish output cadence or perceived smoothness."
+  }
+}
