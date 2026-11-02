@@ -7,7 +7,9 @@ extension PlayerModel {
     func runDepthEnduranceProbe(name: String) async {
         let engine: PlaybackEngine = name.hasSuffix("vlc") ? .vlc : .native
         depthMotionAlignment = !ProcessInfo.processInfo.arguments.contains("--depth-motion-baseline")
+        depthEdgeRefinement = depthMotionAlignment && !ProcessInfo.processInfo.arguments.contains("--depth-reference-063")
         let alignment = depthMotionAlignment
+        let edges = depthEdgeRefinement
         let source = URL.documentsDirectory.appending(path: engine == .vlc ? "BBB-Motion-2D-30s.mkv" : "BBB-Motion-2D-30s.mp4")
         depthStrength = 0.35; depthPopOut = 0.6; depthProportionProtection = true
         openSample(source, layout: .flat, engine: engine, convert2D: true)
@@ -74,7 +76,7 @@ extension PlayerModel {
                     "intervalSamples": intervals.count, "excludedSeekIntervals": max(0, times.count - 1 - intervals.count),
                     "gpuP95MS": percentile(gpu, 0.95), "thermalState": ProcessInfo.processInfo.thermalState.rawValue,
                     "passed": passed])
-                write(["sample": name, "motionAlignment": alignment, "elapsedSeconds": now - start,
+                write(["sample": name, "motionAlignment": alignment, "edgeRefinement": edges, "elapsedSeconds": now - start,
                     "completedSegments": segments.count, "latestSegment": segments.last!], suffix: "-progress")
                 segmentStart = now; segmentFrames = renderedFrames
                 depthDisplayTimes.removeAll(); depthGPUTimeSamples.removeAll()
@@ -83,7 +85,7 @@ extension PlayerModel {
         let duration = ProcessInfo.processInfo.systemUptime - start
         let passed = failure == nil && !Task.isCancelled && duration >= 1200 && segments.count >= 39
             && segments.allSatisfy { $0["passed"] as? Bool == true }
-        write(["sample": name, "sourceFile": source.lastPathComponent, "motionAlignment": alignment,
+        write(["sample": name, "sourceFile": source.lastPathComponent, "motionAlignment": alignment, "edgeRefinement": edges,
             "motionAlgorithm": alignment ? "bidirectional-patch-v1" : "baseline-0.6.2",
             "durationSeconds": duration, "segments": segments, "loopSeeks": seekWindows.count,
             "recentStates": recentStates,

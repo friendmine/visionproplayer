@@ -239,11 +239,11 @@ struct MotionAlignmentComparison: View {
     @Bindable var model: PlayerModel
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Picker("运动处理", selection: $model.depthMotionAlignment) {
-                Text("稳定版 0.6.2").tag(false)
-                Text("运动对齐 · 实验").tag(true)
+            Picker("画面处理", selection: $model.depthEdgeRefinement) {
+                Text("稳定版 0.6.3").tag(false)
+                Text("边缘与细节 · 实验").tag(true)
             }
-            Text("保持影片位置和立体参数不变作对比。只在本次使用期间生效，暂停时也可切换。")
+            Text("两种模式均使用运动对齐。保持影片位置和立体参数不变作对比。只在本次使用期间生效，暂停时也可切换。")
                 .font(.caption).foregroundStyle(.secondary)
         }
     }

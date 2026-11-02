@@ -34,6 +34,7 @@ final class PlayerModel {
     var depthProportionProtection = true
     // Session-only diagnostic choice; never overwrite per-film picture settings.
     var depthMotionAlignment = true
+    var depthEdgeRefinement = true
     @ObservationIgnored var depthScreenWidthMeters: Float = 0
     var depthRevision = 0
     var depthStatus = "等待转换"
@@ -49,6 +50,7 @@ final class PlayerModel {
     @ObservationIgnored var depthGPUTimeSamples: [Double] = []
     #if DEBUG
     @ObservationIgnored var lastBackgroundPause: Double?
+    var diagnosticPlaybackGeneration: Int { openGeneration }
     #endif
     @ObservationIgnored let depthEstimator = DepthEstimator()
     @ObservationIgnored private var depthFrameTimes: [Double] = []

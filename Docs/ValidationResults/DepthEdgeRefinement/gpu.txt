@@ -1,0 +1,26 @@
+dark=false shift=-1.0 boundary error reduction=0.892606
+projected RGB error reduction=0.6307006
+dark=false shift=0.0 boundary error reduction=0.89532274
+projected RGB error reduction=0.6441153
+dark=false shift=0.5 boundary error reduction=0.8934978
+projected RGB error reduction=0.7637585
+dark=false shift=1.0 boundary error reduction=0.8915987
+projected RGB error reduction=0.60854757
+dark=true shift=-1.0 boundary error reduction=0.8899713
+projected RGB error reduction=0.5952369
+dark=true shift=0.0 boundary error reduction=0.8917894
+projected RGB error reduction=0.6262896
+dark=true shift=0.5 boundary error reduction=0.8902165
+projected RGB error reduction=0.76174617
+dark=true shift=1.0 boundary error reduction=0.88888586
+projected RGB error reduction=0.573534
+{
+  "flatColorMaximumDifference" : 0.00019532442092895508,
+  "maximumProtectedSlopeX" : 0.070000052452087402,
+  "maximumProtectedSlopeY" : 0.070000171661376953,
+  "minimumBoundaryDepthErrorReduction" : 0.88888585567474365,
+  "minimumProjectedImageErrorReduction" : 0.57353401184082031,
+  "passed" : true,
+  "scope" : "Synthetic visible silhouette and confidence tests, not recovered hidden detail or subjective improvement",
+  "unreliableMotionMaximumDifference" : 0.00019532442092895508
+}

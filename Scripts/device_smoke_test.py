@@ -14,10 +14,13 @@ def main():
     parser.add_argument("device", help="CoreDevice identifier or UDID")
     parser.add_argument("--capture", action="store_true", help="Save the first converted eye textures in the app Documents directory (Debug only)")
     parser.add_argument("--baseline", action="store_true", help="Use the preserved 0.6.2 depth path for an AI comparison")
+    parser.add_argument("--reference-063", action="store_true", help="Use 0.6.3 motion alignment without edge refinement")
     parser.add_argument("--resume-stress", action="store_true", help="Repeat paused-seek/resume checks with clock traces")
     parser.add_argument("sample", choices=["ou-native", "ou-vlc", "half-ou-native", "half-ou-vlc", "2d", "mkv", "sbs-native", "sbs-vlc", "bbb-native", "bbb-vlc", "lifecycle", "routing", "product", "depth-native", "depth-vlc", "depth-motion-native", "depth-motion-vlc", "depth-endurance-native", "depth-endurance-vlc",
                                            "hevc-mp4", "hevc-mkv", "half-h264-native", "half-h264-vlc", "half-hevc-native", "half-hevc-vlc"])
     args = parser.parse_args()
+    if args.baseline and args.reference_063:
+        parser.error("Choose either --baseline or --reference-063")
     bundle = "com.jeff.visionproplayer"
     output = Path(__file__).resolve().parent.parent / ".build/physical-validation"
     output.mkdir(parents=True, exist_ok=True)
@@ -48,6 +51,7 @@ def main():
                      "--terminate-existing", "--timeout", "20", bundle,
                      "--smoke", args.sample, "--smoke-run-id", run_id, *(["--depth-capture"] if args.capture else []),
                      *(["--depth-motion-baseline"] if args.baseline else []),
+                     *(["--depth-reference-063"] if args.reference_063 else []),
                      *(["--depth-resume-stress"] if args.resume_stress else []))
         if result.returncode:
             raise SystemExit(result.stdout + result.stderr)
@@ -81,7 +85,7 @@ def main():
                 continue
             if report.get("environment") != "physical-device":
                 raise SystemExit("Report does not identify a physical device.")
-            destination = output / f"{args.sample}{'-baseline' if args.baseline else ''}{'-resume-stress' if args.resume_stress else ''}.json"
+            destination = output / f"{args.sample}{'-baseline' if args.baseline else ''}{'-reference-063' if args.reference_063 else ''}{'-resume-stress' if args.resume_stress else ''}.json"
             destination.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
             print(destination)
             print(json.dumps(report, ensure_ascii=False, indent=2))

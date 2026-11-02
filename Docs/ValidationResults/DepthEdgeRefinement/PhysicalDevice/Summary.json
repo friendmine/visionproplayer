@@ -1,0 +1,66 @@
+{
+  "date": "2026-11-02",
+  "automaticShortChecksPassed": true,
+  "wearerAcceptance": "passed for the reported scenes",
+  "scope": "Four sequential physical-device short probes; not scanout, long-run thermal validation, or perceptual acceptance",
+  "rows": [
+    {
+      "engine": "native",
+      "mode": "0.6.3ok",
+      "report": "depth-motion-native-reference-063.json",
+      "runID": "91e648f8-cba8-44d5-ab96-4b53f2bcd1ff",
+      "checks": 16,
+      "submittedFPS": 29.991899313020824,
+      "highReliefFPS": 29.993274789241934,
+      "gpuMeanMS": 10.997103055706248,
+      "gpuP95MS": 14.773833332583308,
+      "submissionIntervalP95MS": 37.362624978413805,
+      "submissionMaximumIntervalMS": 41.9837916851975
+    },
+    {
+      "engine": "native",
+      "mode": "color-guided-depth-v1",
+      "report": "depth-motion-native.json",
+      "runID": "b4079cdb-c3cf-4b33-96a7-efcec15a0d6e",
+      "checks": 16,
+      "submittedFPS": 29.99820635717789,
+      "highReliefFPS": 29.993888745227064,
+      "gpuMeanMS": 11.85516708297655,
+      "gpuP95MS": 15.55991664645262,
+      "submissionIntervalP95MS": 37.00554167153314,
+      "submissionMaximumIntervalMS": 41.52854165295139
+    },
+    {
+      "engine": "vlc",
+      "mode": "0.6.3ok",
+      "report": "depth-motion-vlc-reference-063.json",
+      "runID": "7fccc04f-2c8d-4ad9-a1b8-0c5f3800c5de",
+      "checks": 16,
+      "submittedFPS": 29.892163893740346,
+      "highReliefFPS": 29.745470012858544,
+      "gpuMeanMS": 10.894049749589746,
+      "gpuP95MS": 14.036875014426187,
+      "submissionIntervalP95MS": 38.687749998643994,
+      "submissionMaximumIntervalMS": 82.90783333359286
+    },
+    {
+      "engine": "vlc",
+      "mode": "color-guided-depth-v1",
+      "report": "depth-motion-vlc.json",
+      "runID": "2aaa3c49-9c03-4c58-a50f-45987410e6df",
+      "checks": 16,
+      "submittedFPS": 29.899502796198625,
+      "highReliefFPS": 29.870965397154016,
+      "gpuMeanMS": 11.966886565931777,
+      "gpuP95MS": 14.697999984491616,
+      "submissionIntervalP95MS": 38.11862500151619,
+      "submissionMaximumIntervalMS": 90.3205833164975
+    }
+  ],
+  "wearerFeedback": {
+    "date": "2026-11-02",
+    "edgesAndProportions": "新版边缘改善，人物比例自然",
+    "playback": "两条路径流畅、声音同步，无新增异常",
+    "scope": "User-reported scenes and settings; no separate claim of cinema-specific coverage or long-run performance."
+  }
+}

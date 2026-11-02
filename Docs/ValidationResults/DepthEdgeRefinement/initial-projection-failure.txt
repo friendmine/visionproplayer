@@ -1,0 +1,11 @@
+FAIL: Final eye images must improve against the same projection with ideal depth
+dark=false shift=-1.0 boundary error reduction=0.3963235
+projected RGB error reduction=0.020995796
+dark=false shift=0.0 boundary error reduction=0.38897377
+projected RGB error reduction=-0.15116334
+Traceback (most recent call last):
+  File "<repository>/Scripts/test_depth_warp.py", line 43, in <module>
+    subprocess.run([str(executable), *arguments], cwd=root, check=True)
+  File "<user-home>/.pyenv/versions/3.11.7/lib/python3.11/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/var/folders/6f/pr9tfltj3sgcmxrqp066_tgm0000gn/T/vpp-depth-gpu-twi9a0pp/test-depth-warp']' returned non-zero exit status 1.

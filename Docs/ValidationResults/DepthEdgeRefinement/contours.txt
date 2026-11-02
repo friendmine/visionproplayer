@@ -1,0 +1,5 @@
+Proportion protection: true
+PASS: identity, eye direction, orientation/color, pop-out, disparity cap, full coverage, continuous silhouettes and edge-preserving depth
+Contour cases: 864, failures: 0, worst reverse contrast: 1.4126301e-05
+PASS: diagonal contours, both edge directions, depth/color offsets, weak/default/high relief and screen caps
+PASS: 15 adversarial disparity fields, zero identity, caps, fixed endpoints, repeatability; maximum slope: 0.45000052

@@ -1,0 +1,254 @@
+{
+  "benchmarkSeconds": 10.001094250008464,
+  "checks": [
+    {
+      "name": "model-and-render-started",
+      "passed": true
+    },
+    {
+      "intervalP95MS": 37.10983332712203,
+      "maximumIntervalMS": 41.53254168340936,
+      "name": "submission-cadence",
+      "passed": true
+    },
+    {
+      "endClock": {},
+      "endMedia": 13.547787126,
+      "name": "sustained-conversion",
+      "passed": true,
+      "startClock": {},
+      "startMedia": 3.466033292
+    },
+    {
+      "name": "high-relief-sustained-conversion",
+      "passed": true
+    },
+    {
+      "name": "seek-resets-depth-history",
+      "passed": true
+    },
+    {
+      "name": "paused-picture-stays-static",
+      "passed": true
+    },
+    {
+      "name": "pause-and-strength-redraw",
+      "passed": true
+    },
+    {
+      "name": "paused-pop-out-redraw",
+      "passed": true
+    },
+    {
+      "name": "paused-relief-sweep-keeps-position",
+      "passed": true
+    },
+    {
+      "name": "paused-proportion-protection-toggle-redraws-and-settles",
+      "passed": true,
+      "samples": [
+        {
+          "depthUpdates": 0,
+          "enabled": false,
+          "frameUpdates": 1,
+          "playing": false,
+          "settledDepthUpdates": 0,
+          "settledFrameUpdates": 0
+        },
+        {
+          "depthUpdates": 0,
+          "enabled": true,
+          "frameUpdates": 1,
+          "playing": false,
+          "settledDepthUpdates": 0,
+          "settledFrameUpdates": 0
+        }
+      ]
+    },
+    {
+      "name": "paused-motion-comparison-same-frame",
+      "passed": false,
+      "samples": [
+        {
+          "depthUpdates": -303,
+          "enabled": false,
+          "frameUpdates": -938,
+          "settledFrameUpdates": 12
+        },
+        {
+          "depthUpdates": 12,
+          "enabled": true,
+          "frameUpdates": 25,
+          "settledFrameUpdates": 12
+        }
+      ]
+    },
+    {
+      "name": "paused-edge-comparison-same-frame",
+      "passed": false,
+      "samples": [
+        {
+          "depthUpdates": 12,
+          "enabled": false,
+          "frameUpdates": 25,
+          "settledFrameUpdates": 12
+        },
+        {
+          "depthUpdates": 13,
+          "enabled": true,
+          "frameUpdates": 25,
+          "settledFrameUpdates": 12
+        }
+      ]
+    },
+    {
+      "elapsed": 1533.855868583,
+      "framesSinceSeek": 284,
+      "name": "paused-seek-updates-then-settles",
+      "passed": false,
+      "playing": true,
+      "position": 0.20154945765526286,
+      "settledDepthUpdates": 12,
+      "settledFrameUpdates": 24,
+      "state": "播放中",
+      "updated": false
+    },
+    {
+      "clock": {},
+      "continuous": false,
+      "elapsed": 1535.371721583,
+      "name": "resume-conversion",
+      "newDepthPredictions": 18,
+      "passed": false,
+      "pausedElapsed": 1532.845378958,
+      "playing": true,
+      "trace": [
+        {
+          "age": 7.500057108700275e-07,
+          "clock": {},
+          "elapsed": 1533.855868583
+        },
+        {
+          "age": 0.10071441667969339,
+          "clock": {},
+          "elapsed": 1533.855868583
+        },
+        {
+          "age": 0.2025790416810196,
+          "clock": {},
+          "elapsed": 1533.855868583
+        },
+        {
+          "age": 0.3040326666668989,
+          "clock": {},
+          "elapsed": 1534.106570625
+        },
+        {
+          "age": 0.4067565416917205,
+          "clock": {},
+          "elapsed": 1534.106570625
+        },
+        {
+          "age": 0.5073267916741315,
+          "clock": {},
+          "elapsed": 1534.359585542
+        },
+        {
+          "age": 0.6075469583447557,
+          "clock": {},
+          "elapsed": 1534.359585542
+        },
+        {
+          "age": 0.7085802500077989,
+          "clock": {},
+          "elapsed": 1534.359585542
+        },
+        {
+          "age": 0.8101386666821782,
+          "clock": {},
+          "elapsed": 1534.610069875
+        },
+        {
+          "age": 0.9168431250145659,
+          "clock": {},
+          "elapsed": 1534.610069875
+        },
+        {
+          "age": 1.0181925416691229,
+          "clock": {},
+          "elapsed": 1534.860934917
+        },
+        {
+          "age": 1.1246559583523776,
+          "clock": {},
+          "elapsed": 1534.860934917
+        },
+        {
+          "age": 1.2256568750017323,
+          "clock": {},
+          "elapsed": 1534.860934917
+        },
+        {
+          "age": 1.3278517916915007,
+          "clock": {},
+          "elapsed": 1535.114105083
+        },
+        {
+          "age": 1.4290529166755732,
+          "clock": {},
+          "elapsed": 1535.114105083
+        }
+      ]
+    },
+    {
+      "name": "disable-preserves-position",
+      "passed": true
+    },
+    {
+      "name": "reenable-conversion",
+      "passed": true
+    }
+  ],
+  "convertedFramesInBenchmark": 289,
+  "depthAgeP95MS": 103.40916668064892,
+  "depthGainBelowHalfFrames": 21,
+  "depthGainMedian": 1,
+  "depthGainMinimum": 0,
+  "depthGainSamples": 300,
+  "depthMapping": "anchored-relief-v2",
+  "edgeAlgorithm": "color-guided-depth-v1",
+  "edgeRefinement": true,
+  "engine": "native",
+  "environment": "physical-device",
+  "error": "",
+  "frameSize": "2D 1920 × 1080 → AI 左右眼",
+  "gpuMeanMS": 11.85613097176732,
+  "gpuP95MS": 15.193250001175329,
+  "highReliefConvertedFrames": 235,
+  "highReliefFPS": 29.984780225223982,
+  "highReliefSeconds": 8.00406066668802,
+  "inferenceMeanMS": 43.57580470592797,
+  "inferenceP95MS": 49.926375009818,
+  "motionAlgorithm": "bidirectional-patch-v1",
+  "motionAlignment": true,
+  "passed": false,
+  "pausedDepthUpdates": 0,
+  "pausedFrameUpdates": 0,
+  "popOut": 0,
+  "projectionSampling": "proportion-protected-forward-v1",
+  "proportionProtection": true,
+  "runID": "70a560c8-c6b5-4b4b-b10b-cd73dca34130",
+  "sample": "depth-motion-native",
+  "sceneResetsInBenchmark": 4,
+  "scope": "10-second warmed-up submission benchmark, not headset scanout FPS or long-run thermal validation. Perceived depth, artifacts and audio sync need manual observation.",
+  "screenWidthMeters": 0.6535947918891907,
+  "sourceFile": "BBB-Motion-2D-30s.mp4",
+  "submissionGapsOver50MS": 0,
+  "submissionIntervalP95MS": 37.10983332712203,
+  "submissionMaximumIntervalMS": 41.53254168340936,
+  "submittedFPS": 29.99671760915023,
+  "systemVersion": "Version 27.0.1 (Build 24M372)",
+  "temporalPolicy": "motion-aware-cuts-continuous-history-v1",
+  "thermalState": 0,
+  "timestamp": "2026-11-02T11:11:09Z"
+}

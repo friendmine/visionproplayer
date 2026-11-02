@@ -1,0 +1,21 @@
+{
+  "flatColorMaximumDifference": 0.00019532442092895508,
+  "maximumProtectedSlopeX": 0.0700000524520874,
+  "maximumProtectedSlopeY": 0.07000017166137695,
+  "minimumBoundaryDepthErrorReduction": 0.8888858556747437,
+  "minimumProjectedImageErrorReduction": 0.5735340118408203,
+  "passed": true,
+  "scope": "Synthetic visible silhouette and confidence tests, not recovered hidden detail or subjective improvement",
+  "unreliableMotionMaximumDifference": 0.00019532442092895508,
+  "date": "2026-11-02",
+  "algorithm": "color-guided-depth-v1",
+  "baseline": "0.6.3ok",
+  "physicalDeviceStatus": "Four physical-device short probes passed, 16 checks each. User confirmed improved edges, natural proportions, smooth native/VLC playback, synchronized sound and no new artifacts. No endurance test run.",
+  "sourceSHA256": {
+    "VisionProPlayer/Rendering/DepthEdges.metal": "358aea59f8405c5e39c7983d46929bdc6058a9544df360540b088df099646fb8",
+    "VisionProPlayer/Rendering/DepthEdgeRefiner.swift": "08f35b66d198531b4a901b5279c411fc33a0895a170129c5f210dabdae92cce9",
+    "VisionProPlayer/Rendering/StereoRenderer.swift": "27dccd9a19df3fe4a0a035f61d2566ffcdffc3e9b6ff611a496921c70634d509",
+    "Scripts/test_depth_edges.swift": "f4a81d0feb067e55833f7f1e7a5c9dbc9a7311b36d00cc0b71153abefa75f93d",
+    "VisionProPlayer/Playback/DepthSmokeTest.swift": "49841e05174e98610370844d0747787f9d9cbabc5acfd76e2c1851297e0ea6dc"
+  }
+}
