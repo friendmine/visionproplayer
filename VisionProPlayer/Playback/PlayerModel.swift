@@ -32,6 +32,8 @@ final class PlayerModel {
     var depthStrength: Float = 0.35
     var depthPopOut: Float = 0
     var depthProportionProtection = true
+    // Session-only diagnostic choice; never overwrite per-film picture settings.
+    var depthMotionAlignment = true
     @ObservationIgnored var depthScreenWidthMeters: Float = 0
     var depthRevision = 0
     var depthStatus = "等待转换"
@@ -43,6 +45,11 @@ final class PlayerModel {
     var depthAgeSamples: [Double] = []
     @ObservationIgnored var depthGainSamples: [Float] = []
     @ObservationIgnored var depthSceneResets = 0
+    @ObservationIgnored var depthDisplayTimes: [Double] = []
+    @ObservationIgnored var depthGPUTimeSamples: [Double] = []
+    #if DEBUG
+    @ObservationIgnored var lastBackgroundPause: Double?
+    #endif
     @ObservationIgnored let depthEstimator = DepthEstimator()
     @ObservationIgnored private var depthFrameTimes: [Double] = []
     var request: PlaybackRequest?
@@ -104,6 +111,13 @@ final class PlayerModel {
         depthAgeSamples.append(age)
         if depthAgeSamples.count > 600 { depthAgeSamples.removeFirst() }
         depthStatus = "2D 转 3D · 实验性"
+    }
+
+    func recordDepthDisplay(gpuMilliseconds: Double) {
+        depthDisplayTimes.append(ProcessInfo.processInfo.systemUptime)
+        depthGPUTimeSamples.append(gpuMilliseconds)
+        if depthDisplayTimes.count > 900 { depthDisplayTimes.removeFirst() }
+        if depthGPUTimeSamples.count > 900 { depthGPUTimeSamples.removeFirst() }
     }
 
     func open(_ url: URL, layout: StereoLayout? = nil, engine: PlaybackEngine? = nil, convert2D: Bool? = nil,
@@ -176,6 +190,7 @@ final class PlayerModel {
         depthPredictions = 0; depthConvertedFrames = 0; depthFrameTimes = []; depthInferenceMS = 0; depthDisplayFPS = 0
         depthInferenceSamples.removeAll(); depthAgeSamples.removeAll(); depthGainSamples.removeAll()
         depthSceneResets = 0
+        depthDisplayTimes.removeAll(); depthGPUTimeSamples.removeAll()
         errorMessage = nil; rendererError = nil
         renderedFrames = 0; stereoDisplayAspect = 0; frameSize = "等待视频帧"
         progress = 0; elapsed = 0; duration = 0
@@ -390,6 +405,9 @@ final class PlayerModel {
     func waitForPendingChange() async { await pendingOpen?.value }
 
     func pauseForBackground() {
+        #if DEBUG
+        lastBackgroundPause = ProcessInfo.processInfo.systemUptime
+        #endif
         wantsPlayback = false
         if let recovery = pendingVLCRecovery { pendingVLCRecovery = (recovery.seconds, false) }
         nativePlayer?.pause()

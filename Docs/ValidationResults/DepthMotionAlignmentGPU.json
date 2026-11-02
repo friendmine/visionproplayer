@@ -1,0 +1,27 @@
+{
+  "ambiguousTextureMeanConfidence": 0.0022860239259898663,
+  "gpuMeanMS": 5.37283846642822,
+  "maximumProtectedSlopeX": 0.0700000524520874,
+  "maximumProtectedSlopeY": 0.0700000524520874,
+  "minimumKnownMotionErrorReduction": 0.7487276792526245,
+  "outOfRangeMeanConfidence": 0.04622830078005791,
+  "passed": true,
+  "rejectedSceneMeanConfidence": 0,
+  "scope": "Synthetic GPU transport, rejection, coverage and warp-bound checks; not wearable performance or perceptual acceptance",
+  "date": "2026-11-02",
+  "algorithm": "bidirectional-patch-v1",
+  "sourceSHA256": {
+    "VisionProPlayer/Rendering/DepthMotion.metal": "c9669242f39c5d69248baa4ef9e83963cd4842f4f9d00371b90e78ec5ca243fe",
+    "VisionProPlayer/Rendering/DepthMotionAligner.swift": "0254a7367e53dd55622bdbce36ab5eaee984193cd1fa2c3a6d59ae481b932bc9",
+    "VisionProPlayer/Rendering/DepthEstimator.swift": "1e743a0b2f867e780a7c093944a9160405a15460c2f527be54693f2667ee26e7",
+    "VisionProPlayer/Rendering/StereoRenderer.swift": "8232a4f5600dbf40179bc62d6f4bfbd23fc67150fdaf8ae48143bb63e8bbfcac",
+    "VisionProPlayer/Rendering/StereoReprojector.swift": "62102d16ba3db0f383ac87935691416e1889af7b7e9f636fcca17cbe2b63fb22",
+    "VisionProPlayer/Rendering/DepthStereo.metal": "150b0c8f449c317887b2dde3720e428737c0bbb022c03707cf263285fe343a96",
+    "VisionProPlayer/Rendering/DepthTemporalPolicy.swift": "83728f61787a6976ccb730ccd99b12a56dfa7fe82c02f412eb0a4938c499e893",
+    "VisionProPlayer/Playback/DepthSmokeTest.swift": "5c43fec0e526773cd59bf90c37077d6397e3730fafc63f7a00abcdcc9303afe5",
+    "VisionProPlayer/Playback/DepthEnduranceProbe.swift": "92b67a3e0a179ee4708d7d4b1ad39c8822567f66fffafbae814c9f660d3ff273",
+    "Scripts/test_depth_motion.swift": "5190b488caab4444a5c0c455ec278e61e1d074ce9e7a41b8ec7166260163fbd6"
+  },
+  "baseline": "0.6.2ok rendering and depth policy preserved behind session-only comparison switch",
+  "physicalDeviceStatus": "Native/VLC baseline and alignment short probes passed; 16 consecutive 30-second intervals passed before background pause confirmed by user. Full 20-minute test cancelled at explicit user request; not completed. No explicit wearer A/B acceptance recorded for this iteration."
+}

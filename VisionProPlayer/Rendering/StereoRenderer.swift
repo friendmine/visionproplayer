@@ -34,6 +34,13 @@ final class StereoRenderer {
     private var rightTexture: TextureResource?
     private var textureCache: CVMetalTextureCache?
     private var depthPipeline: MTLComputePipelineState?
+    private var motionDepthPipeline: MTLComputePipelineState?
+    private var motionAligner: DepthMotionAligner?
+    private var depthGuideConverters: [VideoColorConverter] = []
+    private var depthGuides: [MTLTexture?] = [nil, nil]
+    private var currentGuideConverter: VideoColorConverter?
+    private var motionEnabled: Bool?
+    private(set) var lastGPUMilliseconds: Double = 0
     private var reprojector: StereoReprojector?
     private var depthHistory: [MTLTexture] = []
     private var depthIndex = 0
@@ -52,9 +59,15 @@ final class StereoRenderer {
            let stabilize = library.makeFunction(name: "stabilizeDepth") {
             depthPipeline = try await device.makeComputePipelineState(function: stabilize)
             reprojector = try StereoReprojector(device: device, library: library)
+            motionAligner = try DepthMotionAligner(device: device, library: library)
+            if let filter = library.makeFunction(name: "stabilizeMotionDepth") {
+                motionDepthPipeline = try await device.makeComputePipelineState(function: filter)
+            }
         }
         ciContext = CIContext(mtlDevice: device, options: [.cacheIntermediates: false])
         videoColorConverter = VideoColorConverter(device: device)
+        depthGuideConverters = (0..<2).map { _ in VideoColorConverter(device: device) }
+        currentGuideConverter = VideoColorConverter(device: device)
         material = try await ShaderGraphMaterial(named: "/Root/StereoMaterial", from: "StereoMaterial.usda")
         eyeCheckMaterial = try await ShaderGraphMaterial(named: "/Root/EyeCheckMaterial", from: "StereoMaterial.usda")
         entity.model = ModelComponent(mesh: .generatePlane(width: 1, height: 1), materials: [])
@@ -146,6 +159,7 @@ final class StereoRenderer {
             let failure = command.status == .error ? (command.error?.localizedDescription ?? "GPU 视频纹理更新失败") : nil
             Task { @MainActor [weak self] in
                 self?.failure = failure
+                self?.lastGPUMilliseconds = max(0, command.gpuEndTime - command.gpuStartTime) * 1000
                 self?.inFlight = false
             }
         }
@@ -180,9 +194,14 @@ final class StereoRenderer {
         return [min(distance == nil ? 0.04 : 0.03, front / widthMeters), min(0.012, rear / widthMeters)]
     }
 
-    func renderConverted(_ buffer: CVPixelBuffer, depth: EstimatedDepth, strength: Float, popOut: Float, protectProportions: Bool, distance: Float?, swapped: Bool, disparityGain: Float = 1) throws -> Bool {
+    func renderConverted(_ buffer: CVPixelBuffer, depth: EstimatedDepth, strength: Float, popOut: Float, protectProportions: Bool, distance: Float?, swapped: Bool, disparityGain: Float = 1, alignMotion: Bool = false) throws -> Bool {
         guard !inFlight, let queue = commandQueue, let depthPipeline, let reprojector,
               let context = ciContext, let videoColorConverter else { return false }
+        if motionEnabled != alignMotion {
+            // Never feed one algorithm's history into the other during A/B.
+            depthHistoryValid = false; processedDepthBuffer = nil
+            depthGuides = [nil, nil]; motionEnabled = alignMotion
+        }
         let sourceWidth = CVPixelBufferGetWidth(buffer), sourceHeight = CVPixelBufferGetHeight(buffer)
         let scale = min(1.0, 1920.0 / Double(max(sourceWidth, sourceHeight)))
         let width = max(2, Int(Double(sourceWidth) * scale)), height = max(2, Int(Double(sourceHeight) * scale))
@@ -211,11 +230,26 @@ final class StereoRenderer {
         let updatesDepth = !depthHistoryValid || processedDepthBuffer !== depth.buffer
         let nextDepthIndex = updatesDepth ? 1 - depthIndex : depthIndex
         let smooth = depthHistory[nextDepthIndex]
+        let guideScale = 128.0 / Double(max(sourceWidth, sourceHeight))
+        let guideWidth = max(2, Int(Double(sourceWidth) * guideScale))
+        let guideHeight = max(2, Int(Double(sourceHeight) * guideScale))
         if updatesDepth {
+            var previous = depthHistory[depthIndex]
+            var filter = depthPipeline
+            if alignMotion {
+                guard let motionAligner, let motionDepthPipeline else { throw RenderError.unavailable }
+                let guide = try depthGuideConverters[nextDepthIndex].encode(depth.source, width: guideWidth, height: guideHeight,
+                    scale: guideScale, context: context, commands: commands)
+                if depthHistoryValid, !depth.resetHistory, let oldGuide = depthGuides[depthIndex] {
+                    previous = try motionAligner.encode(source: oldGuide, target: guide, depth: previous,
+                        neutral: 0.5, conservative: false, commands: commands)
+                }
+                depthGuides[nextDepthIndex] = guide
+                filter = motionDepthPipeline
+            }
             guard let encoder = commands.makeComputeCommandEncoder() else { throw RenderError.unavailable }
-            let previous = depthHistory[depthIndex]
             var params = SIMD4<Float>(depth.lower, 1 / (depth.upper - depth.lower), (!depthHistoryValid || depth.resetHistory) ? 1 : 0, 0)
-            encoder.setComputePipelineState(depthPipeline)
+            encoder.setComputePipelineState(filter)
             encoder.setTexture(raw.0, index: 0); encoder.setTexture(previous, index: 1); encoder.setTexture(smooth, index: 2)
             encoder.setBytes(&params, length: MemoryLayout<SIMD4<Float>>.stride, index: 0)
             encoder.dispatchThreads(MTLSize(width: dw, height: dh, depth: 1), threadsPerThreadgroup: MTLSize(width: 16, height: 8, depth: 1))
@@ -227,20 +261,30 @@ final class StereoRenderer {
         let limits = disparityLimits(distance: distance)
         let warpParams = SIMD4<Float>(max(0, min(1, strength)), max(0, min(1, popOut)),
                                      limits.x, limits.y)
-        try reprojector.encode(color: color, depth: smooth, parameters: warpParams, protectProportions: protectProportions, sourceIsLinear: true, disparityGain: disparityGain,
+        var displayedDepth = smooth
+        if alignMotion {
+            guard let motionAligner, let currentGuideConverter, let sourceGuide = depthGuides[nextDepthIndex] else { throw RenderError.unavailable }
+            let guide = try currentGuideConverter.encode(buffer, width: guideWidth, height: guideHeight,
+                scale: guideScale, context: context, commands: commands)
+            displayedDepth = try motionAligner.encode(source: sourceGuide, target: guide, depth: smooth,
+                neutral: 0.5 - 0.15 * warpParams.y, conservative: true, commands: commands)
+        }
+        try reprojector.encode(color: color, depth: displayedDepth, parameters: warpParams, protectProportions: protectProportions, sourceIsLinear: true, disparityGain: disparityGain,
                                left: left, right: right, commands: commands)
         try generateDisplayMipmaps(left, right, using: commands)
         depthIndex = nextDepthIndex; depthHistoryValid = true; processedDepthBuffer = depth.buffer; inFlight = true
         let input = RetainedVideoFrame(buffer), output = RetainedVideoFrame(depth.buffer, textureReference: raw.1)
+        let reference = RetainedVideoFrame(depth.source)
         let capture = !debugCaptured && ProcessInfo.processInfo.arguments.contains("--depth-capture")
         debugCaptured = debugCaptured || capture
         let capturedParameters = warpParams
-        commands.addCompletedHandler { [weak self, input, output] command in
-            _ = input; _ = output
+        commands.addCompletedHandler { [weak self, input, output, reference] command in
+            _ = input; _ = output; _ = reference
             let failure = command.status == .error ? (command.error?.localizedDescription ?? "3D 合成失败") : nil
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 self.failure = failure
+                self.lastGPUMilliseconds = max(0, command.gpuEndTime - command.gpuStartTime) * 1000
                 #if DEBUG
                 if capture, let context = self.ciContext {
                     let manifestURL = URL.documentsDirectory.appending(path: "depth-capture.json")
@@ -256,7 +300,7 @@ final class StereoRenderer {
                         let arguments = ProcessInfo.processInfo.arguments
                         let runID = arguments.firstIndex(of: "--smoke-run-id").flatMap { arguments.indices.contains($0 + 1) ? arguments[$0 + 1] : nil } ?? "manual"
                         let metadata: [String: Any] = ["runID": runID, "mapping": "anchored-relief-v2", "projectionSampling": "proportion-protected-forward-v1", "proportionProtection": protectProportions,
-                            "strength": capturedParameters.x, "popOut": capturedParameters.y, "disparityGain": disparityGain,
+                            "strength": capturedParameters.x, "popOut": capturedParameters.y, "disparityGain": disparityGain, "motionAlignment": alignMotion,
                             "frontLimit": capturedParameters.z, "rearLimit": capturedParameters.w,
                             "width": width, "height": height, "displayMipLevels": left.mipmapLevelCount, "timestamp": ISO8601DateFormatter().string(from: Date())]
                         try JSONSerialization.data(withJSONObject: metadata, options: [.prettyPrinted, .sortedKeys]).write(to: manifestURL, options: .atomic)
@@ -392,6 +436,7 @@ struct StereoPlayerView: View {
             var lastStrength: Float = -1
             var lastPopOut: Float = -1
             var lastProportionProtection: Bool?
+            var lastMotionAlignment: Bool?
             var lastDisparityLimits = SIMD2<Float>(repeating: -1)
             var lastRevision = model.depthRevision
             var presentation = DepthPresentationEnvelope()
@@ -409,9 +454,10 @@ struct StereoPlayerView: View {
                 let strengthChanged = request.converts2D && (model.depthStrength != lastStrength || model.depthPopOut != lastPopOut
                     || (abs(disparityLimits.x - lastDisparityLimits.x) > 0.00001 || abs(disparityLimits.y - lastDisparityLimits.y) > 0.00001))
                 let protectionChanged = request.converts2D && model.depthProportionProtection != lastProportionProtection
+                let alignmentChanged = request.converts2D && model.depthMotionAlignment != lastMotionAlignment
                 let depthChangedWhilePaused = request.converts2D && !model.isPlaying && stream.version != lastDepthVersion
                 if let failure = stream.error { model.rendererError = failure; return }
-                if let buffer = newBuffer ?? ((strengthChanged || protectionChanged || depthChangedWhilePaused) ? lastBuffer : nil) {
+                if let buffer = newBuffer ?? ((strengthChanged || protectionChanged || alignmentChanged || depthChangedWhilePaused) ? lastBuffer : nil) {
                     do {
                         let width = CVPixelBufferGetWidth(buffer), height = CVPixelBufferGetHeight(buffer)
                         var rendered = false
@@ -421,7 +467,7 @@ struct StereoPlayerView: View {
                             let gain = presentation.update(now: now, capturedAt: stream.latest?.capturedAt,
                                                            generation: stream.generation, playing: model.isPlaying)
                             if let latest = stream.latest, now - latest.capturedAt <= 0.15 || !model.isPlaying {
-                                rendered = try renderer.renderConverted(buffer, depth: latest.depth, strength: model.depthStrength, popOut: model.depthPopOut, protectProportions: model.depthProportionProtection, distance: immersive ? model.library.screenDistance : nil, swapped: model.swapEyes, disparityGain: gain)
+                                rendered = try renderer.renderConverted(buffer, depth: latest.depth, strength: model.depthStrength, popOut: model.depthPopOut, protectProportions: model.depthProportionProtection, distance: immersive ? model.library.screenDistance : nil, swapped: model.swapEyes, disparityGain: gain, alignMotion: model.depthMotionAlignment)
                                 model.depthStatus = "Depth Anything V2 Small · 本机转换"
                                 if rendered, newBuffer != nil {
                                     model.recordConvertedFrame(age: (ProcessInfo.processInfo.systemUptime - latest.capturedAt) * 1000)
@@ -433,6 +479,7 @@ struct StereoPlayerView: View {
                             if rendered, newBuffer != nil {
                                 model.depthGainSamples.append(gain)
                                 if model.depthGainSamples.count > 600 { model.depthGainSamples.removeFirst() }
+                                model.recordDepthDisplay(gpuMilliseconds: renderer.lastGPUMilliseconds)
                             }
                             lastDepthVersion = stream.version
                         } else {
@@ -443,6 +490,7 @@ struct StereoPlayerView: View {
                             lastDepthVersion = stream.version
                             lastBuffer = buffer; lastStrength = model.depthStrength; lastPopOut = model.depthPopOut
                             lastProportionProtection = model.depthProportionProtection
+                            lastMotionAlignment = model.depthMotionAlignment
                             lastDisparityLimits = disparityLimits
                             aspect = request.layout.displayAspect(width: width, height: height)
                             let eye = request.layout.eyeRegions(width: width, height: height).left

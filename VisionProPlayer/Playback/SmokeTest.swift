@@ -19,6 +19,7 @@ extension PlayerModel {
               request == nil else { return }
         let name = arguments[index + 1]
         if name == "product" { Task { await runProductProbe() }; return }
+        if name.hasPrefix("depth-endurance-") { Task { await runDepthEnduranceProbe(name: name) }; return }
         if name.hasPrefix("depth-") {
             Task { await runDepthProbe(name: name) }
             return

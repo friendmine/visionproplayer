@@ -11,6 +11,9 @@ struct DepthInput: @unchecked Sendable {
 }
 struct EstimatedDepth: @unchecked Sendable {
     let buffer: CVPixelBuffer
+    // Retain the exact immutable decoded frame that produced this depth.
+    // The reusable model input must never serve as a motion reference.
+    let source: CVPixelBuffer
     let lower: Float
     let upper: Float
     let resetHistory: Bool
@@ -71,7 +74,7 @@ actor DepthEstimator {
         lower = reset ? low : lower * 0.85 + low * 0.15
         upper = reset ? high : upper * 0.85 + high * 0.15
         previousID = input.requestID; previousRevision = input.revision
-        return EstimatedDepth(buffer: depth, lower: lower, upper: max(lower + 0.0001, upper),
+        return EstimatedDepth(buffer: depth, source: input.buffer, lower: lower, upper: max(lower + 0.0001, upper),
             resetHistory: reset, milliseconds: (ProcessInfo.processInfo.systemUptime - began) * 1000)
     }
 

@@ -8,6 +8,8 @@ extension PlayerModel {
         let source = name.hasPrefix("depth-motion-")
             ? URL.documentsDirectory.appending(path: engine == .vlc ? "BBB-Motion-2D-30s.mkv" : "BBB-Motion-2D-30s.mp4") : sample.url
         var checks: [[String: Any]] = []
+        let testedAlignment = !ProcessInfo.processInfo.arguments.contains("--depth-motion-baseline")
+        depthMotionAlignment = testedAlignment
         func waitUntil(seconds: Double = 10, _ predicate: () -> Bool) async {
             let deadline = ProcessInfo.processInfo.systemUptime + seconds
             while !predicate(), ProcessInfo.processInfo.systemUptime < deadline {
@@ -30,12 +32,21 @@ extension PlayerModel {
         let convertedStart = depthConvertedFrames
         let resetStart = depthSceneResets
         depthInferenceSamples.removeAll(); depthAgeSamples.removeAll(); depthGainSamples.removeAll()
+        depthDisplayTimes.removeAll(); depthGPUTimeSamples.removeAll()
         try? await Task.sleep(for: .seconds(10))
         let seconds = ProcessInfo.processInfo.systemUptime - start
         let fps = Double(renderedFrames - startFrames) / seconds
         let times = depthInferenceSamples.sorted(), ages = depthAgeSamples.sorted()
         let gains = depthGainSamples.sorted()
         let sceneResets = depthSceneResets - resetStart
+        let intervals = zip(depthDisplayTimes, depthDisplayTimes.dropFirst()).map { ($1 - $0) * 1000 }.sorted()
+        let gpu = depthGPUTimeSamples.filter { $0 > 0 }.sorted()
+        func percentile(_ values: [Double], _ fraction: Double) -> Double {
+            values.isEmpty ? 0 : values[min(values.count - 1, Int(Double(values.count) * fraction))]
+        }
+        checks.append(["name": "submission-cadence", "passed": intervals.count >= 240
+            && percentile(intervals, 0.95) < 60 && (intervals.last ?? 1000) < 150,
+            "intervalP95MS": percentile(intervals, 0.95), "maximumIntervalMS": intervals.last ?? 0])
         let mean = times.reduce(0, +) / Double(max(1, times.count))
         let p95 = times.isEmpty ? 0 : times[min(times.count - 1, Int(Double(times.count) * 0.95))]
         let age95 = ages.isEmpty ? 0 : ages[min(ages.count - 1, Int(Double(ages.count) * 0.95))]
@@ -115,6 +126,21 @@ extension PlayerModel {
         }
         checks.append(["name": "paused-proportion-protection-toggle-redraws-and-settles", "passed": protectionRedraws,
                        "samples": protectionSamples])
+        var alignmentRedraws = true
+        var alignmentSamples: [[String: Any]] = []
+        for enabled in [!testedAlignment, testedAlignment] {
+            let before = renderedFrames, predictions = depthPredictions
+            depthMotionAlignment = enabled
+            await waitUntil(seconds: 3) { renderedFrames > before }
+            try? await Task.sleep(for: .milliseconds(400))
+            let settled = renderedFrames
+            try? await Task.sleep(for: .milliseconds(500))
+            alignmentRedraws = alignmentRedraws && renderedFrames > before && renderedFrames == settled
+                && depthPredictions == predictions && !isPlaying && abs(elapsed - paused) < 0.2
+            alignmentSamples.append(["enabled": enabled, "frameUpdates": renderedFrames - before,
+                "depthUpdates": depthPredictions - predictions, "settledFrameUpdates": renderedFrames - settled])
+        }
+        checks.append(["name": "paused-motion-comparison-same-frame", "passed": alignmentRedraws, "samples": alignmentSamples])
         let beforePausedSeek = renderedFrames
         seek(to: 0.2)
         await waitUntil { renderedFrames > beforePausedSeek && abs(elapsed - 6) < 0.6 }
@@ -132,15 +158,43 @@ extension PlayerModel {
         if !isPlaying { togglePlayback() }
         let resumeStart = ProcessInfo.processInfo.systemUptime
         var resumeContinuous = true
+        var resumeTrace: [[String: Any]] = []
         repeat {
             let age = ProcessInfo.processInfo.systemUptime - resumeStart
             resumeContinuous = resumeContinuous && elapsed >= paused - 0.25 && elapsed <= paused + age + 0.75
+            resumeTrace.append(["age": age, "elapsed": elapsed, "clock": vlc?.clockDiagnostics ?? [:]])
             try? await Task.sleep(for: .milliseconds(100))
         } while ProcessInfo.processInfo.systemUptime - resumeStart < 1.5
         checks.append(["name": "resume-conversion", "passed": resumeContinuous && isPlaying && elapsed > paused && elapsed < paused + 3.5 && depthPredictions > beforeResume,
-            "continuous": resumeContinuous,
+            "continuous": resumeContinuous, "trace": resumeTrace,
             "elapsed": elapsed, "pausedElapsed": paused, "playing": isPlaying, "newDepthPredictions": depthPredictions - beforeResume, "clock": vlc?.clockDiagnostics ?? [:]])
 
+        if ProcessInfo.processInfo.arguments.contains("--depth-resume-stress") {
+            var rounds: [[String: Any]] = []
+            for fraction in [0.2, 0.4, 0.1, 0.6, 0.2, 0.4, 0.1, 0.6] {
+                if isPlaying { togglePlayback() }
+                try? await Task.sleep(for: .milliseconds(250))
+                let before = renderedFrames
+                seek(to: fraction)
+                await waitUntil { !isPlaying && abs(elapsed - duration * fraction) < 0.6 && renderedFrames > before }
+                try? await Task.sleep(for: .milliseconds(800))
+                let position = elapsed, initialClock = vlc?.clockDiagnostics ?? [:]
+                let began = ProcessInfo.processInfo.systemUptime
+                if !isPlaying { togglePlayback() }
+                var violations: [[String: Any]] = []
+                repeat {
+                    let age = ProcessInfo.processInfo.systemUptime - began
+                    if elapsed < position - 0.25 || elapsed > position + age + 0.75 {
+                        violations.append(["age": age, "elapsed": elapsed, "clock": vlc?.clockDiagnostics ?? [:]])
+                    }
+                    try? await Task.sleep(for: .milliseconds(50))
+                } while ProcessInfo.processInfo.systemUptime - began < 1.3
+                rounds.append(["position": position, "initialClock": initialClock, "endPosition": elapsed,
+                    "violations": violations, "passed": violations.isEmpty && isPlaying && elapsed > position])
+            }
+            checks.append(["name": "repeated-paused-seek-resume", "rounds": rounds,
+                "passed": rounds.allSatisfy { $0["passed"] as? Bool == true }])
+        }
         let beforeOff = elapsed
         setDepthConversion(false)
         await waitForPendingChange()
@@ -154,6 +208,10 @@ extension PlayerModel {
             "sample": name, "engine": engine.rawValue, "depthMapping": "anchored-relief-v2", "projectionSampling": "proportion-protected-forward-v1", "proportionProtection": depthProportionProtection, "checks": checks, "popOut": depthPopOut, "screenWidthMeters": depthScreenWidthMeters,
             "benchmarkSeconds": seconds, "submittedFPS": fps,
             "temporalPolicy": "motion-aware-cuts-continuous-history-v1",
+            "motionAlignment": testedAlignment, "motionAlgorithm": testedAlignment ? "bidirectional-patch-v1" : "baseline-0.6.2",
+            "submissionIntervalP95MS": percentile(intervals, 0.95), "submissionMaximumIntervalMS": intervals.last ?? 0,
+            "submissionGapsOver50MS": intervals.filter { $0 > 50 }.count,
+            "gpuMeanMS": gpu.reduce(0, +) / Double(max(1, gpu.count)), "gpuP95MS": percentile(gpu, 0.95),
             "sourceFile": source.lastPathComponent, "sceneResetsInBenchmark": sceneResets,
             "depthGainMinimum": gains.first ?? 0,
             "depthGainMedian": gains.isEmpty ? 0 : gains[gains.count / 2],

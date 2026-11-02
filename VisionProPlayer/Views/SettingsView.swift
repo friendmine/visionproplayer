@@ -111,6 +111,7 @@ struct DiagnosticsView: View {
                 Text("单眼确认 LEFT / RIGHT；双眼比较金色圆盘、白色参照框和青色圆盘的前后位置。").font(.caption)
             }
             Section("AI 立体") {
+                MotionAlignmentComparison(model: model)
                 Button("2D 转 3D · 原生") { play(CompatibilitySample.hevcMP4.url, .flat, .native, depth: true) }
                 Button("2D 转 3D · VLC") { play(CompatibilitySample.hevcMKV.url, .flat, .vlc, depth: true) }
                 ForEach([PlaybackEngine.native, .vlc]) { engine in

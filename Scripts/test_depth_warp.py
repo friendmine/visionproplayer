@@ -26,6 +26,10 @@ with tempfile.TemporaryDirectory(prefix="vpp-depth-gpu-") as temporary:
         arguments.remove("--scenes")
         fixture = "test_motion_scenes.swift"
         support = [str(root / "VisionProPlayer/Rendering/DepthEstimator.swift")]
+    if "--motion" in arguments:
+        arguments.remove("--motion")
+        fixture = "test_depth_motion.swift"
+        support = [str(root / "VisionProPlayer/Rendering/DepthMotionAligner.swift")]
     shutil.copyfile(root / "Scripts" / fixture, main)
     executable = folder / "test-depth-warp"
     subprocess.run(["swiftc", "-O", str(root / "VisionProPlayer/Rendering/StereoReprojector.swift"),

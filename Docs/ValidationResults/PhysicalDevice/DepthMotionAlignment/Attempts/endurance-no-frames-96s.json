@@ -1,0 +1,40 @@
+{
+  "durationSeconds": 96.31085537502076,
+  "environment": "physical-device",
+  "error": "连续五秒无新画面，可能锁定或停止播放",
+  "loopSeeks": 3,
+  "maximumThermalState": 0,
+  "motionAlgorithm": "bidirectional-patch-v1",
+  "motionAlignment": true,
+  "passed": false,
+  "runID": "1542a6d8-f40d-41e3-9adb-263a4521bd30",
+  "sample": "depth-endurance-vlc",
+  "scope": "20-minute repeated motion fixture; submission cadence and GPU timing, not scanout or human perception. One-second intervals around intentional loop seeks excluded from ordinary cadence, but included in segment FPS.",
+  "segments": [
+    {
+      "elapsedSeconds": 30.05816491667065,
+      "excludedSeekIntervals": 33,
+      "gpuP95MS": 14.001666684634984,
+      "intervalSamples": 866,
+      "ordinaryIntervalP95MS": 37.843458325369284,
+      "ordinaryMaximumIntervalMS": 89.87179165706038,
+      "passed": true,
+      "submittedFPSIncludingSeeks": 29.975216467732324,
+      "thermalState": 0
+    },
+    {
+      "elapsedSeconds": 60.110369041678496,
+      "excludedSeekIntervals": 31,
+      "gpuP95MS": 12.798041658243164,
+      "intervalSamples": 868,
+      "ordinaryIntervalP95MS": 38.035208330256864,
+      "ordinaryMaximumIntervalMS": 92.32629166217521,
+      "passed": true,
+      "submittedFPSIncludingSeeks": 29.94788655954416,
+      "thermalState": 0
+    }
+  ],
+  "sourceFile": "BBB-Motion-2D-30s.mkv",
+  "systemVersion": "Version 27.0.1 (Build 24M372)",
+  "timestamp": "2026-11-02T09:40:28Z"
+}

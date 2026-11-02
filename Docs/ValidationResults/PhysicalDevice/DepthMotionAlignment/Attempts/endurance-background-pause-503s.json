@@ -1,0 +1,616 @@
+{
+  "durationSeconds": 503.5087982500263,
+  "environment": "physical-device",
+  "error": "连续五秒无新画面，可能锁定或停止播放",
+  "loopSeeks": 19,
+  "maximumThermalState": 1,
+  "motionAlgorithm": "bidirectional-patch-v1",
+  "motionAlignment": true,
+  "passed": false,
+  "recentStates": [
+    {
+      "age": 478.9059299166838,
+      "backgroundPauseAge": -1,
+      "clock": {
+        "pausedSeekPending": false,
+        "playerState": 2,
+        "pollTime": 7636759,
+        "resumeAnchorDate": 0,
+        "resumeAnchorTime": 0,
+        "watch": {
+          "now": 453820631767,
+          "pausedDate": 0,
+          "rate": 1,
+          "systemDate": 453819912421,
+          "ts": 6917402,
+          "valid": true
+        }
+      },
+      "duration": 30.021,
+      "frames": 14695,
+      "lastFrameAge": 0.006264166673645377,
+      "mediaTime": 7.424251,
+      "playing": true,
+      "predictions": 7079,
+      "progress": 0.24729979014689718,
+      "state": "播放中",
+      "strength": 0.3499999940395355
+    },
+    {
+      "age": 479.90821329166647,
+      "backgroundPauseAge": -1,
+      "clock": {
+        "pausedSeekPending": false,
+        "playerState": 2,
+        "pollTime": 8639054,
+        "resumeAnchorDate": 0,
+        "resumeAnchorTime": 0,
+        "watch": {
+          "now": 453821634052,
+          "pausedDate": 0,
+          "rate": 1,
+          "systemDate": 453820912388,
+          "ts": 7917377,
+          "valid": true
+        }
+      },
+      "duration": 30.021,
+      "frames": 14725,
+      "lastFrameAge": 0.009692041639937088,
+      "mediaTime": 8.434846,
+      "playing": true,
+      "predictions": 7093,
+      "progress": 0.28096345891209484,
+      "state": "播放中",
+      "strength": 0.3499999940395355
+    },
+    {
+      "age": 480.90888012500363,
+      "backgroundPauseAge": -1,
+      "clock": {
+        "pausedSeekPending": false,
+        "playerState": 2,
+        "pollTime": 9639704,
+        "resumeAnchorDate": 0,
+        "resumeAnchorTime": 0,
+        "watch": {
+          "now": 453822634712,
+          "pausedDate": 0,
+          "rate": 1,
+          "systemDate": 453821912411,
+          "ts": 8917394,
+          "valid": true
+        }
+      },
+      "duration": 30.021,
+      "frames": 14755,
+      "lastFrameAge": 0.00925549998646602,
+      "mediaTime": 9.44023,
+      "playing": true,
+      "predictions": 7107,
+      "progress": 0.3144533493221412,
+      "state": "播放中",
+      "strength": 0.3499999940395355
+    },
+    {
+      "age": 481.91615933334106,
+      "backgroundPauseAge": -1,
+      "clock": {
+        "pausedSeekPending": false,
+        "playerState": 2,
+        "pollTime": 10646987,
+        "resumeAnchorDate": 0,
+        "resumeAnchorTime": 0,
+        "watch": {
+          "now": 453823641992,
+          "pausedDate": 0,
+          "rate": 1,
+          "systemDate": 453822912425,
+          "ts": 9917409,
+          "valid": true
+        }
+      },
+      "duration": 30.021,
+      "frames": 14785,
+      "lastFrameAge": 0.015196208318229765,
+      "mediaTime": 10.450874,
+      "playing": true,
+      "predictions": 7123,
+      "progress": 0.34811735118750203,
+      "state": "播放中",
+      "strength": 0.3499999940395355
+    },
+    {
+      "age": 482.9187091666681,
+      "backgroundPauseAge": -1,
+      "clock": {
+        "pausedSeekPending": false,
+        "playerState": 2,
+        "pollTime": 11649540,
+        "resumeAnchorDate": 0,
+        "resumeAnchorTime": 0,
+        "watch": {
+          "now": 453824644558,
+          "pausedDate": 0,
+          "rate": 1,
+          "systemDate": 453823915375,
+          "ts": 10920345,
+          "valid": true
+        }
+      },
+      "duration": 30.021,
+      "frames": 14815,
+      "lastFrameAge": 0.016943333321250975,
+      "mediaTime": 11.459061,
+      "playing": true,
+      "predictions": 7137,
+      "progress": 0.38169914393258053,
+      "state": "播放中",
+      "strength": 0.3499999940395355
+    },
+    {
+      "age": 483.9197577916784,
+      "backgroundPauseAge": -1,
+      "clock": {
+        "pausedSeekPending": false,
+        "playerState": 2,
+        "pollTime": 12650566,
+        "resumeAnchorDate": 0,
+        "resumeAnchorTime": 0,
+        "watch": {
+          "now": 453825645579,
+          "pausedDate": 0,
+          "rate": 1,
+          "systemDate": 453824913745,
+          "ts": 11918725,
+          "valid": true
+        }
+      },
+      "duration": 30.021,
+      "frames": 14845,
+      "lastFrameAge": 0.021662041661329567,
+      "mediaTime": 12.464232,
+      "playing": true,
+      "predictions": 7152,
+      "progress": 0.4151828719896073,
+      "state": "播放中",
+      "strength": 0.3499999940395355
+    },
+    {
+      "age": 484.92021179167205,
+      "backgroundPauseAge": -1,
+      "clock": {
+        "pausedSeekPending": false,
+        "playerState": 2,
+        "pollTime": 13651030,
+        "resumeAnchorDate": 0,
+        "resumeAnchorTime": 0,
+        "watch": {
+          "now": 453826646037,
+          "pausedDate": 0,
+          "rate": 1,
+          "systemDate": 453825912404,
+          "ts": 12917388,
+          "valid": true
+        }
+      },
+      "duration": 30.021,
+      "frames": 14875,
+      "lastFrameAge": 0.0217071249790024,
+      "mediaTime": 13.4677,
+      "playing": true,
+      "predictions": 7166,
+      "progress": 0.4486080410379401,
+      "state": "播放中",
+      "strength": 0.3499999940395355
+    },
+    {
+      "age": 485.9232656666718,
+      "backgroundPauseAge": -1,
+      "clock": {
+        "pausedSeekPending": false,
+        "playerState": 2,
+        "pollTime": 14654097,
+        "resumeAnchorDate": 0,
+        "resumeAnchorTime": 0,
+        "watch": {
+          "now": 453827649102,
+          "pausedDate": 0,
+          "rate": 1,
+          "systemDate": 453826912406,
+          "ts": 13917391,
+          "valid": true
+        }
+      },
+      "duration": 30.021,
+      "frames": 14905,
+      "lastFrameAge": 0.024272624985314906,
+      "mediaTime": 14.471575,
+      "playing": true,
+      "predictions": 7181,
+      "progress": 0.48204720029312814,
+      "state": "播放中",
+      "strength": 0.3499999940395355
+    },
+    {
+      "age": 486.92350250002346,
+      "backgroundPauseAge": -1,
+      "clock": {
+        "pausedSeekPending": false,
+        "playerState": 2,
+        "pollTime": 15654321,
+        "resumeAnchorDate": 0,
+        "resumeAnchorTime": 0,
+        "watch": {
+          "now": 453828649324,
+          "pausedDate": 0,
+          "rate": 1,
+          "systemDate": 453827912456,
+          "ts": 14917446,
+          "valid": true
+        }
+      },
+      "duration": 30.021,
+      "frames": 14935,
+      "lastFrameAge": 0.024820499995257705,
+      "mediaTime": 15.47855,
+      "playing": true,
+      "predictions": 7196,
+      "progress": 0.5155896205989141,
+      "state": "播放中",
+      "strength": 0.3499999940395355
+    },
+    {
+      "age": 487.92413616669364,
+      "backgroundPauseAge": -1,
+      "clock": {
+        "pausedSeekPending": false,
+        "playerState": 2,
+        "pollTime": 16654971,
+        "resumeAnchorDate": 0,
+        "resumeAnchorTime": 0,
+        "watch": {
+          "now": 453829649965,
+          "pausedDate": 0,
+          "rate": 1,
+          "systemDate": 453828912407,
+          "ts": 15917398,
+          "valid": true
+        }
+      },
+      "duration": 30.021,
+      "frames": 14965,
+      "lastFrameAge": 0.027008166682207957,
+      "mediaTime": 16.487747,
+      "playing": true,
+      "predictions": 7211,
+      "progress": 0.5492056560407714,
+      "state": "播放中",
+      "strength": 0.3499999940395355
+    },
+    {
+      "age": 488.9249316666683,
+      "backgroundPauseAge": -1,
+      "clock": {
+        "pausedSeekPending": false,
+        "playerState": 2,
+        "pollTime": 17655780,
+        "resumeAnchorDate": 0,
+        "resumeAnchorTime": 0,
+        "watch": {
+          "now": 453830650777,
+          "pausedDate": 0,
+          "rate": 1,
+          "systemDate": 453829912390,
+          "ts": 16917383,
+          "valid": true
+        }
+      },
+      "duration": 30.021,
+      "frames": 14995,
+      "lastFrameAge": 0.024452249985188246,
+      "mediaTime": 17.491643,
+      "playing": true,
+      "predictions": 7226,
+      "progress": 0.5826449485360248,
+      "state": "播放中",
+      "strength": 0.3499999940395355
+    },
+    {
+      "age": 489.9271706250147,
+      "backgroundPauseAge": -1,
+      "clock": {
+        "pausedSeekPending": false,
+        "playerState": 2,
+        "pollTime": 18658019,
+        "resumeAnchorDate": 0,
+        "resumeAnchorTime": 0,
+        "watch": {
+          "now": 453831653014,
+          "pausedDate": 0,
+          "rate": 1,
+          "systemDate": 453830912401,
+          "ts": 17917394,
+          "valid": true
+        }
+      },
+      "duration": 30.021,
+      "frames": 15025,
+      "lastFrameAge": 0.02620454167481512,
+      "mediaTime": 18.500281,
+      "playing": true,
+      "predictions": 7240,
+      "progress": 0.6162427300889377,
+      "state": "播放中",
+      "strength": 0.3499999940395355
+    },
+    {
+      "age": 490.9282681666664,
+      "backgroundPauseAge": -1,
+      "clock": {
+        "pausedSeekPending": false,
+        "playerState": 2,
+        "pollTime": 19659091,
+        "resumeAnchorDate": 0,
+        "resumeAnchorTime": 0,
+        "watch": {
+          "now": 453832654093,
+          "pausedDate": 0,
+          "rate": 1,
+          "systemDate": 453831912456,
+          "ts": 18917444,
+          "valid": true
+        }
+      },
+      "duration": 30.021,
+      "frames": 15055,
+      "lastFrameAge": 0.03249904164113104,
+      "mediaTime": 19.509204,
+      "playing": true,
+      "predictions": 7255,
+      "progress": 0.649850271476633,
+      "state": "播放中",
+      "strength": 0.3499999940395355
+    },
+    {
+      "age": 491.9290722083533,
+      "backgroundPauseAge": 0.1075985416828189,
+      "clock": {
+        "pausedSeekPending": false,
+        "playerState": 3,
+        "pollTime": 20552922,
+        "resumeAnchorDate": 0,
+        "resumeAnchorTime": 0,
+        "watch": {
+          "now": 453833654906,
+          "pausedDate": 453833547361,
+          "rate": 1,
+          "systemDate": 9223372036854775807,
+          "ts": 20552922,
+          "valid": true
+        }
+      },
+      "duration": 30.021,
+      "frames": 15083,
+      "lastFrameAge": 0.04029112501302734,
+      "mediaTime": 20.513997,
+      "playing": true,
+      "predictions": 7269,
+      "progress": 0.6833201425668699,
+      "state": "播放中",
+      "strength": 0.3499999940395355
+    },
+    {
+      "age": 503.50870191666763,
+      "backgroundPauseAge": 11.687228249997133,
+      "clock": {
+        "pausedSeekPending": false,
+        "playerState": 3,
+        "pollTime": 20552922,
+        "resumeAnchorDate": 0,
+        "resumeAnchorTime": 0,
+        "watch": {
+          "now": 453845234542,
+          "pausedDate": 453833547361,
+          "rate": 1,
+          "systemDate": 9223372036854775807,
+          "ts": 20552922,
+          "valid": true
+        }
+      },
+      "duration": 30.021,
+      "frames": 15084,
+      "lastFrameAge": 11.52825699999812,
+      "mediaTime": 20.552922,
+      "playing": false,
+      "predictions": 7270,
+      "progress": 0.6846181339728856,
+      "state": "已暂停",
+      "strength": 0.3499999940395355
+    }
+  ],
+  "runID": "375516f5-b759-4181-abf0-f669b098762c",
+  "sample": "depth-endurance-vlc",
+  "scope": "20-minute repeated motion fixture; submission cadence and GPU timing, not scanout or human perception. One-second intervals around intentional loop seeks excluded from ordinary cadence, but included in segment FPS.",
+  "segments": [
+    {
+      "elapsedSeconds": 30.05153616669122,
+      "excludedSeekIntervals": 32,
+      "gpuP95MS": 13.337583339307457,
+      "intervalSamples": 867,
+      "ordinaryIntervalP95MS": 38.109749992145225,
+      "ordinaryMaximumIntervalMS": 93.16233333083801,
+      "passed": true,
+      "submittedFPSIncludingSeeks": 29.981828383157932,
+      "thermalState": 0
+    },
+    {
+      "elapsedSeconds": 60.10754750002525,
+      "excludedSeekIntervals": 32,
+      "gpuP95MS": 13.054333336185664,
+      "intervalSamples": 867,
+      "ordinaryIntervalP95MS": 37.78837498975918,
+      "ordinaryMaximumIntervalMS": 91.59958333475515,
+      "passed": true,
+      "submittedFPSIncludingSeeks": 29.97736426192832,
+      "thermalState": 0
+    },
+    {
+      "elapsedSeconds": 90.17105450000963,
+      "excludedSeekIntervals": 32,
+      "gpuP95MS": 12.938250001752749,
+      "intervalSamples": 867,
+      "ordinaryIntervalP95MS": 38.53195835836232,
+      "ordinaryMaximumIntervalMS": 90.98779165651649,
+      "passed": true,
+      "submittedFPSIncludingSeeks": 29.96989007305329,
+      "thermalState": 0
+    },
+    {
+      "elapsedSeconds": 120.23110637502396,
+      "excludedSeekIntervals": 62,
+      "gpuP95MS": 13.219083339208737,
+      "intervalSamples": 837,
+      "ordinaryIntervalP95MS": 38.14133335254155,
+      "ordinaryMaximumIntervalMS": 100.2393749949988,
+      "passed": true,
+      "submittedFPSIncludingSeeks": 30.006601577082947,
+      "thermalState": 0
+    },
+    {
+      "elapsedSeconds": 150.28471141669434,
+      "excludedSeekIntervals": 32,
+      "gpuP95MS": 13.179249974200502,
+      "intervalSamples": 867,
+      "ordinaryIntervalP95MS": 38.15675000078045,
+      "ordinaryMaximumIntervalMS": 91.35025000432506,
+      "passed": true,
+      "submittedFPSIncludingSeeks": 29.979764449247664,
+      "thermalState": 1
+    },
+    {
+      "elapsedSeconds": 180.3328855416912,
+      "excludedSeekIntervals": 32,
+      "gpuP95MS": 13.468750024912879,
+      "intervalSamples": 867,
+      "ordinaryIntervalP95MS": 38.2883750135079,
+      "ordinaryMaximumIntervalMS": 90.39249998750165,
+      "passed": true,
+      "submittedFPSIncludingSeeks": 29.985183001534327,
+      "thermalState": 1
+    },
+    {
+      "elapsedSeconds": 210.39963404167793,
+      "excludedSeekIntervals": 33,
+      "gpuP95MS": 13.383041659835726,
+      "intervalSamples": 866,
+      "ordinaryIntervalP95MS": 37.89695832529105,
+      "ordinaryMaximumIntervalMS": 92.9666250012815,
+      "passed": true,
+      "submittedFPSIncludingSeeks": 29.99991834835079,
+      "thermalState": 1
+    },
+    {
+      "elapsedSeconds": 240.45283925000695,
+      "excludedSeekIntervals": 31,
+      "gpuP95MS": 13.384000019868836,
+      "intervalSamples": 868,
+      "ordinaryIntervalP95MS": 37.969916680594906,
+      "ordinaryMaximumIntervalMS": 88.41266666422598,
+      "passed": true,
+      "submittedFPSIncludingSeeks": 29.980163305519728,
+      "thermalState": 1
+    },
+    {
+      "elapsedSeconds": 270.5005058750103,
+      "excludedSeekIntervals": 66,
+      "gpuP95MS": 13.214250007877126,
+      "intervalSamples": 833,
+      "ordinaryIntervalP95MS": 38.21220833924599,
+      "ordinaryMaximumIntervalMS": 93.71424998971634,
+      "passed": true,
+      "submittedFPSIncludingSeeks": 29.985689446190072,
+      "thermalState": 1
+    },
+    {
+      "elapsedSeconds": 300.5601984166715,
+      "excludedSeekIntervals": 32,
+      "gpuP95MS": 12.877499975729734,
+      "intervalSamples": 867,
+      "ordinaryIntervalP95MS": 38.05470833322033,
+      "ordinaryMaximumIntervalMS": 94.17816667701118,
+      "passed": true,
+      "submittedFPSIncludingSeeks": 30.006960275787048,
+      "thermalState": 1
+    },
+    {
+      "elapsedSeconds": 330.61291920836084,
+      "excludedSeekIntervals": 33,
+      "gpuP95MS": 13.280624989420176,
+      "intervalSamples": 866,
+      "ordinaryIntervalP95MS": 38.20387498126365,
+      "ordinaryMaximumIntervalMS": 90.97733334056102,
+      "passed": true,
+      "submittedFPSIncludingSeeks": 29.980646552612917,
+      "thermalState": 1
+    },
+    {
+      "elapsedSeconds": 360.66873604166904,
+      "excludedSeekIntervals": 33,
+      "gpuP95MS": 12.705250002909452,
+      "intervalSamples": 866,
+      "ordinaryIntervalP95MS": 37.95645834179595,
+      "ordinaryMaximumIntervalMS": 89.73937502014451,
+      "passed": true,
+      "submittedFPSIncludingSeeks": 30.010829684069453,
+      "thermalState": 1
+    },
+    {
+      "elapsedSeconds": 390.740363000019,
+      "excludedSeekIntervals": 32,
+      "gpuP95MS": 13.006749999476597,
+      "intervalSamples": 867,
+      "ordinaryIntervalP95MS": 38.16683331388049,
+      "ordinaryMaximumIntervalMS": 91.99733333662152,
+      "passed": true,
+      "submittedFPSIncludingSeeks": 29.961797585741213,
+      "thermalState": 1
+    },
+    {
+      "elapsedSeconds": 420.79379008334945,
+      "excludedSeekIntervals": 33,
+      "gpuP95MS": 12.865458353189752,
+      "intervalSamples": 866,
+      "ordinaryIntervalP95MS": 37.90145833045244,
+      "ordinaryMaximumIntervalMS": 96.86420831712894,
+      "passed": true,
+      "submittedFPSIncludingSeeks": 29.97994197140172,
+      "thermalState": 1
+    },
+    {
+      "elapsedSeconds": 450.8461334583408,
+      "excludedSeekIntervals": 62,
+      "gpuP95MS": 12.715374992694706,
+      "intervalSamples": 836,
+      "ordinaryIntervalP95MS": 38.85849998914637,
+      "ordinaryMaximumIntervalMS": 101.33945834240876,
+      "passed": true,
+      "submittedFPSIncludingSeeks": 29.914472518243663,
+      "thermalState": 1
+    },
+    {
+      "elapsedSeconds": 480.90888012500363,
+      "excludedSeekIntervals": 31,
+      "gpuP95MS": 12.272375024622306,
+      "intervalSamples": 868,
+      "ordinaryIntervalP95MS": 39.50349998194724,
+      "ordinaryMaximumIntervalMS": 88.51562498603016,
+      "passed": true,
+      "submittedFPSIncludingSeeks": 29.93738429755744,
+      "thermalState": 1
+    }
+  ],
+  "sourceFile": "BBB-Motion-2D-30s.mkv",
+  "systemVersion": "Version 27.0.1 (Build 24M372)",
+  "timestamp": "2026-11-02T09:53:17Z"
+}

@@ -1,0 +1,234 @@
+{
+  "benchmarkSeconds": 10.004945708322339,
+  "checks": [
+    {
+      "name": "model-and-render-started",
+      "passed": true
+    },
+    {
+      "intervalP95MS": 37.31291665462777,
+      "maximumIntervalMS": 45.27179166325368,
+      "name": "submission-cadence",
+      "passed": true
+    },
+    {
+      "endClock": {},
+      "endMedia": 13.427691333,
+      "name": "sustained-conversion",
+      "passed": true,
+      "startClock": {},
+      "startMedia": 3.347756375
+    },
+    {
+      "name": "high-relief-sustained-conversion",
+      "passed": true
+    },
+    {
+      "name": "seek-resets-depth-history",
+      "passed": true
+    },
+    {
+      "name": "paused-picture-stays-static",
+      "passed": true
+    },
+    {
+      "name": "pause-and-strength-redraw",
+      "passed": true
+    },
+    {
+      "name": "paused-pop-out-redraw",
+      "passed": true
+    },
+    {
+      "name": "paused-relief-sweep-keeps-position",
+      "passed": true
+    },
+    {
+      "name": "paused-proportion-protection-toggle-redraws-and-settles",
+      "passed": true,
+      "samples": [
+        {
+          "depthUpdates": 0,
+          "enabled": false,
+          "frameUpdates": 1,
+          "playing": false,
+          "settledDepthUpdates": 0,
+          "settledFrameUpdates": 0
+        },
+        {
+          "depthUpdates": 0,
+          "enabled": true,
+          "frameUpdates": 1,
+          "playing": false,
+          "settledDepthUpdates": 0,
+          "settledFrameUpdates": 0
+        }
+      ]
+    },
+    {
+      "name": "paused-motion-comparison-same-frame",
+      "passed": true,
+      "samples": [
+        {
+          "depthUpdates": 0,
+          "enabled": true,
+          "frameUpdates": 1,
+          "settledFrameUpdates": 0
+        },
+        {
+          "depthUpdates": 0,
+          "enabled": false,
+          "frameUpdates": 1,
+          "settledFrameUpdates": 0
+        }
+      ]
+    },
+    {
+      "elapsed": 6,
+      "framesSinceSeek": 2,
+      "name": "paused-seek-updates-then-settles",
+      "passed": true,
+      "playing": false,
+      "position": 0.2,
+      "settledDepthUpdates": 0,
+      "settledFrameUpdates": 0,
+      "state": "已暂停",
+      "updated": true
+    },
+    {
+      "clock": {},
+      "continuous": true,
+      "elapsed": 7.308153001,
+      "name": "resume-conversion",
+      "newDepthPredictions": 20,
+      "passed": true,
+      "pausedElapsed": 6,
+      "playing": true,
+      "trace": [
+        {
+          "age": 8.750066626816988e-07,
+          "clock": {},
+          "elapsed": 6
+        },
+        {
+          "age": 0.10169424998457544,
+          "clock": {},
+          "elapsed": 6
+        },
+        {
+          "age": 0.2068674583279062,
+          "clock": {},
+          "elapsed": 6.049105167
+        },
+        {
+          "age": 0.3087820833316073,
+          "clock": {},
+          "elapsed": 6.049105167
+        },
+        {
+          "age": 0.41016595833934844,
+          "clock": {},
+          "elapsed": 6.049105167
+        },
+        {
+          "age": 0.5103502083220519,
+          "clock": {},
+          "elapsed": 6.300125126
+        },
+        {
+          "age": 0.6119311666698195,
+          "clock": {},
+          "elapsed": 6.300125126
+        },
+        {
+          "age": 0.7137718333397061,
+          "clock": {},
+          "elapsed": 6.550808751
+        },
+        {
+          "age": 0.814865958323935,
+          "clock": {},
+          "elapsed": 6.550808751
+        },
+        {
+          "age": 0.9159353750001173,
+          "clock": {},
+          "elapsed": 6.550808751
+        },
+        {
+          "age": 1.0177741666557267,
+          "clock": {},
+          "elapsed": 6.802571876
+        },
+        {
+          "age": 1.120087124989368,
+          "clock": {},
+          "elapsed": 6.802571876
+        },
+        {
+          "age": 1.222136333322851,
+          "clock": {},
+          "elapsed": 7.055542167
+        },
+        {
+          "age": 1.3239141666563228,
+          "clock": {},
+          "elapsed": 7.055542167
+        },
+        {
+          "age": 1.426646375010023,
+          "clock": {},
+          "elapsed": 7.055542167
+        }
+      ]
+    },
+    {
+      "name": "disable-preserves-position",
+      "passed": true
+    },
+    {
+      "name": "reenable-conversion",
+      "passed": true
+    }
+  ],
+  "convertedFramesInBenchmark": 291,
+  "depthAgeP95MS": 103.01875000004657,
+  "depthGainBelowHalfFrames": 20,
+  "depthGainMedian": 1,
+  "depthGainMinimum": 0,
+  "depthGainSamples": 300,
+  "depthMapping": "anchored-relief-v2",
+  "engine": "native",
+  "environment": "physical-device",
+  "error": "",
+  "frameSize": "2D 1920 × 1080 → AI 左右眼",
+  "gpuMeanMS": 8.33959236217197,
+  "gpuP95MS": 13.486375013599172,
+  "highReliefConvertedFrames": 235,
+  "highReliefFPS": 29.988788410252447,
+  "highReliefSeconds": 8.002990875014802,
+  "inferenceMeanMS": 45.05758192563253,
+  "inferenceP95MS": 51.61316666635685,
+  "motionAlgorithm": "baseline-0.6.2",
+  "motionAlignment": false,
+  "passed": true,
+  "pausedDepthUpdates": 0,
+  "pausedFrameUpdates": 0,
+  "popOut": 0.6000000238418579,
+  "projectionSampling": "proportion-protected-forward-v1",
+  "proportionProtection": true,
+  "runID": "b7d4fe53-13f0-4124-87ee-60f574aee3e1",
+  "sample": "depth-motion-native",
+  "sceneResetsInBenchmark": 4,
+  "scope": "10-second warmed-up submission benchmark, not headset scanout FPS or long-run thermal validation. Perceived depth, artifacts and audio sync need manual observation.",
+  "screenWidthMeters": 0.6535947322845459,
+  "sourceFile": "BBB-Motion-2D-30s.mp4",
+  "submissionGapsOver50MS": 0,
+  "submissionIntervalP95MS": 37.31291665462777,
+  "submissionMaximumIntervalMS": 45.27179166325368,
+  "submittedFPS": 29.985170209414854,
+  "systemVersion": "Version 27.0.1 (Build 24M372)",
+  "temporalPolicy": "motion-aware-cuts-continuous-history-v1",
+  "thermalState": 0,
+  "timestamp": "2026-11-02T09:07:43Z"
+}

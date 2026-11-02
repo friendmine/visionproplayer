@@ -1,3 +1,4 @@
+#import "VPPResumeClockGuard.h"
 #import "VPPVLCSession.h"
 #import <VLCKit/vlc/vlc.h>
 #import <os/lock.h>
@@ -315,7 +316,9 @@ static BOOL VPPFramesEqual(CVPixelBufferRef a, CVPixelBufferRef b) {
     if (_player) libvlc_media_player_select_tracks_by_ids(_player, libvlc_track_text, identifier.UTF8String);
 }
 - (NSDictionary *)clockDiagnostics {
-    return @{@"watch": [_clock snapshot] ?: @{}, @"pollTime": @(_player ? libvlc_media_player_get_time(_player) : -1)};
+    return @{@"watch": [_clock snapshot] ?: @{}, @"pollTime": @(_player ? libvlc_media_player_get_time(_player) : -1),
+             @"resumeAnchorDate": @(_resumeAnchorDate), @"resumeAnchorTime": @(_resumeAnchorTime),
+             @"pausedSeekPending": @(_pausedSeekPending), @"playerState": @(_player ? libvlc_media_player_get_state(_player) : -1)};
 }
 // The output watcher supplies the displayed paused frame. During playback the
 // polling clock catches up sooner after seeks. Briefly hold a confirmed paused
@@ -327,16 +330,8 @@ static BOOL VPPFramesEqual(CVPixelBufferRef a, CVPixelBufferRef b) {
         && [_clock readTime:time position:position]) return;
     *time = libvlc_media_player_get_time(_player);
     *position = libvlc_media_player_get_position(_player);
-    if (_resumeAnchorDate > 0) {
-        libvlc_time_t age = MAX(0, libvlc_clock() - _resumeAnchorDate);
-        BOOL caughtUp = *time >= _resumeAnchorTime - 250000
-            && *time <= _resumeAnchorTime + age + 500000;
-        if (age < 2000000 && !caughtUp) {
-            *time = _resumeAnchorTime; *position = _resumeAnchorPosition;
-        } else {
-            _resumeAnchorDate = 0;
-        }
-    }
+    VPPFilterResumeClock(libvlc_clock(), &_resumeAnchorDate, _resumeAnchorTime,
+                        _resumeAnchorPosition, time, position);
 }
 - (double)position {
     libvlc_time_t time; double position;

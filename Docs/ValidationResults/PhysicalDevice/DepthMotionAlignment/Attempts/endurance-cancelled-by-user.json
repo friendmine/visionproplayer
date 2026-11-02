@@ -1,0 +1,29 @@
+{
+  "complete": false,
+  "cancelledByUser": true,
+  "reason": "User explicitly requested no further 20-minute testing. App relaunched normally and host collector terminated.",
+  "runID": "75930b2e-f08a-4e4b-a628-362399f24514",
+  "progressReports": [
+    {
+      "completedSegments": 1,
+      "elapsedSeconds": 30.045527666661656,
+      "environment": "physical-device",
+      "latestSegment": {
+        "elapsedSeconds": 30.045527666661656,
+        "excludedSeekIntervals": 32,
+        "gpuP95MS": 13.312374998349696,
+        "intervalSamples": 867,
+        "ordinaryIntervalP95MS": 38.372041657567024,
+        "ordinaryMaximumIntervalMS": 99.1165833256673,
+        "passed": true,
+        "submittedFPSIncludingSeeks": 29.98782414461452,
+        "thermalState": 1
+      },
+      "motionAlignment": true,
+      "runID": "75930b2e-f08a-4e4b-a628-362399f24514",
+      "sample": "depth-endurance-vlc",
+      "systemVersion": "Version 27.0.1 (Build 24M372)",
+      "timestamp": "2026-11-02T09:57:58Z"
+    }
+  ]
+}

@@ -1,0 +1,660 @@
+{
+  "benchmarkSeconds": 10.000704166654032,
+  "checks": [
+    {
+      "name": "model-and-render-started",
+      "passed": false
+    },
+    {
+      "intervalP95MS": 0,
+      "maximumIntervalMS": 0,
+      "name": "submission-cadence",
+      "passed": false
+    },
+    {
+      "endClock": {
+        "pausedSeekPending": true,
+        "playerState": 3,
+        "pollTime": 3021001,
+        "resumeAnchorDate": 0,
+        "resumeAnchorTime": 0,
+        "watch": {
+          "now": 451369251680,
+          "pausedDate": 0,
+          "rate": 1,
+          "systemDate": 9223372036854775807,
+          "ts": 3021001,
+          "valid": true
+        }
+      },
+      "endMedia": 3.021001,
+      "name": "sustained-conversion",
+      "passed": false,
+      "startClock": {
+        "pausedSeekPending": true,
+        "playerState": 3,
+        "pollTime": 3021001,
+        "resumeAnchorDate": 0,
+        "resumeAnchorTime": 0,
+        "watch": {
+          "now": 451359250578,
+          "pausedDate": 0,
+          "rate": 1,
+          "systemDate": 9223372036854775807,
+          "ts": 3021001,
+          "valid": true
+        }
+      },
+      "startMedia": 3.021001
+    },
+    {
+      "name": "high-relief-sustained-conversion",
+      "passed": false
+    },
+    {
+      "name": "seek-resets-depth-history",
+      "passed": true
+    },
+    {
+      "name": "paused-picture-stays-static",
+      "passed": true
+    },
+    {
+      "name": "pause-and-strength-redraw",
+      "passed": true
+    },
+    {
+      "name": "paused-pop-out-redraw",
+      "passed": true
+    },
+    {
+      "name": "paused-relief-sweep-keeps-position",
+      "passed": true
+    },
+    {
+      "name": "paused-proportion-protection-toggle-redraws-and-settles",
+      "passed": true,
+      "samples": [
+        {
+          "depthUpdates": 0,
+          "enabled": false,
+          "frameUpdates": 1,
+          "playing": false,
+          "settledDepthUpdates": 0,
+          "settledFrameUpdates": 0
+        },
+        {
+          "depthUpdates": 0,
+          "enabled": true,
+          "frameUpdates": 1,
+          "playing": false,
+          "settledDepthUpdates": 0,
+          "settledFrameUpdates": 0
+        }
+      ]
+    },
+    {
+      "name": "paused-motion-comparison-same-frame",
+      "passed": true,
+      "samples": [
+        {
+          "depthUpdates": 0,
+          "enabled": false,
+          "frameUpdates": 1,
+          "settledFrameUpdates": 0
+        },
+        {
+          "depthUpdates": 0,
+          "enabled": true,
+          "frameUpdates": 1,
+          "settledFrameUpdates": 0
+        }
+      ]
+    },
+    {
+      "elapsed": 6.021001,
+      "framesSinceSeek": 2,
+      "name": "paused-seek-updates-then-settles",
+      "passed": true,
+      "playing": false,
+      "position": 0.20055960827420805,
+      "settledDepthUpdates": 0,
+      "settledFrameUpdates": 0,
+      "state": "已暂停",
+      "updated": true
+    },
+    {
+      "clock": {
+        "pausedSeekPending": false,
+        "playerState": 2,
+        "pollTime": 7037401,
+        "resumeAnchorDate": 451399541710,
+        "resumeAnchorTime": 6021001,
+        "watch": {
+          "now": 451401067872,
+          "pausedDate": 0,
+          "rate": 1,
+          "systemDate": 9223372036854775807,
+          "ts": 7037401,
+          "valid": true
+        }
+      },
+      "continuous": true,
+      "elapsed": 7.037401,
+      "name": "resume-conversion",
+      "newDepthPredictions": 21,
+      "passed": true,
+      "pausedElapsed": 6.021001,
+      "playing": true,
+      "trace": [
+        {
+          "age": 8.750066626816988e-07,
+          "clock": {
+            "pausedSeekPending": false,
+            "playerState": 3,
+            "pollTime": 6021001,
+            "resumeAnchorDate": 451399541710,
+            "resumeAnchorTime": 6021001,
+            "watch": {
+              "now": 451399541797,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 6021001,
+              "valid": true
+            }
+          },
+          "elapsed": 6.021001
+        },
+        {
+          "age": 0.10541200000443496,
+          "clock": {
+            "pausedSeekPending": false,
+            "playerState": 2,
+            "pollTime": 1523186,
+            "resumeAnchorDate": 451399541710,
+            "resumeAnchorTime": 6021001,
+            "watch": {
+              "now": 451399647204,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 6021001,
+              "valid": true
+            }
+          },
+          "elapsed": 6.021001
+        },
+        {
+          "age": 0.2063814166758675,
+          "clock": {
+            "pausedSeekPending": false,
+            "playerState": 2,
+            "pollTime": 1523186,
+            "resumeAnchorDate": 451399541710,
+            "resumeAnchorTime": 6021001,
+            "watch": {
+              "now": 451399748184,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 6021001,
+              "valid": true
+            }
+          },
+          "elapsed": 6.021001
+        },
+        {
+          "age": 0.30697470833547413,
+          "clock": {
+            "pausedSeekPending": false,
+            "playerState": 2,
+            "pollTime": 6222076,
+            "resumeAnchorDate": 451399541710,
+            "resumeAnchorTime": 6021001,
+            "watch": {
+              "now": 451399848766,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 6021001,
+              "valid": true
+            }
+          },
+          "elapsed": 6.021001
+        },
+        {
+          "age": 0.4073777500016149,
+          "clock": {
+            "pausedSeekPending": false,
+            "playerState": 2,
+            "pollTime": 6222076,
+            "resumeAnchorDate": 451399541710,
+            "resumeAnchorTime": 6021001,
+            "watch": {
+              "now": 451399949175,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 6021001,
+              "valid": true
+            }
+          },
+          "elapsed": 6.021001
+        },
+        {
+          "age": 0.5078464166726917,
+          "clock": {
+            "pausedSeekPending": false,
+            "playerState": 2,
+            "pollTime": 6222076,
+            "resumeAnchorDate": 451399541710,
+            "resumeAnchorTime": 6021001,
+            "watch": {
+              "now": 451400049645,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 6021001,
+              "valid": true
+            }
+          },
+          "elapsed": 6.021001
+        },
+        {
+          "age": 0.608794541680254,
+          "clock": {
+            "pausedSeekPending": false,
+            "playerState": 2,
+            "pollTime": 6477160,
+            "resumeAnchorDate": 451399541710,
+            "resumeAnchorTime": 6021001,
+            "watch": {
+              "now": 451400150590,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 6021001,
+              "valid": true
+            }
+          },
+          "elapsed": 6.222076
+        },
+        {
+          "age": 0.7121678749972489,
+          "clock": {
+            "pausedSeekPending": false,
+            "playerState": 2,
+            "pollTime": 6477160,
+            "resumeAnchorDate": 451399541710,
+            "resumeAnchorTime": 6021001,
+            "watch": {
+              "now": 451400253964,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 6021001,
+              "valid": true
+            }
+          },
+          "elapsed": 6.222076
+        },
+        {
+          "age": 0.8129482500080485,
+          "clock": {
+            "pausedSeekPending": false,
+            "playerState": 2,
+            "pollTime": 6733792,
+            "resumeAnchorDate": 451399541710,
+            "resumeAnchorTime": 6021001,
+            "watch": {
+              "now": 451400354751,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 6021001,
+              "valid": true
+            }
+          },
+          "elapsed": 6.47716
+        },
+        {
+          "age": 0.9141633333347272,
+          "clock": {
+            "pausedSeekPending": false,
+            "playerState": 2,
+            "pollTime": 6733792,
+            "resumeAnchorDate": 451399541710,
+            "resumeAnchorTime": 6021001,
+            "watch": {
+              "now": 451400455960,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 6021001,
+              "valid": true
+            }
+          },
+          "elapsed": 6.47716
+        },
+        {
+          "age": 1.0196928750083316,
+          "clock": {
+            "pausedSeekPending": false,
+            "playerState": 2,
+            "pollTime": 6733792,
+            "resumeAnchorDate": 451399541710,
+            "resumeAnchorTime": 6021001,
+            "watch": {
+              "now": 451400561502,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 6021001,
+              "valid": true
+            }
+          },
+          "elapsed": 6.733792
+        },
+        {
+          "age": 1.122835041664075,
+          "clock": {
+            "pausedSeekPending": false,
+            "playerState": 2,
+            "pollTime": 6989179,
+            "resumeAnchorDate": 451399541710,
+            "resumeAnchorTime": 6021001,
+            "watch": {
+              "now": 451400664637,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 6021001,
+              "valid": true
+            }
+          },
+          "elapsed": 6.733792
+        },
+        {
+          "age": 1.2245364999980666,
+          "clock": {
+            "pausedSeekPending": false,
+            "playerState": 2,
+            "pollTime": 7037401,
+            "resumeAnchorDate": 451399541710,
+            "resumeAnchorTime": 6021001,
+            "watch": {
+              "now": 451400766334,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 7037401,
+              "valid": true
+            }
+          },
+          "elapsed": 6.733792
+        },
+        {
+          "age": 1.3251832916866988,
+          "clock": {
+            "pausedSeekPending": false,
+            "playerState": 2,
+            "pollTime": 7037401,
+            "resumeAnchorDate": 451399541710,
+            "resumeAnchorTime": 6021001,
+            "watch": {
+              "now": 451400866986,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 7037401,
+              "valid": true
+            }
+          },
+          "elapsed": 7.037401
+        },
+        {
+          "age": 1.4258883750007953,
+          "clock": {
+            "pausedSeekPending": false,
+            "playerState": 2,
+            "pollTime": 7037401,
+            "resumeAnchorDate": 451399541710,
+            "resumeAnchorTime": 6021001,
+            "watch": {
+              "now": 451400967666,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 7037401,
+              "valid": true
+            }
+          },
+          "elapsed": 7.037401
+        }
+      ]
+    },
+    {
+      "name": "repeated-paused-seek-resume",
+      "passed": true,
+      "rounds": [
+        {
+          "endPosition": 6.989212,
+          "initialClock": {
+            "pausedSeekPending": true,
+            "playerState": 3,
+            "pollTime": 6021001,
+            "resumeAnchorDate": 0,
+            "resumeAnchorTime": 6021001,
+            "watch": {
+              "now": 451402435947,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 6021001,
+              "valid": true
+            }
+          },
+          "passed": true,
+          "position": 6.021001,
+          "violations": []
+        },
+        {
+          "endPosition": 13.025648,
+          "initialClock": {
+            "pausedSeekPending": true,
+            "playerState": 3,
+            "pollTime": 12021001,
+            "resumeAnchorDate": 0,
+            "resumeAnchorTime": 6021001,
+            "watch": {
+              "now": 451405229686,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 12021001,
+              "valid": true
+            }
+          },
+          "passed": true,
+          "position": 12.021001,
+          "violations": []
+        },
+        {
+          "endPosition": 3.937246,
+          "initialClock": {
+            "pausedSeekPending": true,
+            "playerState": 3,
+            "pollTime": 3021001,
+            "resumeAnchorDate": 0,
+            "resumeAnchorTime": 12021001,
+            "watch": {
+              "now": 451407938392,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 3021001,
+              "valid": true
+            }
+          },
+          "passed": true,
+          "position": 3.021001,
+          "violations": []
+        },
+        {
+          "endPosition": 19.039841,
+          "initialClock": {
+            "pausedSeekPending": true,
+            "playerState": 3,
+            "pollTime": 18021001,
+            "resumeAnchorDate": 0,
+            "resumeAnchorTime": 3021001,
+            "watch": {
+              "now": 451410726100,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 18021001,
+              "valid": true
+            }
+          },
+          "passed": true,
+          "position": 18.021001,
+          "violations": []
+        },
+        {
+          "endPosition": 6.986445,
+          "initialClock": {
+            "pausedSeekPending": true,
+            "playerState": 3,
+            "pollTime": 6021001,
+            "resumeAnchorDate": 0,
+            "resumeAnchorTime": 18021001,
+            "watch": {
+              "now": 451413527589,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 6021001,
+              "valid": true
+            }
+          },
+          "passed": true,
+          "position": 6.021001,
+          "violations": []
+        },
+        {
+          "endPosition": 13.032047,
+          "initialClock": {
+            "pausedSeekPending": true,
+            "playerState": 3,
+            "pollTime": 12021001,
+            "resumeAnchorDate": 0,
+            "resumeAnchorTime": 6021001,
+            "watch": {
+              "now": 451416223037,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 12021001,
+              "valid": true
+            }
+          },
+          "passed": true,
+          "position": 12.021001,
+          "violations": []
+        },
+        {
+          "endPosition": 3.915869,
+          "initialClock": {
+            "pausedSeekPending": true,
+            "playerState": 3,
+            "pollTime": 3021001,
+            "resumeAnchorDate": 0,
+            "resumeAnchorTime": 12021001,
+            "watch": {
+              "now": 451419029567,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 3021001,
+              "valid": true
+            }
+          },
+          "passed": true,
+          "position": 3.021001,
+          "violations": []
+        },
+        {
+          "endPosition": 19.042351,
+          "initialClock": {
+            "pausedSeekPending": true,
+            "playerState": 3,
+            "pollTime": 18021001,
+            "resumeAnchorDate": 0,
+            "resumeAnchorTime": 3021001,
+            "watch": {
+              "now": 451421823598,
+              "pausedDate": 0,
+              "rate": 1,
+              "systemDate": 9223372036854775807,
+              "ts": 18021001,
+              "valid": true
+            }
+          },
+          "passed": true,
+          "position": 18.021001,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "name": "disable-preserves-position",
+      "passed": true
+    },
+    {
+      "name": "reenable-conversion",
+      "passed": true
+    }
+  ],
+  "convertedFramesInBenchmark": 0,
+  "depthAgeP95MS": 0,
+  "depthGainBelowHalfFrames": 0,
+  "depthGainMedian": 0,
+  "depthGainMinimum": 0,
+  "depthGainSamples": 0,
+  "depthMapping": "anchored-relief-v2",
+  "engine": "vlc",
+  "environment": "physical-device",
+  "error": "",
+  "frameSize": "2D 1920 × 1080 → AI 左右眼",
+  "gpuMeanMS": 0,
+  "gpuP95MS": 0,
+  "highReliefConvertedFrames": 0,
+  "highReliefFPS": 0,
+  "highReliefSeconds": 8.000976874987828,
+  "inferenceMeanMS": 0,
+  "inferenceP95MS": 0,
+  "motionAlgorithm": "bidirectional-patch-v1",
+  "motionAlignment": true,
+  "passed": false,
+  "pausedDepthUpdates": 0,
+  "pausedFrameUpdates": 0,
+  "popOut": 0.6000000238418579,
+  "projectionSampling": "proportion-protected-forward-v1",
+  "proportionProtection": true,
+  "runID": "a164efe1-9380-4837-a8f3-2cf44590bc70",
+  "sample": "depth-motion-vlc",
+  "sceneResetsInBenchmark": 0,
+  "scope": "10-second warmed-up submission benchmark, not headset scanout FPS or long-run thermal validation. Perceived depth, artifacts and audio sync need manual observation.",
+  "screenWidthMeters": 0.6535947322845459,
+  "sourceFile": "BBB-Motion-2D-30s.mkv",
+  "submissionGapsOver50MS": 0,
+  "submissionIntervalP95MS": 0,
+  "submissionMaximumIntervalMS": 0,
+  "submittedFPS": 0,
+  "systemVersion": "Version 27.0.1 (Build 24M372)",
+  "temporalPolicy": "motion-aware-cuts-continuous-history-v1",
+  "thermalState": 0,
+  "timestamp": "2026-11-02T09:12:57Z"
+}

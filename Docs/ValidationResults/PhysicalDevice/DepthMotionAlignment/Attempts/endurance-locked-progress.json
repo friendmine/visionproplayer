@@ -1,0 +1,197 @@
+{
+  "passed": false,
+  "complete": false,
+  "reason": "Device lockState reported passcodeRequired=true; full 1200-second run not completed.",
+  "runID": "cb6a766e-5034-4169-83e3-6cde6ea12c9e",
+  "progressReports": [
+    {
+      "completedSegments": 1,
+      "elapsedSeconds": 30.055045416665962,
+      "environment": "physical-device",
+      "latestSegment": {
+        "elapsedSeconds": 30.055045416665962,
+        "excludedSeekIntervals": 32,
+        "gpuP95MS": 13.832958327839151,
+        "intervalSamples": 867,
+        "ordinaryIntervalP95MS": 38.264291652012616,
+        "ordinaryMaximumIntervalMS": 92.07137499470264,
+        "passed": true,
+        "submittedFPSIncludingSeeks": 29.978327682059742,
+        "thermalState": 0
+      },
+      "motionAlignment": true,
+      "runID": "cb6a766e-5034-4169-83e3-6cde6ea12c9e",
+      "sample": "depth-endurance-vlc",
+      "systemVersion": "Version 27.0.1 (Build 24M372)",
+      "timestamp": "2026-11-02T09:20:55Z"
+    },
+    {
+      "completedSegments": 2,
+      "elapsedSeconds": 60.10475179165951,
+      "environment": "physical-device",
+      "latestSegment": {
+        "elapsedSeconds": 60.10475179165951,
+        "excludedSeekIntervals": 32,
+        "gpuP95MS": 13.519083324354142,
+        "intervalSamples": 867,
+        "ordinaryIntervalP95MS": 37.763791653560475,
+        "ordinaryMaximumIntervalMS": 90.9832083270885,
+        "passed": true,
+        "submittedFPSIncludingSeeks": 29.983654041617683,
+        "thermalState": 0
+      },
+      "motionAlignment": true,
+      "runID": "cb6a766e-5034-4169-83e3-6cde6ea12c9e",
+      "sample": "depth-endurance-vlc",
+      "systemVersion": "Version 27.0.1 (Build 24M372)",
+      "timestamp": "2026-11-02T09:21:25Z"
+    },
+    {
+      "completedSegments": 3,
+      "elapsedSeconds": 90.15519962497638,
+      "environment": "physical-device",
+      "latestSegment": {
+        "elapsedSeconds": 90.15519962497638,
+        "excludedSeekIntervals": 33,
+        "gpuP95MS": 13.670249987626448,
+        "intervalSamples": 866,
+        "ordinaryIntervalP95MS": 38.10516666271724,
+        "ordinaryMaximumIntervalMS": 88.61266664462164,
+        "passed": true,
+        "submittedFPSIncludingSeeks": 30.016191605635726,
+        "thermalState": 0
+      },
+      "motionAlignment": true,
+      "runID": "cb6a766e-5034-4169-83e3-6cde6ea12c9e",
+      "sample": "depth-endurance-vlc",
+      "systemVersion": "Version 27.0.1 (Build 24M372)",
+      "timestamp": "2026-11-02T09:21:55Z"
+    },
+    {
+      "completedSegments": 4,
+      "elapsedSeconds": 120.20339737497852,
+      "environment": "physical-device",
+      "latestSegment": {
+        "elapsedSeconds": 120.20339737497852,
+        "excludedSeekIntervals": 31,
+        "gpuP95MS": 13.376958318985999,
+        "intervalSamples": 868,
+        "ordinaryIntervalP95MS": 38.01245833165012,
+        "ordinaryMaximumIntervalMS": 88.1833333405666,
+        "passed": true,
+        "submittedFPSIncludingSeeks": 29.951879559895925,
+        "thermalState": 0
+      },
+      "motionAlignment": true,
+      "runID": "cb6a766e-5034-4169-83e3-6cde6ea12c9e",
+      "sample": "depth-endurance-vlc",
+      "systemVersion": "Version 27.0.1 (Build 24M372)",
+      "timestamp": "2026-11-02T09:22:25Z"
+    },
+    {
+      "completedSegments": 5,
+      "elapsedSeconds": 150.26125737497932,
+      "environment": "physical-device",
+      "latestSegment": {
+        "elapsedSeconds": 150.26125737497932,
+        "excludedSeekIntervals": 32,
+        "gpuP95MS": 13.623333361465484,
+        "intervalSamples": 867,
+        "ordinaryIntervalP95MS": 38.28187502222136,
+        "ordinaryMaximumIntervalMS": 91.1375000141561,
+        "passed": true,
+        "submittedFPSIncludingSeeks": 29.975520546039405,
+        "thermalState": 0
+      },
+      "motionAlignment": true,
+      "runID": "cb6a766e-5034-4169-83e3-6cde6ea12c9e",
+      "sample": "depth-endurance-vlc",
+      "systemVersion": "Version 27.0.1 (Build 24M372)",
+      "timestamp": "2026-11-02T09:22:55Z"
+    },
+    {
+      "completedSegments": 6,
+      "elapsedSeconds": 180.31820845830953,
+      "environment": "physical-device",
+      "latestSegment": {
+        "elapsedSeconds": 180.31820845830953,
+        "excludedSeekIntervals": 64,
+        "gpuP95MS": 13.192874990636483,
+        "intervalSamples": 835,
+        "ordinaryIntervalP95MS": 38.08933333493769,
+        "ordinaryMaximumIntervalMS": 93.56070833746344,
+        "passed": true,
+        "submittedFPSIncludingSeeks": 29.94315682601441,
+        "thermalState": 0
+      },
+      "motionAlignment": true,
+      "runID": "cb6a766e-5034-4169-83e3-6cde6ea12c9e",
+      "sample": "depth-endurance-vlc",
+      "systemVersion": "Version 27.0.1 (Build 24M372)",
+      "timestamp": "2026-11-02T09:23:26Z"
+    },
+    {
+      "completedSegments": 7,
+      "elapsedSeconds": 210.37032179164817,
+      "environment": "physical-device",
+      "latestSegment": {
+        "elapsedSeconds": 210.37032179164817,
+        "excludedSeekIntervals": 32,
+        "gpuP95MS": 13.351458328543231,
+        "intervalSamples": 867,
+        "ordinaryIntervalP95MS": 38.136874994961545,
+        "ordinaryMaximumIntervalMS": 95.72908334666863,
+        "passed": true,
+        "submittedFPSIncludingSeeks": 29.947977036329597,
+        "thermalState": 0
+      },
+      "motionAlignment": true,
+      "runID": "cb6a766e-5034-4169-83e3-6cde6ea12c9e",
+      "sample": "depth-endurance-vlc",
+      "systemVersion": "Version 27.0.1 (Build 24M372)",
+      "timestamp": "2026-11-02T09:23:56Z"
+    },
+    {
+      "completedSegments": 8,
+      "elapsedSeconds": 240.41868945831084,
+      "environment": "physical-device",
+      "latestSegment": {
+        "elapsedSeconds": 240.41868945831084,
+        "excludedSeekIntervals": 32,
+        "gpuP95MS": 13.427958328975365,
+        "intervalSamples": 867,
+        "ordinaryIntervalP95MS": 37.77320831432007,
+        "ordinaryMaximumIntervalMS": 92.96999999787658,
+        "passed": true,
+        "submittedFPSIncludingSeeks": 29.984989866841236,
+        "thermalState": 0
+      },
+      "motionAlignment": true,
+      "runID": "cb6a766e-5034-4169-83e3-6cde6ea12c9e",
+      "sample": "depth-endurance-vlc",
+      "systemVersion": "Version 27.0.1 (Build 24M372)",
+      "timestamp": "2026-11-02T09:24:26Z"
+    },
+    {
+      "completedSegments": 9,
+      "elapsedSeconds": 270.47003499997663,
+      "environment": "physical-device",
+      "latestSegment": {
+        "elapsedSeconds": 270.47003499997663,
+        "excludedSeekIntervals": 32,
+        "gpuP95MS": 13.166749995434657,
+        "intervalSamples": 867,
+        "ordinaryIntervalP95MS": 38.05200001806952,
+        "ordinaryMaximumIntervalMS": 91.58645832212642,
+        "passed": true,
+        "submittedFPSIncludingSeeks": 29.982018567214414,
+        "thermalState": 1
+      },
+      "motionAlignment": true,
+      "runID": "cb6a766e-5034-4169-83e3-6cde6ea12c9e",
+      "sample": "depth-endurance-vlc",
+      "systemVersion": "Version 27.0.1 (Build 24M372)",
+      "timestamp": "2026-11-02T09:24:56Z"
+    }
+  ]
+}
