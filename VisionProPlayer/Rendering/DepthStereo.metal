@@ -58,16 +58,24 @@ float disparity(float nearDepth, float2 source, float4 params) {
 // into thin alternating islands, even with perfect temporal stability.
 // Separate passes publish upper/lower envelopes between the two scans.
 // Texture reads must not depend on writes earlier in the same invocation.
+// Protected projection removes the top/bottom disparity taper: a row-dependent
+// horizontal shift can shear a face or arm even though vertical UV is unchanged.
+// Horizontal border coverage is still constrained to exactly zero at both ends.
+float projectionDisparity(float d, float2 uv, float4 params, float4 protection) {
+    return disparity(d, protection.z > 0.5 ? float2(uv.x, 0.5) : uv, params);
+}
+
 kernel void regularizeDisparityForward(texture2d<float, access::sample> depth [[texture(0)]],
     texture2d<float, access::write> scratch [[texture(1)]],
-    constant float4 &params [[buffer(0)]], uint row [[thread_position_in_grid]]) {
+    constant float4 &params [[buffer(0)]], constant float4 &protection [[buffer(1)]],
+    uint row [[thread_position_in_grid]]) {
     uint width = scratch.get_width(), height = scratch.get_height();
     if (row >= height) return;
-    float step = 0.45 / float(width - 1);
+    float step = protection.x / float(width - 1);
     float upper = -1.0, lower = 1.0;
     for (uint x = 0; x < width; ++x) {
         float2 uv = float2(x, row) / float2(width - 1, height - 1);
-        float value = disparity(depth.sample(linearClamp, uv).r, uv, params);
+        float value = projectionDisparity(depth.sample(linearClamp, uv).r, uv, params, protection);
         upper = max(value, upper - step); lower = min(value, lower + step);
         scratch.write(float4(upper, lower, 0, 1), uint2(x, row));
     }
@@ -76,14 +84,15 @@ kernel void regularizeDisparityForward(texture2d<float, access::sample> depth [[
 kernel void regularizeDisparity(texture2d<float, access::sample> depth [[texture(0)]],
     texture2d<float, access::read> scratch [[texture(1)]],
     texture2d<float, access::write> result [[texture(2)]],
-    constant float4 &params [[buffer(0)]], uint row [[thread_position_in_grid]]) {
+    constant float4 &params [[buffer(0)]], constant float4 &protection [[buffer(1)]],
+    uint row [[thread_position_in_grid]]) {
     uint width = result.get_width(), height = result.get_height();
     if (row >= height) return;
-    float step = 0.45 / float(width - 1);
+    float step = protection.x / float(width - 1);
     float upper = -1.0, lower = 1.0;
     for (int x = int(width) - 1; x >= 0; --x) {
         float2 uv = float2(x, row) / float2(width - 1, height - 1);
-        float value = disparity(depth.sample(linearClamp, uv).r, uv, params);
+        float value = projectionDisparity(depth.sample(linearClamp, uv).r, uv, params, protection);
         upper = max(value, upper - step); lower = min(value, lower + step);
         float2 forward = scratch.read(uint2(x, row)).rg;
         float bounded = 0.5 * (max(upper, forward.x) + min(lower, forward.y));
@@ -91,6 +100,40 @@ kernel void regularizeDisparity(texture2d<float, access::sample> depth [[texture
         float boundary = step * min(float(x), float(width - 1 - x));
         bounded = clamp(bounded, -boundary, boundary);
         result.write(float4(bounded, 0, 0, 1), uint2(x, row));
+    }
+}
+
+// Column scans bound vertical shear as well as horizontal scaling. Min/max
+// envelopes and their average preserve the row bound already established.
+// Both passes use separate encoders and separate input/output textures.
+kernel void protectProportionsForward(texture2d<float, access::read> field [[texture(0)]],
+    texture2d<float, access::write> scratch [[texture(1)]],
+    constant float4 &protection [[buffer(1)]], uint x [[thread_position_in_grid]]) {
+    uint width = field.get_width(), height = field.get_height();
+    if (x >= width) return;
+    float step = protection.y / float(height - 1);
+    float upper = -1.0, lower = 1.0;
+    for (uint y = 0; y < height; ++y) {
+        float value = field.read(uint2(x, y)).r;
+        upper = max(value, upper - step); lower = min(value, lower + step);
+        scratch.write(float4(upper, lower, 0, 1), uint2(x, y));
+    }
+}
+
+kernel void protectProportions(texture2d<float, access::read> field [[texture(0)]],
+    texture2d<float, access::read> scratch [[texture(1)]],
+    texture2d<float, access::write> result [[texture(2)]],
+    constant float4 &protection [[buffer(1)]], uint x [[thread_position_in_grid]]) {
+    uint width = field.get_width(), height = field.get_height();
+    if (x >= width) return;
+    float step = protection.y / float(height - 1);
+    float upper = -1.0, lower = 1.0;
+    for (int y = int(height) - 1; y >= 0; --y) {
+        float value = field.read(uint2(x, y)).r;
+        upper = max(value, upper - step); lower = min(value, lower + step);
+        float2 forward = scratch.read(uint2(x, y)).rg;
+        float bounded = 0.5 * (max(upper, forward.x) + min(lower, forward.y));
+        result.write(float4(bounded, 0, 0, 1), uint2(x, y));
     }
 }
 

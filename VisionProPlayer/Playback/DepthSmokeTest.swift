@@ -14,6 +14,7 @@ extension PlayerModel {
         }
         depthPopOut = 0.6
         depthStrength = 0.35
+        depthProportionProtection = true
         openSample(sample.url, layout: .flat, engine: engine, convert2D: true)
         await waitForPendingChange()
         await waitUntil(seconds: 45) { depthPredictions > 8 || rendererError != nil || errorMessage != nil }
@@ -86,7 +87,29 @@ extension PlayerModel {
             redraws = redraws && renderedFrames > before && !isPlaying && abs(elapsed - paused) < 0.2
         }
         checks.append(["name": "paused-relief-sweep-keeps-position", "passed": redraws])
+        // Let the preceding pop-out adjustment finish its depth prediction
+        // before measuring the protection switch in isolation.
+        let beforeProtectionSetup = renderedFrames
         depthPopOut = 0.6
+        await waitUntil(seconds: 3) { renderedFrames > beforeProtectionSetup }
+        try? await Task.sleep(for: .seconds(1))
+        var protectionRedraws = renderedFrames > beforeProtectionSetup && !isPlaying
+        var protectionSamples: [[String: Any]] = []
+        for enabled in [false, true] {
+            let before = renderedFrames, beforeDepth = depthPredictions
+            depthProportionProtection = enabled
+            await waitUntil(seconds: 3) { renderedFrames > before }
+            protectionRedraws = protectionRedraws && renderedFrames > before && !isPlaying && abs(elapsed - paused) < 0.2
+            try? await Task.sleep(for: .milliseconds(400))
+            let stableFrames = renderedFrames, stableDepth = depthPredictions
+            try? await Task.sleep(for: .milliseconds(500))
+            protectionRedraws = protectionRedraws && renderedFrames == stableFrames && depthPredictions == stableDepth && depthPredictions == beforeDepth
+            protectionSamples.append(["enabled": enabled, "frameUpdates": renderedFrames - before,
+                "depthUpdates": depthPredictions - beforeDepth, "settledFrameUpdates": renderedFrames - stableFrames,
+                "settledDepthUpdates": depthPredictions - stableDepth, "playing": isPlaying])
+        }
+        checks.append(["name": "paused-proportion-protection-toggle-redraws-and-settles", "passed": protectionRedraws,
+                       "samples": protectionSamples])
         let beforePausedSeek = renderedFrames
         seek(to: 0.2)
         await waitUntil { renderedFrames > beforePausedSeek && abs(elapsed - 6) < 0.6 }
@@ -123,7 +146,7 @@ extension PlayerModel {
         await waitUntil { depthPredictions > 5 }
         checks.append(["name": "reenable-conversion", "passed": request?.converts2D == true && depthPredictions > 5 && rendererError == nil])
         let report = smokeMetadata().merging([
-            "sample": name, "engine": engine.rawValue, "depthMapping": "anchored-relief-v2", "projectionSampling": "bounded-forward-msaa-v2", "checks": checks, "popOut": depthPopOut, "screenWidthMeters": depthScreenWidthMeters,
+            "sample": name, "engine": engine.rawValue, "depthMapping": "anchored-relief-v2", "projectionSampling": "proportion-protected-forward-v1", "proportionProtection": depthProportionProtection, "checks": checks, "popOut": depthPopOut, "screenWidthMeters": depthScreenWidthMeters,
             "benchmarkSeconds": seconds, "submittedFPS": fps,
             "pausedFrameUpdates": pausedFrameUpdates, "pausedDepthUpdates": pausedDepthUpdates,
             "highReliefSeconds": highSeconds, "highReliefFPS": highFPS, "highReliefConvertedFrames": highConvertedCount, "inferenceMeanMS": mean,

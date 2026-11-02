@@ -8,6 +8,7 @@ struct FilmPreferences: Codable, Equatable {
     var converts2D = false
     var strength: Float = 0.35
     var popOut: Float? // Missing in older libraries means the original balanced depth.
+    var proportionProtection: Bool? // Missing in older libraries enables protection.
     var swapped = false
     var subtitleFile: String?
     var subtitleOffset = 0.0

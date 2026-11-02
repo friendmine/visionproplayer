@@ -220,8 +220,11 @@ struct DepthEffectControls: View {
                 if !editing { model.savePicturePreferences() }
             }).accessibilityLabel("出屏程度")
             Text("向右让前景更靠近你，并保留远景在屏幕后。立体强度调节前后层次；强度为 0 时保持平面。").font(.caption).foregroundStyle(.secondary)
+            Toggle("比例保护", isOn: $model.depthProportionProtection)
+                .onChange(of: model.depthProportionProtection) { _, _ in model.savePicturePreferences() }
+            Text("减少脸部、四肢等区域的拉伸和扭斜，尽量保留原片形状。开启后部分局部景深会收敛。").font(.caption).foregroundStyle(.secondary)
             Button("恢复默认立体效果") {
-                model.depthStrength = 0.35; model.depthPopOut = 0; model.savePicturePreferences()
+                model.depthStrength = 0.35; model.depthPopOut = 0; model.depthProportionProtection = true; model.savePicturePreferences()
             }
             Text("实验性效果。遮挡处仍可能拉伸；若出现重影，可降低强度或出屏程度。").font(.caption).foregroundStyle(.secondary)
         }

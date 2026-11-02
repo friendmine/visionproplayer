@@ -44,6 +44,7 @@ extension PlayerModel {
             check("focus-pause-errors-and-disabled-mode-stay-visible", pausedVisible && errorVisible && focus.visible)
             let legacyPreferences = try JSONDecoder().decode(FilmPreferences.self, from: Data(#"{"layout":"flat","converts2D":false,"strength":0.35,"swapped":false,"subtitleOffset":0}"#.utf8))
             check("legacy-library-defaults-to-balanced-pop-out", legacyPreferences.popOut == nil && legacyPreferences.strength == 0.35)
+            check("legacy-library-enables-proportion-protection", legacyPreferences.proportionProtection ?? true)
             let store = MediaLibrary(root: folder.appending(path: "store"), defaults: defaults)
             let nativeURL = folder.appending(path: "product-native.mp4")
             let vlcURL = folder.appending(path: "product-vlc.mkv")
@@ -109,12 +110,12 @@ extension PlayerModel {
             _ = try recovered.add(nativeURL)
             let backups = try FileManager.default.contentsOfDirectory(at: damagedRoot, includingPropertiesForKeys: nil).filter { $0.lastPathComponent.hasPrefix("library-recovery-") }
             check("damaged-library-preserved-before-save", try backups.count == 1 && Data(contentsOf: backups[0]) == damagedData)
-            store.update(first.id) { $0.favorite = true; $0.position = 3; $0.duration = 12; $0.preferences.strength = 0.62; $0.preferences.popOut = 0.6; $0.preferences.layout = .halfSBS }
+            store.update(first.id) { $0.favorite = true; $0.position = 3; $0.duration = 12; $0.preferences.strength = 0.62; $0.preferences.popOut = 0.6; $0.preferences.proportionProtection = false; $0.preferences.layout = .halfSBS }
             let reloaded = MediaLibrary(root: folder.appending(path: "store"), defaults: defaults)
-            check("library-persists-progress-favorite-settings", reloaded.film(first.id)?.favorite == true && reloaded.film(first.id)?.position == 3 && reloaded.film(first.id)?.preferences.strength == 0.62 && reloaded.film(first.id)?.preferences.popOut == 0.6)
+            check("library-persists-progress-favorite-settings", reloaded.film(first.id)?.favorite == true && reloaded.film(first.id)?.position == 3 && reloaded.film(first.id)?.preferences.strength == 0.62 && reloaded.film(first.id)?.preferences.popOut == 0.6 && reloaded.film(first.id)?.preferences.proportionProtection == false)
             check("bookmark-resolves", try reloaded.resolve(first).path == nativeURL.path)
             let second = try reloaded.add(vlcURL)
-            check("per-film-settings-isolated", reloaded.film(second.id)?.preferences.layout == .flat && reloaded.film(second.id)?.preferences.strength == 0.35 && reloaded.film(second.id)?.preferences.popOut == nil)
+            check("per-film-settings-isolated", reloaded.film(second.id)?.preferences.layout == .flat && reloaded.film(second.id)?.preferences.strength == 0.35 && reloaded.film(second.id)?.preferences.popOut == nil && (reloaded.film(second.id)?.preferences.proportionProtection ?? true))
             let remote = try reloaded.add(URL(string: "https://example.com/movie.mp4")!, title: "Network fixture")
             check("network-source-saved-without-opening", reloaded.film(remote.id)?.isNetwork == true)
             reloaded.remove(first.id)
@@ -154,16 +155,16 @@ extension PlayerModel {
             check("format-change-preserves-paused-position", request?.layout == .halfSBS && !isPlaying && abs(elapsed - paused) < 0.6 && renderedFrames > 0)
             setLayout(.flat); await waitForPendingChange()
             await wait { duration > 0 && abs(elapsed - paused) < 0.6 }
-            depthStrength = 0.62; depthPopOut = 0.6; savePicturePreferences()
+            depthStrength = 0.62; depthPopOut = 0.6; depthProportionProtection = false; savePicturePreferences()
             returnToLibrary(); await waitForPendingChange()
             let savedPosition = library.film(native.id)?.position ?? 0
             openFilm(library.film(native.id)!)
             await waitForPendingChange(); await wait { elapsed >= savedPosition - 0.4 && duration > 0 }
-            check("return-and-resume", savedPosition > 2 && abs(elapsed - savedPosition) < 1 && depthStrength == 0.62 && depthPopOut == 0.6)
+            check("return-and-resume", savedPosition > 2 && abs(elapsed - savedPosition) < 1 && depthStrength == 0.62 && depthPopOut == 0.6 && !depthProportionProtection)
 
             let other = try library.add(vlcURL, title: "Temporary VLC probe"); owned.append(other.id)
             openFilm(other); await waitForPendingChange(); await wait { duration > 0 && audioTracks.count >= 2 && !subtitleTracks.isEmpty }
-            check("vlc-unified-player-and-tracks", request?.engine == .vlc && audioTracks.count >= 2 && !subtitleTracks.isEmpty && depthStrength == 0.35 && depthPopOut == 0 && request?.converts2D == false)
+            check("vlc-unified-player-and-tracks", request?.engine == .vlc && audioTracks.count >= 2 && !subtitleTracks.isEmpty && depthStrength == 0.35 && depthPopOut == 0 && depthProportionProtection && request?.converts2D == false)
             if let last = audioTracks.last { selectAudio(last.id) }
             await wait(3) { vlc?.audioTracks.last?["selected"] as? Bool == true }
             check("vlc-audio-selection", vlc?.audioTracks.last?["selected"] as? Bool == true)

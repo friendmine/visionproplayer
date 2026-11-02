@@ -42,6 +42,7 @@ extension PlayerModel {
             $0.preferences.converts2D = request.converts2D
             $0.preferences.strength = depthStrength
             $0.preferences.popOut = depthPopOut
+            $0.preferences.proportionProtection = depthProportionProtection
             $0.preferences.swapped = swapEyes
             $0.preferences.subtitleOffset = subtitleOffset
         }

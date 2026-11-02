@@ -31,6 +31,7 @@ final class PlayerModel {
     var depthEnabled = false
     var depthStrength: Float = 0.35
     var depthPopOut: Float = 0
+    var depthProportionProtection = true
     @ObservationIgnored var depthScreenWidthMeters: Float = 0
     var depthRevision = 0
     var depthStatus = "等待转换"
@@ -72,6 +73,7 @@ final class PlayerModel {
 
     /// Test presets never change the choices used for the user's next file.
     func openSample(_ url: URL, layout: StereoLayout, engine: PlaybackEngine, convert2D: Bool = false) {
+        depthProportionProtection = true
         eyeCheck = false
         swapEyes = false
         open(url, layout: layout, engine: engine, convert2D: convert2D)
@@ -155,6 +157,7 @@ final class PlayerModel {
             swapEyes = film.preferences.swapped
             depthStrength = film.preferences.strength
             depthPopOut = min(1, max(0, film.preferences.popOut ?? 0))
+            depthProportionProtection = film.preferences.proportionProtection ?? true
             subtitleOffset = film.preferences.subtitleOffset
             if let file = film.preferences.subtitleFile,
                let data = try? Data(contentsOf: library.subtitleURL(file)), let cues = try? SubtitleCue.parse(data) {

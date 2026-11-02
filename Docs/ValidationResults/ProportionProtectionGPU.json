@@ -1,0 +1,43 @@
+{
+  "baselineLocalLengthRange": [
+    0.22451063990592957,
+    3.591214656829834
+  ],
+  "baselineMaximumLandmarkLengthError": 0.05963730812072754,
+  "cases": 126,
+  "maximumProtectedHorizontalSlope": 0.07000058889389038,
+  "maximumProtectedVerticalSlope": 0.07000058889389038,
+  "passed": true,
+  "protectedCases": 63,
+  "protectedLocalLengthRange": [
+    0.9161368012428284,
+    1.085089087486267
+  ],
+  "protectedMaximumLandmarkLengthError": 0.020998716354370117,
+  "scope": "Synthetic GPU projection fixtures; no human detection or wearer acceptance",
+  "projectionSampling": "proportion-protected-forward-v1",
+  "environment": "Mac Metal GPU",
+  "sourceSHA256": {
+    "VisionProPlayer/Rendering/DepthStereo.metal": "239a5d110308044938b6a5f3bbf910092b46f0703bf881b0ce24c5a5745f419c",
+    "VisionProPlayer/Rendering/StereoReprojector.swift": "57f139c58d8a84f9fe792f19a0fcb26c9dc1b9dc20ead68191a74e18378222aa",
+    "VisionProPlayer/Rendering/StereoRenderer.swift": "7f6cfc1f12fd35ae5a781c6a9d9c2bbfce933d1e308d4adb55af3bb69e5ae54b",
+    "Scripts/test_depth_warp.swift": "a9e401ab50ba40a3a56d6ab719260ce8af1c52e6c81206d37c862497fc43764b",
+    "Scripts/test_proportion_protection.swift": "54c5fda1e3b6c24b5879c1fa94c0e797e11322394aeca59ab9645db3483d14da"
+  },
+  "protectionOnRegressionLog": "Proportion protection: true\nPASS: identity, eye direction, orientation/color, pop-out, disparity cap, full coverage, continuous silhouettes and edge-preserving depth\nContour cases: 864, failures: 0, worst reverse contrast: 1.4126301e-05\nPASS: diagonal contours, both edge directions, depth/color offsets, weak/default/high relief and screen caps\nPASS: 15 adversarial disparity fields, zero identity, caps, fixed endpoints, repeatability; maximum slope: 0.45000052\n",
+  "protectionOffRegressionLog": "Proportion protection: false\nPASS: identity, eye direction, orientation/color, pop-out, disparity cap, full coverage, continuous silhouettes and edge-preserving depth\nContour cases: 864, failures: 0, worst reverse contrast: 0.0\nPASS: diagonal contours, both edge directions, depth/color offsets, weak/default/high relief and screen caps\nPASS: 15 adversarial disparity fields, zero identity, caps, fixed endpoints, repeatability; maximum slope: 0.45000052\n",
+  "physicalDeviceValidation": {
+    "automaticChecks": "passed",
+    "nativeChecks": 13,
+    "vlcChecks": 13,
+    "productChecks": 37,
+    "reportsDirectory": "Docs/ValidationResults/PhysicalDevice/ProportionProtection",
+    "wearerAcceptance": {
+      "date": "2026-11-02",
+      "status": "passed for the tested film and settings",
+      "pictureFeedback": "比例改善，立体感和播放正常",
+      "cinemaAndPersistenceFeedback": "都正常",
+      "scope": "User observation of the previously problematic film, cinema switching/stability and per-film persistence; not a universal anatomical accuracy claim"
+    }
+  }
+}

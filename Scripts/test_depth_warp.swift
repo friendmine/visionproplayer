@@ -9,6 +9,8 @@ let source = try String(contentsOfFile: "VisionProPlayer/Rendering/DepthStereo.m
 let library = try device.makeLibrary(source: source, options: nil)
 let reprojector = try StereoReprojector(device: device, library: library)
 let queue = device.makeCommandQueue()!
+let protectionEnabled = !CommandLine.arguments.contains("--without-protection")
+print("Proportion protection: \(protectionEnabled)")
 let width = 1024, height = 64
 func texture(_ format: MTLPixelFormat) -> MTLTexture {
     let d = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: format, width: width, height: height, mipmapped: false)
@@ -29,7 +31,7 @@ var depths = [Float](repeating: 1, count: width * height)
 depths.withUnsafeBytes { depth.replace(region: MTLRegionMake2D(0,0,width,height), mipmapLevel: 0, withBytes: $0.baseAddress!, bytesPerRow: width * 4) }
 func render(_ strength: Float, popOut: Float = 0, limit: Float = 0.04) -> ([UInt16], [UInt16]) {
     let command = queue.makeCommandBuffer()!
-    try! reprojector.encode(color: color, depth: depth, parameters: SIMD4<Float>(strength, popOut, limit, 0.012),
+    try! reprojector.encode(color: color, depth: depth, parameters: SIMD4<Float>(strength, popOut, limit, 0.012), protectProportions: protectionEnabled,
                            left: left, right: right, commands: command)
     command.commit(); command.waitUntilCompleted()
     precondition(command.status == .completed)
@@ -232,6 +234,8 @@ for strength: Float in [0, 0.0001, 0.35, 0.6, 1] {
             encoder.setTexture(depth, index: 0); encoder.setTexture(scratch, index: 1); encoder.setTexture(field, index: 2)
             var params = SIMD4<Float>(strength, amount, 0.04, 0.012)
             encoder.setBytes(&params, length: 16, index: 0)
+            var protection = SIMD4<Float>(0.45, 0, 0, 0)
+            encoder.setBytes(&protection, length: 16, index: 1)
             encoder.dispatchThreads(MTLSize(width: height, height: 1, depth: 1),
                                     threadsPerThreadgroup: MTLSize(width: 32, height: 1, depth: 1))
             encoder.endEncoding()
