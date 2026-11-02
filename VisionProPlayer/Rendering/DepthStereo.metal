@@ -163,18 +163,21 @@ vertex ProjectedVertex projectStereoVertex(uint id [[vertex_id]],
 }
 
 fragment half4 projectStereoFragment(ProjectedVertex in [[stage_in]],
-                                      texture2d<float, access::sample> color [[texture(0)]]) {
+                                      texture2d<float, access::sample> color [[texture(0)]],
+                                      constant uint &sourceIsLinear [[buffer(0)]]) {
     float2 dx = dfdx(in.uv), dy = dfdy(in.uv);
     float2 size = float2(color.get_width(), color.get_height());
     float footprint = max(length(dx * size), length(dy * size));
-    float3 value = srgbToLinear(color.sample(linearClamp, in.uv).rgb);
+    float3 value = color.sample(linearClamp, in.uv).rgb;
+    if (!sourceIsLinear) value = srgbToLinear(value);
     // Integrate texture coverage when the warp compresses pixels. MSAA alone
     // only filters triangle coverage, not fine detail within a triangle.
     if (footprint > 1.05) {
         float3 integrated = 0;
         for (int y = 0; y < 2; ++y) for (int x = 0; x < 2; ++x) {
             float2 offset = (float(x) - 0.5) * 0.5 * dx + (float(y) - 0.5) * 0.5 * dy;
-            integrated += srgbToLinear(color.sample(linearClamp, in.uv + offset).rgb);
+            float3 sample = color.sample(linearClamp, in.uv + offset).rgb;
+            integrated += sourceIsLinear ? sample : srgbToLinear(sample);
         }
         value = mix(value, integrated * 0.25, smoothstep(1.05, 1.4, footprint));
     }

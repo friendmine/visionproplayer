@@ -24,6 +24,7 @@ final class StereoRenderer {
     private var rightSurface: LowLevelTexture?
     private var commandQueue: MTLCommandQueue?
     private var ciContext: CIContext?
+    private var videoColorConverter: VideoColorConverter?
     private var dimensions = SIMD2<Int>(0, 0)
     private var inFlight = false
     private(set) var failure: String?
@@ -53,6 +54,7 @@ final class StereoRenderer {
             reprojector = try StereoReprojector(device: device, library: library)
         }
         ciContext = CIContext(mtlDevice: device, options: [.cacheIntermediates: false])
+        videoColorConverter = VideoColorConverter(device: device)
         material = try await ShaderGraphMaterial(named: "/Root/StereoMaterial", from: "StereoMaterial.usda")
         eyeCheckMaterial = try await ShaderGraphMaterial(named: "/Root/EyeCheckMaterial", from: "StereoMaterial.usda")
         entity.model = ModelComponent(mesh: .generatePlane(width: 1, height: 1), materials: [])
@@ -179,7 +181,8 @@ final class StereoRenderer {
     }
 
     func renderConverted(_ buffer: CVPixelBuffer, depth: EstimatedDepth, strength: Float, popOut: Float, protectProportions: Bool, distance: Float?, swapped: Bool) throws -> Bool {
-        guard !inFlight, let queue = commandQueue, let depthPipeline, let reprojector else { return false }
+        guard !inFlight, let queue = commandQueue, let depthPipeline, let reprojector,
+              let context = ciContext, let videoColorConverter else { return false }
         let sourceWidth = CVPixelBufferGetWidth(buffer), sourceHeight = CVPixelBufferGetHeight(buffer)
         let scale = min(1.0, 1920.0 / Double(max(sourceWidth, sourceHeight)))
         let width = max(2, Int(Double(sourceWidth) * scale)), height = max(2, Int(Double(sourceHeight) * scale))
@@ -198,7 +201,8 @@ final class StereoRenderer {
         }
         guard depthHistory.count == 2, let leftSurface, let rightSurface,
               let commands = queue.makeCommandBuffer() else { throw RenderError.unavailable }
-        let color = try texture(buffer, format: .bgra8Unorm)
+        let color = try videoColorConverter.encode(buffer, width: width, height: height, scale: scale,
+                                                   context: context, commands: commands)
         let depthFormat: MTLPixelFormat = CVPixelBufferGetPixelFormatType(depth.buffer) == kCVPixelFormatType_OneComponent16Half ? .r16Float : .r32Float
         let raw = try texture(depth.buffer, format: depthFormat)
         // Reuse the same stabilized depth for a frozen source. Changing only
@@ -223,11 +227,11 @@ final class StereoRenderer {
         let limits = disparityLimits(distance: distance)
         let warpParams = SIMD4<Float>(max(0, min(1, strength)), max(0, min(1, popOut)),
                                      limits.x, limits.y)
-        try reprojector.encode(color: color.0, depth: smooth, parameters: warpParams, protectProportions: protectProportions,
+        try reprojector.encode(color: color, depth: smooth, parameters: warpParams, protectProportions: protectProportions, sourceIsLinear: true,
                                left: left, right: right, commands: commands)
         try generateDisplayMipmaps(left, right, using: commands)
         depthIndex = nextDepthIndex; depthHistoryValid = true; processedDepthBuffer = depth.buffer; inFlight = true
-        let input = RetainedVideoFrame(buffer, textureReference: color.1), output = RetainedVideoFrame(depth.buffer, textureReference: raw.1)
+        let input = RetainedVideoFrame(buffer), output = RetainedVideoFrame(depth.buffer, textureReference: raw.1)
         let capture = !debugCaptured && ProcessInfo.processInfo.arguments.contains("--depth-capture")
         debugCaptured = debugCaptured || capture
         let capturedParameters = warpParams

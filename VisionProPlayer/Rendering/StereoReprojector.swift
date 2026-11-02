@@ -39,7 +39,7 @@ final class StereoReprojector {
         pipeline = try device.makeRenderPipelineState(descriptor: descriptor)
     }
 
-    func encode(color: MTLTexture, depth: MTLTexture, parameters: SIMD4<Float>, protectProportions: Bool = true,
+    func encode(color: MTLTexture, depth: MTLTexture, parameters: SIMD4<Float>, protectProportions: Bool = true, sourceIsLinear: Bool = false,
                 left: MTLTexture, right: MTLTexture, commands: MTLCommandBuffer) throws {
         if multisampleColor?.width != left.width || multisampleColor?.height != left.height {
             let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba16Float,
@@ -116,6 +116,8 @@ final class StereoReprojector {
             encoder.setVertexBytes(&grid, length: MemoryLayout<SIMD4<Float>>.stride, index: 1)
             encoder.setVertexTexture(projectedField, index: 0)
             encoder.setFragmentTexture(color, index: 0)
+            var linear: UInt32 = sourceIsLinear ? 1 : 0
+            encoder.setFragmentBytes(&linear, length: MemoryLayout<UInt32>.stride, index: 0)
             encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: columns * rows * 6)
             encoder.endEncoding()
         }

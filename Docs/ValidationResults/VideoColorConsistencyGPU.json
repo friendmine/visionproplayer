@@ -1,0 +1,33 @@
+{
+  "date": "2026-11-02",
+  "environment": "Mac GPU",
+  "passed": true,
+  "renderComparisons": 41,
+  "maximumLinearRGBAError": 3.8146973e-06,
+  "fixture": "BBB-HEVC-2D-30s.mp4 (3 decoded frames) and tagged synthetic BGRA",
+  "sourceSHA256": {
+    "VisionProPlayer/Rendering/VideoColorConverter.swift": "00307c9729825d370d0d2eb6265ba11b9fb2c5ae75de9f038b1910f19576b430",
+    "VisionProPlayer/Rendering/StereoRenderer.swift": "ab3e71acaf09d68ba47f87ea059b0c49f62813185f2aa97c17071de6023b3dd7",
+    "VisionProPlayer/Rendering/StereoReprojector.swift": "c033492f314db40d2fa90383d8999c9b67f63a4049f3bb7b548af38a59309cd2",
+    "VisionProPlayer/Rendering/DepthStereo.metal": "bf39be0f957d83bbc04c8df314216957eb14eb7fa000d38177a2486ed639e656",
+    "Scripts/test_video_color.swift": "cf8df9119bab42429c12eef7d75728ac303400950dbce44aee168565887fdaa8"
+  },
+  "scope": "Same-frame output comparison of AI projection against Core Image flat rendering. No inference scheduling simulation or headset visual acceptance.",
+  "physicalDeviceStatus": "Native and VLC each passed 13 fresh checks on physical Vision Pro after unlock. User subsequently confirmed the original problem clip no longer flickers and other playback behavior is normal.",
+  "physicalDeviceReports": [
+    "PhysicalDevice/VideoColorConsistency/depth-native.json",
+    "PhysicalDevice/VideoColorConsistency/depth-vlc.json"
+  ],
+  "wearerAcceptance": {
+    "date": "2026-11-02",
+    "passed": true,
+    "feedback": "闪动消失，其余正常",
+    "requestedComparison": {
+      "film": "私人测试影片",
+      "strength": 0.35,
+      "popOut": 0,
+      "proportionProtection": true
+    },
+    "scope": "User confirmation for the original problem clip. Actual engine and window/cinema mode were not separately confirmed; does not establish visual acceptance for all media or both engines."
+  }
+}
