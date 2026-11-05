@@ -13,6 +13,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("device", help="CoreDevice identifier or UDID")
     parser.add_argument("--film-id", type=uuid.UUID, help="Library film UUID for seek-preview-film only")
+    parser.add_argument("--vlc-clock-reference", action="store_true", help="Use the pre-optimization VLC audio-master clock for comparison")
     parser.add_argument("--capture", action="store_true", help="Save the first converted eye textures in the app Documents directory (Debug only)")
     parser.add_argument("--baseline", action="store_true", help="Use the preserved 0.6.2 depth path for an AI comparison")
     parser.add_argument("--reference-064", action="store_true", help="Use 0.6.4 inference and edge refinement for comparison")
@@ -58,6 +59,7 @@ def main():
                      *(["--depth-motion-baseline"] if args.baseline else []),
                      *(["--depth-reference-063"] if args.reference_063 else []),
                      *(["--depth-reference-064"] if args.reference_064 else []),
+                     *(["--vlc-clock-reference"] if args.vlc_clock_reference else []),
                      *(["--depth-resume-stress"] if args.resume_stress else []))
         if result.returncode:
             raise SystemExit(result.stdout + result.stderr)
@@ -91,7 +93,7 @@ def main():
                 continue
             if report.get("environment") != "physical-device":
                 raise SystemExit("Report does not identify a physical device.")
-            destination = output / f"{args.sample}{'-baseline' if args.baseline else ''}{'-reference-063' if args.reference_063 else ''}{'-reference-064' if args.reference_064 else ''}{'-resume-stress' if args.resume_stress else ''}.json"
+            destination = output / f"{args.sample}{'-clock-reference' if args.vlc_clock_reference else ''}{'-baseline' if args.baseline else ''}{'-reference-063' if args.reference_063 else ''}{'-reference-064' if args.reference_064 else ''}{'-resume-stress' if args.resume_stress else ''}.json"
             destination.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
             print(destination)
             print(json.dumps(report, ensure_ascii=False, indent=2))

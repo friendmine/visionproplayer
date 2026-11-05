@@ -270,7 +270,7 @@ final class PlayerModel {
                 nativePresented = false
                 if recovery == nil { player.play() }
             } else {
-                vlc = try VPPVLCSession(url: next.url, stereo: next.usesTextureOutput)
+                vlc = try VPPVLCSession(url: next.url, stereo: next.usesTextureOutput, steadyClock: next.converts2D)
                 // Flat video starts after its UIView has attached; SBS starts with its frame mailbox.
                 if next.usesTextureOutput { vlc?.play() }
             }

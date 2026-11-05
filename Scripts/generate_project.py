@@ -60,6 +60,7 @@ for mode in ['Debug','Release']:
       'DEBUG_INFORMATION_FORMAT':'dwarf' if mode=='Debug' else 'dwarf-with-dsym',
       'ENABLE_USER_SCRIPT_SANDBOXING':'YES',
       'SWIFT_ACTIVE_COMPILATION_CONDITIONS':'DEBUG' if mode=='Debug' else '',
+      'GCC_PREPROCESSOR_DEFINITIONS':'DEBUG=1' if mode=='Debug' else 'NDEBUG=1',
     }
     configs.append(add('config:'+mode,'isa = XCBuildConfiguration; name = '+mode+'; buildSettings = {'+''.join(k+' = '+q(v)+';' for k,v in settings.items())+'};'))
     pconfigs.append(add('pconfig:'+mode,f'isa = XCBuildConfiguration; name = {mode}; buildSettings = {{CLANG_WARN_DOCUMENTATION_COMMENTS = YES; GCC_WARN_UNUSED_VARIABLE = YES; }};'))

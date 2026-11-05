@@ -49,9 +49,16 @@ extension PlayerModel {
             let startClock = vlc?.clockDiagnostics ?? [:]
             let convertedStart = depthConvertedFrames
             let resetStart = depthSceneResets
+            let backgroundPauseBefore = lastBackgroundPause
             depthInferenceSamples.removeAll(); depthAgeSamples.removeAll(); depthGainSamples.removeAll()
             depthDisplayTimes.removeAll(); depthGPUTimeSamples.removeAll()
+            vlc?.beginFrameDiagnostics()
             try await pause(.seconds(10))
+            let frameTrace = vlc?.endFrameDiagnostics() ?? []
+            let submissionTrace = depthDisplayTimes
+            let decoderTrace = vlc?.decoderDiagnostics() ?? []
+            let usesSteadyClock = vlc?.usesSteadyClock ?? false
+            let backgroundPausedDuringBenchmark = lastBackgroundPause != backgroundPauseBefore
             let seconds = ProcessInfo.processInfo.systemUptime - start
             let fps = Double(renderedFrames - startFrames) / seconds
             let times = depthInferenceSamples.sorted(), ages = depthAgeSamples.sorted()
@@ -259,6 +266,9 @@ extension PlayerModel {
             let report = smokeMetadata().merging([
                 "sample": name, "engine": engine.rawValue, "depthMapping": testedSubjects ? "planar-coverage-v1" : "anchored-relief-v2", "projectionSampling": "proportion-protected-forward-v1", "proportionProtection": depthProportionProtection, "checks": checks, "popOut": depthPopOut, "screenWidthMeters": depthScreenWidthMeters,
                 "benchmarkSeconds": seconds, "submittedFPS": fps,
+                "vlcMonotonicClock": usesSteadyClock,
+                "backgroundPausedDuringBenchmark": backgroundPausedDuringBenchmark,
+                "vlcFrameTrace": frameTrace, "submissionTimes": submissionTrace, "decoderTrace": decoderTrace,
                 "temporalPolicy": "motion-aware-cuts-continuous-history-v1",
                 "subjectAccuracy": testedSubjects, "subjectAlgorithm": testedSubjects ? "aspect-near-tail-planar-v2" : "baseline-0.6.4",
                 "edgeRefinement": testedEdges, "edgeAlgorithm": testedEdges ? "color-guided-depth-v1" : "baseline-0.6.3",

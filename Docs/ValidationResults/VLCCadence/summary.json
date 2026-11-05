@@ -1,0 +1,320 @@
+[
+  {
+    "report": "auto-decoder-motion.json",
+    "runID": "0483de2b-5996-4df3-96bf-6de15526626f",
+    "passed": true,
+    "submittedFPS": 29.79432529829092,
+    "stages": {
+      "convertedOutputReady": {
+        "samples": 297,
+        "p95MS": 38.67700000409968,
+        "maximumMS": 93.03766666562296,
+        "over50MS": 1
+      },
+      "presentation": {
+        "samples": 297,
+        "p95MS": 37.44070834363811,
+        "maximumMS": 90.50920832669362,
+        "over50MS": 1
+      },
+      "snapshot": {
+        "samples": 297,
+        "p95MS": 37.38433332182467,
+        "maximumMS": 90.44983334024437,
+        "over50MS": 1
+      },
+      "consumed": {
+        "samples": 297,
+        "p95MS": 37.613458349369466,
+        "maximumMS": 89.176250010496,
+        "over50MS": 1
+      },
+      "appSubmission": {
+        "samples": 297,
+        "p95MS": 38.00462500657886,
+        "maximumMS": 91.43558330833912,
+        "over50MS": 1
+      }
+    },
+    "readyToPresentation": {
+      "samples": 297,
+      "p95MS": 33.84666668716818,
+      "maximumMS": 85.17112498520873,
+      "over50MS": 1
+    },
+    "snapshotCopy": {
+      "samples": 298,
+      "p95MS": 1.9495416490826756,
+      "maximumMS": 4.409708344610408,
+      "over50MS": 0
+    },
+    "gpuP95MS": 17.217500018887222,
+    "inferenceP95MS": 58.24108331580646,
+    "scope": "10-second warmed short sample; converted output readiness is after decode/scaling. No scanout, long-run or perceived AV-sync claim."
+  },
+  {
+    "report": "baseline-motion.json",
+    "runID": "82e2c0c8-ed67-420b-8549-2b9723c03714",
+    "passed": true,
+    "submittedFPS": 29.787977696352787,
+    "stages": {
+      "convertedOutputReady": {
+        "samples": 297,
+        "p95MS": 39.301708311541006,
+        "maximumMS": 88.61612502369098,
+        "over50MS": 2
+      },
+      "presentation": {
+        "samples": 297,
+        "p95MS": 37.81137501937337,
+        "maximumMS": 85.78074999968521,
+        "over50MS": 1
+      },
+      "snapshot": {
+        "samples": 297,
+        "p95MS": 37.667166674509645,
+        "maximumMS": 87.2818749921862,
+        "over50MS": 1
+      },
+      "consumed": {
+        "samples": 297,
+        "p95MS": 38.20312500465661,
+        "maximumMS": 87.08520833170041,
+        "over50MS": 1
+      },
+      "appSubmission": {
+        "samples": 297,
+        "p95MS": 38.42829167842865,
+        "maximumMS": 87.78237499063835,
+        "over50MS": 1
+      }
+    },
+    "readyToPresentation": {
+      "samples": 297,
+      "p95MS": 34.084666665876284,
+      "maximumMS": 80.62062499811873,
+      "over50MS": 1
+    },
+    "snapshotCopy": {
+      "samples": 298,
+      "p95MS": 1.8627916579134762,
+      "maximumMS": 3.9373750041704625,
+      "over50MS": 0
+    },
+    "gpuP95MS": 16.45962498150766,
+    "inferenceP95MS": 48.54404166690074,
+    "scope": "10-second warmed short sample; converted output readiness is after decode/scaling. No scanout, long-run or perceived AV-sync claim."
+  },
+  {
+    "report": "final-hevc-initial.json",
+    "runID": "01d534cd-32b9-45b9-ad00-52d69f5ec19e",
+    "passed": false,
+    "submittedFPS": 13.095922311744616,
+    "stages": {
+      "convertedOutputReady": {
+        "samples": 189,
+        "p95MS": 99.07570833456703,
+        "maximumMS": 113.17358334781602,
+        "over50MS": 62
+      },
+      "presentation": {
+        "samples": 189,
+        "p95MS": 98.91062500537373,
+        "maximumMS": 113.26766666024923,
+        "over50MS": 62
+      },
+      "snapshot": {
+        "samples": 189,
+        "p95MS": 98.8562916754745,
+        "maximumMS": 112.7496249973774,
+        "over50MS": 62
+      },
+      "consumed": {
+        "samples": 188,
+        "p95MS": 99.17545833741315,
+        "maximumMS": 114.45354163879529,
+        "over50MS": 62
+      },
+      "appSubmission": {
+        "samples": 127,
+        "p95MS": 37.77037499821745,
+        "maximumMS": 5778.903208323754,
+        "over50MS": 1
+      }
+    },
+    "readyToPresentation": {
+      "samples": 189,
+      "p95MS": 33.96708334912546,
+      "maximumMS": 35.59241665061563,
+      "over50MS": 0
+    },
+    "snapshotCopy": {
+      "samples": 190,
+      "p95MS": 1.5161666669882834,
+      "maximumMS": 2.925000007962808,
+      "over50MS": 0
+    },
+    "gpuP95MS": 15.822250017663464,
+    "inferenceP95MS": 44.17258335161023,
+    "scope": "10-second warmed short sample; converted output readiness is after decode/scaling. No scanout, long-run or perceived AV-sync claim."
+  },
+  {
+    "report": "final-hevc.json",
+    "runID": "0f71a9e5-2280-4c86-9673-da7e3623e66b",
+    "passed": true,
+    "submittedFPS": 29.994973092484678,
+    "stages": {
+      "convertedOutputReady": {
+        "samples": 299,
+        "p95MS": 37.7086250227876,
+        "maximumMS": 39.16745833703317,
+        "over50MS": 0
+      },
+      "presentation": {
+        "samples": 299,
+        "p95MS": 37.30833332519978,
+        "maximumMS": 38.64750001230277,
+        "over50MS": 0
+      },
+      "snapshot": {
+        "samples": 299,
+        "p95MS": 37.56995830917731,
+        "maximumMS": 38.30483331694268,
+        "over50MS": 0
+      },
+      "consumed": {
+        "samples": 299,
+        "p95MS": 37.53070833045058,
+        "maximumMS": 39.62124997633509,
+        "over50MS": 0
+      },
+      "appSubmission": {
+        "samples": 299,
+        "p95MS": 37.33058331999928,
+        "maximumMS": 39.94441666873172,
+        "over50MS": 0
+      }
+    },
+    "readyToPresentation": {
+      "samples": 299,
+      "p95MS": 34.315666678594425,
+      "maximumMS": 35.13895833748393,
+      "over50MS": 0
+    },
+    "snapshotCopy": {
+      "samples": 300,
+      "p95MS": 1.0956666665151715,
+      "maximumMS": 1.4769583358429372,
+      "over50MS": 0
+    },
+    "gpuP95MS": 16.14799999515526,
+    "inferenceP95MS": 41.610208339989185,
+    "scope": "10-second warmed short sample; converted output readiness is after decode/scaling. No scanout, long-run or perceived AV-sync claim."
+  },
+  {
+    "report": "final-motion.json",
+    "runID": "1092f306-ccb6-4de3-9a2a-df7df37519c1",
+    "passed": true,
+    "submittedFPS": 29.992914548842904,
+    "stages": {
+      "convertedOutputReady": {
+        "samples": 299,
+        "p95MS": 43.39395833085291,
+        "maximumMS": 51.05104169342667,
+        "over50MS": 1
+      },
+      "presentation": {
+        "samples": 299,
+        "p95MS": 37.736666679847986,
+        "maximumMS": 40.58795832679607,
+        "over50MS": 0
+      },
+      "snapshot": {
+        "samples": 299,
+        "p95MS": 38.386750005884096,
+        "maximumMS": 43.6373749980703,
+        "over50MS": 0
+      },
+      "consumed": {
+        "samples": 299,
+        "p95MS": 39.68212497420609,
+        "maximumMS": 48.68454165989533,
+        "over50MS": 0
+      },
+      "appSubmission": {
+        "samples": 299,
+        "p95MS": 40.93029166688211,
+        "maximumMS": 49.91445833002217,
+        "over50MS": 0
+      }
+    },
+    "readyToPresentation": {
+      "samples": 299,
+      "p95MS": 33.41795832966454,
+      "maximumMS": 36.42820834647864,
+      "over50MS": 0
+    },
+    "snapshotCopy": {
+      "samples": 300,
+      "p95MS": 3.36212498950772,
+      "maximumMS": 8.709625020856038,
+      "over50MS": 0
+    },
+    "gpuP95MS": 15.33662501606159,
+    "inferenceP95MS": 51.09820835059509,
+    "scope": "10-second warmed short sample; converted output readiness is after decode/scaling. No scanout, long-run or perceived AV-sync claim."
+  },
+  {
+    "report": "monotonic-motion-experiment.json",
+    "runID": "7a3ba020-4bf0-4c95-ac8c-5824b74d393a",
+    "passed": true,
+    "submittedFPS": 29.99041181541152,
+    "stages": {
+      "convertedOutputReady": {
+        "samples": 299,
+        "p95MS": 38.37304166518152,
+        "maximumMS": 45.02679166034795,
+        "over50MS": 0
+      },
+      "presentation": {
+        "samples": 299,
+        "p95MS": 37.75537500041537,
+        "maximumMS": 39.64137498405762,
+        "over50MS": 0
+      },
+      "snapshot": {
+        "samples": 299,
+        "p95MS": 37.787833309266716,
+        "maximumMS": 42.565374984405935,
+        "over50MS": 0
+      },
+      "consumed": {
+        "samples": 299,
+        "p95MS": 38.42166665708646,
+        "maximumMS": 43.19312499137595,
+        "over50MS": 0
+      },
+      "appSubmission": {
+        "samples": 299,
+        "p95MS": 38.32600000896491,
+        "maximumMS": 42.11445833789185,
+        "over50MS": 0
+      }
+    },
+    "readyToPresentation": {
+      "samples": 299,
+      "p95MS": 33.602958341361955,
+      "maximumMS": 35.65129166236147,
+      "over50MS": 0
+    },
+    "snapshotCopy": {
+      "samples": 300,
+      "p95MS": 1.8841666460502893,
+      "maximumMS": 5.192833341425285,
+      "over50MS": 0
+    },
+    "gpuP95MS": 16.150166688021272,
+    "inferenceP95MS": 47.00433334801346,
+    "scope": "10-second warmed short sample; converted output readiness is after decode/scaling. No scanout, long-run or perceived AV-sync claim."
+  }
+]

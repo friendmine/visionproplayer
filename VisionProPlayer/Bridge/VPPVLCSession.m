@@ -2,18 +2,50 @@
 #import "VPPVLCSession.h"
 #import <VLCKit/vlc/vlc.h>
 #import <os/lock.h>
+#import <QuartzCore/QuartzCore.h>
 
 // The callback context owns the pool and the latest frame. There is no unbounded frame queue.
 @interface VPPFrameMailbox : NSObject {
     os_unfair_lock _lock;
     CVPixelBufferRef _latest;
+#if DEBUG
+    struct { double time; int event; } _trace[2048];
+    NSUInteger _traceCount;
+    BOOL _tracing;
+#endif
 }
 @property (nonatomic) CVPixelBufferPoolRef pool;
 @property (nonatomic) CVPixelBufferRef decodeBuffer;
+#if DEBUG
+- (void)trace:(int)event;
+- (void)beginTrace;
+- (NSArray *)endTrace;
+#endif
 - (void)publish:(CVPixelBufferRef)buffer;
 - (CVPixelBufferRef)take CF_RETURNS_RETAINED;
 @end
 @implementation VPPFrameMailbox
+#if DEBUG
+// Bounded, allocation-free callback instrumentation; exported only after the sample.
+- (void)trace:(int)event {
+    double time = CACurrentMediaTime();
+    os_unfair_lock_lock(&_lock);
+    if (_tracing && _traceCount < 2048) {
+        _trace[_traceCount].time = time; _trace[_traceCount++].event = event;
+    }
+    os_unfair_lock_unlock(&_lock);
+}
+- (void)beginTrace {
+    os_unfair_lock_lock(&_lock); _traceCount = 0; _tracing = YES; os_unfair_lock_unlock(&_lock);
+}
+- (NSArray *)endTrace {
+    os_unfair_lock_lock(&_lock); _tracing = NO; os_unfair_lock_unlock(&_lock);
+    NSMutableArray *result = [NSMutableArray arrayWithCapacity:_traceCount];
+    for (NSUInteger i = 0; i < _traceCount; i++)
+        [result addObject:@[@(_trace[i].time), @(_trace[i].event)]];
+    return result;
+}
+#endif
 - (instancetype)init { if ((self = [super init])) _lock = OS_UNFAIR_LOCK_INIT; return self; }
 - (void)publish:(CVPixelBufferRef)buffer {
     CVPixelBufferRetain(buffer);
@@ -28,6 +60,9 @@
     CVPixelBufferRef result = _latest;
     _latest = NULL;
     os_unfair_lock_unlock(&_lock);
+#if DEBUG
+    if (result) [self trace:3];
+#endif
     return result;
 }
 - (void)dealloc {
@@ -85,9 +120,15 @@ static void *VPPLock(void *opaque, void **planes) {
 }
 static void VPPUnlock(void *opaque, void *picture, void *const *planes) {
     CVPixelBufferUnlockBaseAddress((CVPixelBufferRef)picture, 0);
+#if DEBUG
+    [(__bridge VPPFrameMailbox *)opaque trace:0];
+#endif
 }
 static void VPPDisplay(void *opaque, void *picture) {
     VPPFrameMailbox *mailbox = (__bridge VPPFrameMailbox *)opaque;
+#if DEBUG
+    [mailbox trace:1];
+#endif
     // The decoder owns one reusable destination. Snapshot only at presentation time;
     // skipped frames allocate nothing and a slow consumer only retains the newest snapshot.
     CVPixelBufferRef snapshot = NULL;
@@ -102,15 +143,38 @@ static void VPPDisplay(void *opaque, void *picture) {
     }
     CVPixelBufferUnlockBaseAddress(snapshot, 0);
     CVPixelBufferUnlockBaseAddress(source, kCVPixelBufferLock_ReadOnly);
+#if DEBUG
+    [mailbox trace:2];
+#endif
     [mailbox publish:snapshot];
     CVPixelBufferRelease(snapshot);
 }
 @interface VPPPlaybackEvents : NSObject
 @property (nonatomic, strong) dispatch_semaphore_t stopped;
 @property (atomic) BOOL failed;
+#if DEBUG
+@property (nonatomic, strong) NSMutableArray *decoderLog;
+#endif
 @end
 @implementation VPPPlaybackEvents
 @end
+
+#if DEBUG
+static void VPPDecoderLog(void *opaque, int level, const libvlc_log_t *ctx, const char *fmt, va_list args) {
+    // Only module selection and timestamped late-frame markers; never media paths or titles.
+    BOOL selection = strstr(fmt, "using") && strstr(fmt, "module");
+    BOOL late = strstr(fmt, "late") != NULL;
+    if (!selection && !late) return;
+    @autoreleasepool {
+        VPPPlaybackEvents *events = (__bridge VPPPlaybackEvents *)opaque;
+        NSString *message = late ? @"late-frame" : [[NSString alloc] initWithFormat:@(fmt) arguments:args];
+        if (selection && ![message containsString:@"decoder"] && ![message containsString:@"converter"]) return;
+        @synchronized (events) {
+            if (events.decoderLog.count < 128) [events.decoderLog addObject:@[@(CACurrentMediaTime()), message]];
+        }
+    }
+}
+#endif
 
 // Track the output clock: the polling getters can retain the pre-seek time
 // while paused even after VLC has displayed the newly sought picture.
@@ -220,13 +284,25 @@ static BOOL VPPFramesEqual(CVPixelBufferRef a, CVPixelBufferRef b) {
     libvlc_time_t _resumeAnchorDate, _resumeAnchorTime;
     double _resumeAnchorPosition;
 }
-- (instancetype)initWithURL:(NSURL *)url stereo:(BOOL)stereo error:(NSError **)error {
+- (instancetype)initWithURL:(NSURL *)url stereo:(BOOL)stereo steadyClock:(BOOL)steadyClock error:(NSError **)error {
     if (!(self = [super init])) return nil;
     const char *normal[] = {"--no-video-title-show", "--no-osd"};
-    const char *sbs[] = {"--no-video-title-show", "--no-osd", "--avcodec-hw=none"};
-    _instance = libvlc_new(stereo ? 3 : 2, stereo ? sbs : normal);
+    const char *sbs[] = {"--no-video-title-show", "--no-osd", "--avcodec-hw=none", "--clock-master=auto"};
+    // Local AI output uses a system clock for both audio and video. Audio-master
+    // corrections otherwise held an already prepared frame for ~80 ms after seeks.
+    // Keep VLC's adaptive clock for streams and ordinary/stereo playback.
+    _usesSteadyClock = steadyClock && stereo && url.isFileURL;
+#if DEBUG
+    if ([NSProcessInfo.processInfo.arguments containsObject:@"--vlc-clock-reference"]) _usesSteadyClock = NO;
+#endif
+    if (_usesSteadyClock) sbs[3] = "--clock-master=monotonic";
+    _instance = libvlc_new(stereo ? 4 : 2, stereo ? sbs : normal);
     _events = [VPPPlaybackEvents new];
     _events.stopped = dispatch_semaphore_create(0);
+#if DEBUG
+    _events.decoderLog = [NSMutableArray array];
+    if (_instance) libvlc_log_set(_instance, VPPDecoderLog, (__bridge void *)_events);
+#endif
     if (_instance) _player = libvlc_media_player_new(_instance, &VPPCallbacks, (__bridge void *)_events);
     if (!_player) {
         if (error) *error = [NSError errorWithDomain:@"VisionPlayer.VLC" code:1 userInfo:@{NSLocalizedDescriptionKey:@"无法初始化 VLCKit"}];
@@ -312,7 +388,15 @@ static BOOL VPPFramesEqual(CVPixelBufferRef a, CVPixelBufferRef b) {
 - (void)selectAudioTrack:(NSString *)identifier {
     if (_player) libvlc_media_player_select_tracks_by_ids(_player, libvlc_track_audio, identifier.UTF8String);
 }
+#if DEBUG
+- (NSArray *)decoderDiagnostics { @synchronized (_events) { return [_events.decoderLog copy] ?: @[]; } }
+- (void)beginFrameDiagnostics { [_mailbox beginTrace]; }
+- (NSArray *)endFrameDiagnostics { return [_mailbox endTrace] ?: @[]; }
+#endif
 - (void)selectSubtitleTrack:(NSString *)identifier {
+#if DEBUG
+    [_mailbox trace:4];
+#endif
     if (_player) libvlc_media_player_select_tracks_by_ids(_player, libvlc_track_text, identifier.UTF8String);
 }
 - (NSDictionary *)clockDiagnostics {
