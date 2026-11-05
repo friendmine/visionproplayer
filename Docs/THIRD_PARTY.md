@@ -1,5 +1,13 @@
 # Third-party dependencies
 
+## Project license and scope
+
+Project-authored code and documentation are licensed under the [MIT License](../LICENSE). Third-party code, model weights and media retain their original licenses; the root MIT license does not relicense them.
+
+VLCKit permits applications using it to choose their own license subject to its LGPL terms. Distributing an app containing VLCKit still requires the applicable notices, license text, corresponding source availability and a compliant way to modify/relink or replace the library. Changes to the library remain subject to its license. See the pinned upstream [FAQ](https://github.com/videolan/vlckit/blob/2e0868f5ed40fe59cd92f377645fdcc260c6e759/README.md#faq) and [LGPL text, particularly sections 4–6](https://github.com/videolan/vlckit/blob/2e0868f5ed40fe59cd92f377645fdcc260c6e759/COPYING).
+
+The pinned visionOS arm64 VLCKit artifact was inspected on 2026-11-05 and is a Mach-O dynamic library. That observation alone does not establish compliance for an App Store or other binary distribution, including its bundled components. This repository records provenance and license scope; it does not claim that adding the root MIT license completes a binary-distribution review.
+
 ## VLCKit / libVLC
 
 - Provider: VideoLAN
