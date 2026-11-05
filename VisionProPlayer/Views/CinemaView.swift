@@ -128,7 +128,10 @@ struct CinemaControls: View {
                     Spacer()
                     if model.request?.converts2D == true {
                         Button("立体效果", systemImage: "view.3d") { depthEffects = true }
-                            .popover(isPresented: $depthEffects) { DepthEffectControls(model: model).padding(24).frame(width: 430) }
+                            .popover(isPresented: $depthEffects) {
+                                ScrollView { DepthEffectControls(model: model).padding(24) }
+                                    .frame(width: 430).frame(maxHeight: 560)
+                            }
                     }
                     Button(adjust ? "收起屏幕调整" : "调整屏幕", systemImage: "slider.horizontal.3") { adjust.toggle() }
                 }

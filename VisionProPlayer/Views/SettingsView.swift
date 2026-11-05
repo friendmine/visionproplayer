@@ -19,6 +19,14 @@ struct SettingsView: View {
                     Toggle("暗色环境", isOn: Binding(get: { model.library.darkCinema }, set: { model.library.darkCinema = $0 }))
                     Text("关闭时保留现实环境。进入影院后可以调整屏幕尺寸和距离。").font(.caption).foregroundStyle(.secondary)
                 }
+                Section("新影片的 AI 立体效果") {
+                    LabeledContent("默认预设", value: model.library.defaultDepthEffect.preset.title)
+                    Text("强度 \(Int(model.library.defaultDepthEffect.strength * 100))% · 出屏 \(Int(model.library.defaultDepthEffect.popOut * 100))% · 比例保护\(model.library.defaultDepthEffect.proportionProtection ? "开启" : "关闭")")
+                        .font(.caption).foregroundStyle(.secondary)
+                    Text("播放中可在「画面」或影院的「立体效果」里保存新默认值。新影片开启 AI 立体后生效。").font(.caption).foregroundStyle(.secondary)
+                    Button("恢复自然预设") { model.library.saveDefaultDepthEffect(.natural) }
+                        .disabled(model.library.defaultDepthEffect == .natural)
+                }
                 Section("观看历史") {
                     Button("清除观看历史", systemImage: "clock.arrow.circlepath", role: .destructive) {
                         confirmingHistoryClear = true

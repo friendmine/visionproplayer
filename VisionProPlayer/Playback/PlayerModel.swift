@@ -41,6 +41,7 @@ final class PlayerModel {
     var depthStrength: Float = 0.35
     var depthPopOut: Float = 0
     var depthProportionProtection = true
+    var depthPreset: DepthPreset = .natural
     // Session-only diagnostic choice; never overwrite per-film picture settings.
     var depthMotionAlignment = true
     var depthEdgeRefinement = true
@@ -185,9 +186,7 @@ final class PlayerModel {
         spatialStereoActive = false
         if let id = next.libraryID, let film = library.film(id) {
             swapEyes = film.preferences.swapped
-            depthStrength = film.preferences.strength
-            depthPopOut = min(1, max(0, film.preferences.popOut ?? 0))
-            depthProportionProtection = film.preferences.proportionProtection ?? true
+            applyDepthEffect(film.preferences.depthEffect, persist: false)
             subtitleOffset = film.preferences.subtitleOffset
             if let file = film.preferences.subtitleFile,
                let data = try? Data(contentsOf: library.subtitleURL(file)), let cues = try? SubtitleCue.parse(data) {

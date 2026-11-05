@@ -1,0 +1,132 @@
+{
+  "checks": [
+    {
+      "name": "factory-default-natural",
+      "passed": true
+    },
+    {
+      "name": "existing-film-keeps-original-effect",
+      "passed": true
+    },
+    {
+      "name": "new-local-inherits-foreground-with-ai-off",
+      "passed": true
+    },
+    {
+      "name": "reimport-preserves-film-override",
+      "passed": true
+    },
+    {
+      "name": "network-inherits-custom",
+      "passed": true
+    },
+    {
+      "name": "photo-inherits-custom",
+      "passed": true
+    },
+    {
+      "name": "default-and-film-effects-survive-relaunch",
+      "passed": true
+    },
+    {
+      "name": "legacy-film-keeps-tuned-effect",
+      "passed": true
+    },
+    {
+      "name": "oldest-film-keeps-balanced-effect",
+      "passed": true
+    },
+    {
+      "name": "stored-out-of-range-default-is-bounded",
+      "passed": true
+    },
+    {
+      "name": "unreadable-default-falls-back-to-natural",
+      "passed": true
+    },
+    {
+      "name": "native-ai-started",
+      "passed": true
+    },
+    {
+      "name": "native-natural-playing",
+      "passed": true,
+      "submittedFPS": 29.971696415751353
+    },
+    {
+      "name": "native-foreground-playing",
+      "passed": true,
+      "submittedFPS": 30.21113809129307
+    },
+    {
+      "name": "native-paused-preset-updates-picture",
+      "passed": false
+    },
+    {
+      "name": "native-custom-selection-keeps-values",
+      "passed": true
+    },
+    {
+      "name": "native-custom-survives-reopen",
+      "passed": true
+    },
+    {
+      "name": "native-cinema-preserves-effect",
+      "passed": true
+    },
+    {
+      "name": "native-window-return-preserves-effect",
+      "passed": true
+    },
+    {
+      "name": "native-diagnostic-keeps-film-and-defaults",
+      "passed": true
+    },
+    {
+      "name": "vlc-ai-started",
+      "passed": true
+    },
+    {
+      "name": "vlc-natural-playing",
+      "passed": true,
+      "submittedFPS": 29.491662768336738
+    },
+    {
+      "name": "vlc-foreground-playing",
+      "passed": true,
+      "submittedFPS": 30.238834625283502
+    },
+    {
+      "name": "vlc-paused-preset-updates-picture",
+      "passed": false
+    },
+    {
+      "name": "vlc-custom-selection-keeps-values",
+      "passed": true
+    },
+    {
+      "name": "vlc-custom-survives-reopen",
+      "passed": true
+    },
+    {
+      "name": "vlc-cinema-preserves-effect",
+      "passed": true
+    },
+    {
+      "name": "vlc-window-return-preserves-effect",
+      "passed": true
+    },
+    {
+      "name": "vlc-diagnostic-keeps-film-and-defaults",
+      "passed": true
+    }
+  ],
+  "environment": "physical-device",
+  "error": "",
+  "passed": false,
+  "runID": "ba93fcc9-7de6-410c-b62a-bd746d6e168d",
+  "sample": "depth-presets",
+  "scope": "Preset application, legacy and new film persistence, isolated default storage, photo/network/local imports, native/VLC short playback, paused update and cinema session settings. UI comfort and perceived depth require wearer confirmation.",
+  "systemVersion": "Version 27.2 (Build 24N120)",
+  "timestamp": "2026-11-05T08:17:12Z"
+}

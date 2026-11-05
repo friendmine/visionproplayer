@@ -13,9 +13,20 @@ struct FilmPreferences: Codable, Equatable {
     var strength: Float = 0.35
     var popOut: Float? // Missing in older libraries means the original balanced depth.
     var proportionProtection: Bool? // Missing in older libraries enables protection.
+    var depthPreset: DepthPreset?
     var swapped = false
     var subtitleFile: String?
     var subtitleOffset = 0.0
+
+    var depthEffect: DepthEffect {
+        get { DepthEffect(strength: strength, popOut: popOut ?? 0, proportionProtection: proportionProtection ?? true, preset: depthPreset) }
+        set {
+            strength = newValue.strength
+            popOut = newValue.popOut
+            proportionProtection = newValue.proportionProtection
+            depthPreset = newValue.preset
+        }
+    }
 }
 
 struct LibraryFilm: Identifiable, Codable, Equatable {
@@ -54,6 +65,7 @@ final class MediaLibrary {
         didSet { defaults.set(externalCaptionAtTop, forKey: "externalCaptionAtTop") }
     }
     var darkCinema = false { didSet { defaults.set(darkCinema, forKey: "darkCinema") } }
+    private(set) var defaultDepthEffect: DepthEffect = .natural
     private var persistenceAvailable = true
     private let root: URL
     private let defaults: UserDefaults
@@ -70,6 +82,10 @@ final class MediaLibrary {
         externalCaptionSize = defaults.string(forKey: "externalCaptionSize").flatMap(CaptionSize.init(rawValue:)) ?? .standard
         externalCaptionAtTop = defaults.bool(forKey: "externalCaptionAtTop")
         darkCinema = defaults.bool(forKey: "darkCinema")
+        if let data = defaults.data(forKey: "defaultDepthEffect"),
+           let effect = try? JSONDecoder().decode(DepthEffect.self, from: data) {
+            defaultDepthEffect = effect.normalized
+        }
         do {
             try FileManager.default.createDirectory(at: self.root, withIntermediateDirectories: true)
             let file = self.root.appending(path: "library.json")
@@ -91,6 +107,12 @@ final class MediaLibrary {
         }
     }
     var recent: [LibraryFilm] { films.sorted { ($0.lastOpened ?? $0.addedAt) > ($1.lastOpened ?? $1.addedAt) } }
+    func saveDefaultDepthEffect(_ effect: DepthEffect) {
+        let effect = effect.normalized
+        guard let data = try? JSONEncoder().encode(effect) else { return }
+        defaults.set(data, forKey: "defaultDepthEffect")
+        defaultDepthEffect = effect
+    }
     var hasWatchHistory: Bool { films.contains { $0.lastOpened != nil || $0.position > 0 } }
     func clearWatchHistory() throws {
         guard persistenceAvailable else { throw LibraryError.storageUnavailable }
@@ -139,6 +161,7 @@ final class MediaLibrary {
         let bookmark = url.isFileURL ? try url.bookmarkData(options: .minimalBookmark, includingResourceValuesForKeys: nil, relativeTo: nil) : nil
         var film = LibraryFilm(title: title?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty ?? url.deletingPathExtension().lastPathComponent.nilIfEmpty ?? "网络影片",
                                location: url.absoluteString, bookmark: bookmark)
+        film.preferences.depthEffect = defaultDepthEffect
         // Only explicit naming conventions are hints; never infer SBS just from width.
         let name = url.lastPathComponent.lowercased()
         if name.contains("halfsbs") || name.contains("hsbs") || name.contains("half-sbs") { film.preferences.layout = .halfSBS }
@@ -161,6 +184,7 @@ final class MediaLibrary {
         do {
             try FileManager.default.moveItem(at: video.url, to: destination)
             var film = LibraryFilm(title: (video.name as NSString).deletingPathExtension.nilIfEmpty ?? "相册视频", location: destination.absoluteString)
+            film.preferences.depthEffect = defaultDepthEffect
             film.photoFile = filename
             let updated = [film] + films
             try JSONEncoder().encode(updated).write(to: root.appending(path: "library.json"), options: .atomic)

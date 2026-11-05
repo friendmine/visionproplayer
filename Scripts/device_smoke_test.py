@@ -18,7 +18,7 @@ def main():
     parser.add_argument("--reference-064", action="store_true", help="Use 0.6.4 inference and edge refinement for comparison")
     parser.add_argument("--reference-063", action="store_true", help="Use 0.6.3 motion alignment without edge refinement")
     parser.add_argument("--resume-stress", action="store_true", help="Repeat paused-seek/resume checks with clock traces")
-    parser.add_argument("sample", choices=["seek-preview-film", "seek-preview", "ou-native", "ou-vlc", "half-ou-native", "half-ou-vlc", "2d", "mkv", "sbs-native", "sbs-vlc", "bbb-native", "bbb-vlc", "lifecycle", "routing", "product", "depth-native", "depth-vlc", "depth-motion-native", "depth-motion-vlc", "depth-endurance-native", "depth-endurance-vlc",
+    parser.add_argument("sample", choices=["depth-presets", "seek-preview-film", "seek-preview", "ou-native", "ou-vlc", "half-ou-native", "half-ou-vlc", "2d", "mkv", "sbs-native", "sbs-vlc", "bbb-native", "bbb-vlc", "lifecycle", "routing", "product", "depth-native", "depth-vlc", "depth-motion-native", "depth-motion-vlc", "depth-endurance-native", "depth-endurance-vlc",
                                            "hevc-mp4", "hevc-mkv", "half-h264-native", "half-h264-vlc", "half-hevc-native", "half-hevc-vlc"])
     args = parser.parse_args()
     if (args.sample == "seek-preview-film") != (args.film_id is not None):
@@ -63,7 +63,7 @@ def main():
             raise SystemExit(result.stdout + result.stderr)
         print(f"Started {args.sample} on physical Vision Pro (run {run_id})", flush=True)
         endurance = args.sample.startswith("depth-endurance-")
-        report_timeout = 1380 if endurance else 180 if args.resume_stress else 150 if args.sample in ("product", "seek-preview", "seek-preview-film") else 120 if args.sample.startswith("depth-") else (95 if args.sample == "routing" else 55)
+        report_timeout = 1380 if endurance else 180 if args.resume_stress else 150 if args.sample in ("product", "depth-presets", "seek-preview", "seek-preview-film") else 120 if args.sample.startswith("depth-") else (95 if args.sample == "routing" else 55)
         deadline = time.monotonic() + report_timeout
         local = Path(temporary) / "report.json"
         progress_file = Path(temporary) / "progress.json"

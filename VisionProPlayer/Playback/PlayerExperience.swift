@@ -2,6 +2,30 @@ import AVFoundation
 import Foundation
 
 extension PlayerModel {
+    var currentDepthEffect: DepthEffect {
+        DepthEffect(strength: depthStrength, popOut: depthPopOut,
+                    proportionProtection: depthProportionProtection, preset: depthPreset)
+    }
+
+    func applyDepthEffect(_ effect: DepthEffect, persist: Bool = true) {
+        let effect = effect.normalized
+        depthStrength = effect.strength
+        depthPopOut = effect.popOut
+        depthProportionProtection = effect.proportionProtection
+        depthPreset = effect.preset
+        if persist { savePicturePreferences() }
+    }
+
+    func selectDepthPreset(_ preset: DepthPreset) {
+        switch preset {
+        case .natural: applyDepthEffect(.natural)
+        case .foreground: applyDepthEffect(.foreground)
+        case .custom:
+            depthPreset = .custom
+            savePicturePreferences()
+        }
+    }
+
     var captionAtTop: Bool { selectedSubtitle == "external" && library.externalCaptionAtTop }
     var currentFilm: LibraryFilm? { request?.libraryID.flatMap { library.film($0) } }
     var movieTitle: String { currentFilm?.title ?? request?.url.deletingPathExtension().lastPathComponent ?? "正在打开影片" }
@@ -41,9 +65,7 @@ extension PlayerModel {
         library.update(id) {
             $0.preferences.layout = request.layout
             $0.preferences.converts2D = request.converts2D
-            $0.preferences.strength = depthStrength
-            $0.preferences.popOut = depthPopOut
-            $0.preferences.proportionProtection = depthProportionProtection
+            $0.preferences.depthEffect = currentDepthEffect
             $0.preferences.swapped = swapEyes
             $0.preferences.subtitleOffset = subtitleOffset
         }

@@ -178,34 +178,36 @@ struct CaptionOverlay: View {
 struct PictureSettings: View {
     @Bindable var model: PlayerModel
     var body: some View {
-        VStack(alignment: .leading, spacing: 22) {
-            Text("画面设置").font(.title2)
-            if model.request?.isSpatialVideo == true {
-                Label(model.spatialStereoActive ? "正在播放原生双眼画面" : "正在准备原生空间画面", systemImage: "vision.pro")
-                Text("保留影片的左右眼画面，无需 AI 转换或手动分屏。").font(.callout).foregroundStyle(.secondary)
-            } else if model.request?.layout.isStereo == false {
-                Picker("观看效果", selection: Binding(get: { model.request?.converts2D ?? false }, set: { model.setDepthConversion($0) })) {
-                    Text("普通 2D").tag(false); Text("AI 立体").tag(true)
-                }.pickerStyle(.segmented).disabled(model.isClosing)
-                if model.request?.converts2D == true {
-                    DepthEffectControls(model: model)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                Text("画面设置").font(.title2)
+                if model.request?.isSpatialVideo == true {
+                    Label(model.spatialStereoActive ? "正在播放原生双眼画面" : "正在准备原生空间画面", systemImage: "vision.pro")
+                    Text("保留影片的左右眼画面，无需 AI 转换或手动分屏。").font(.callout).foregroundStyle(.secondary)
+                } else if model.request?.layout.isStereo == false {
+                    Picker("观看效果", selection: Binding(get: { model.request?.converts2D ?? false }, set: { model.setDepthConversion($0) })) {
+                        Text("普通 2D").tag(false); Text("AI 立体").tag(true)
+                    }.pickerStyle(.segmented).disabled(model.isClosing)
+                    if model.request?.converts2D == true {
+                        DepthEffectControls(model: model)
+                    }
+                } else {
+                    Label("使用影片自带的左右眼画面", systemImage: "view.3d")
+                    Toggle("交换左右眼", isOn: $model.swapEyes).onChange(of: model.swapEyes) { _, _ in model.savePicturePreferences() }
                 }
-            } else {
-                Label("使用影片自带的左右眼画面", systemImage: "view.3d")
-                Toggle("交换左右眼", isOn: $model.swapEyes).onChange(of: model.swapEyes) { _, _ in model.savePicturePreferences() }
+                if model.request?.isSpatialVideo != true {
+                DisclosureGroup("影片格式 · \(model.request?.layout.title ?? "普通 2D")") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("左右并排、上下排列或比例异常时调整。上下格式默认上方为左眼，可交换左右眼。").font(.caption).foregroundStyle(.secondary)
+                        Picker("影片格式", selection: Binding(get: { model.request?.layout ?? .flat }, set: { model.setLayout($0) })) {
+                            ForEach(StereoLayout.allCases) { Text($0.title).tag($0) }
+                        }.pickerStyle(.inline).labelsHidden().disabled(model.isClosing)
+                    }.padding(.top, 14)
+                }
+                }
+                if model.currentFilm != nil { Label("自动记住这部影片的设置", systemImage: "checkmark.circle").font(.caption).foregroundStyle(.secondary) }
             }
-            if model.request?.isSpatialVideo != true {
-            DisclosureGroup("影片格式 · \(model.request?.layout.title ?? "普通 2D")") {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("左右并排、上下排列或比例异常时调整。上下格式默认上方为左眼，可交换左右眼。").font(.caption).foregroundStyle(.secondary)
-                    Picker("影片格式", selection: Binding(get: { model.request?.layout ?? .flat }, set: { model.setLayout($0) })) {
-                        ForEach(StereoLayout.allCases) { Text($0.title).tag($0) }
-                    }.pickerStyle(.inline).labelsHidden().disabled(model.isClosing)
-                }.padding(.top, 14)
-            }
-            }
-            if model.currentFilm != nil { Label("自动记住这部影片的设置", systemImage: "checkmark.circle").font(.caption).foregroundStyle(.secondary) }
-        }
+        }.frame(maxHeight: 620)
     }
 }
 
@@ -213,25 +215,33 @@ struct DepthEffectControls: View {
     @Bindable var model: PlayerModel
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
+            Picker("观影预设", selection: Binding(get: { model.currentDepthEffect.preset }, set: { model.selectDepthPreset($0) })) {
+                ForEach(DepthPreset.allCases) { Text($0.title).tag($0) }
+            }.pickerStyle(.segmented)
             HStack { Text("立体强度"); Spacer(); Text("\(Int(model.depthStrength * 100))%").monospacedDigit() }
-            Slider(value: $model.depthStrength, in: 0...1, onEditingChanged: { editing in
+            Slider(value: Binding(get: { model.depthStrength }, set: { model.depthStrength = $0; model.depthPreset = .custom }), in: 0...1, onEditingChanged: { editing in
                 if !editing { model.savePicturePreferences() }
             }).accessibilityLabel("立体强度")
             Text("控制前后层次；设为 0 可对比平面画面。").font(.caption).foregroundStyle(.secondary)
             HStack { Text("出屏程度"); Spacer(); Text("\(Int(model.depthPopOut * 100))%").monospacedDigit() }
-            Slider(value: $model.depthPopOut, in: 0...1, onEditingChanged: { editing in
+            Slider(value: Binding(get: { model.depthPopOut }, set: { model.depthPopOut = $0; model.depthPreset = .custom }), in: 0...1, onEditingChanged: { editing in
                 if !editing { model.savePicturePreferences() }
             }).accessibilityLabel("出屏程度")
             Text("向右让前景更靠近你，并保留远景在屏幕后。立体强度调节前后层次；强度为 0 时保持平面。").font(.caption).foregroundStyle(.secondary)
-            Toggle("比例保护", isOn: $model.depthProportionProtection)
-                .onChange(of: model.depthProportionProtection) { _, _ in model.savePicturePreferences() }
+            Toggle("比例保护", isOn: Binding(get: { model.depthProportionProtection }, set: {
+                model.depthProportionProtection = $0; model.depthPreset = .custom; model.savePicturePreferences()
+            }))
             #if DEBUG
             DisclosureGroup("实验对比") { MotionAlignmentComparison(model: model) }
             #endif
             Text("减少脸部、四肢等区域的拉伸和扭斜，尽量保留原片形状。开启后部分局部景深会收敛。").font(.caption).foregroundStyle(.secondary)
-            Button("恢复默认立体效果") {
-                model.depthStrength = 0.35; model.depthPopOut = 0; model.depthProportionProtection = true; model.savePicturePreferences()
+            Button(model.currentDepthEffect == model.library.defaultDepthEffect ? "已是新影片默认效果" : "设为新影片默认效果") {
+                model.library.saveDefaultDepthEffect(model.currentDepthEffect)
             }
+            .disabled(model.currentDepthEffect == model.library.defaultDepthEffect)
+            Text("新加入影片开启 AI 立体时使用，已有影片沿用各自设置。").font(.caption).foregroundStyle(.secondary)
+            Button("使用新影片默认效果") { model.applyDepthEffect(model.library.defaultDepthEffect) }
+                .disabled(model.currentDepthEffect == model.library.defaultDepthEffect)
             Text("实验性效果。遮挡处仍可能拉伸；若出现重影，可降低强度或出屏程度。").font(.caption).foregroundStyle(.secondary)
         }
     }
