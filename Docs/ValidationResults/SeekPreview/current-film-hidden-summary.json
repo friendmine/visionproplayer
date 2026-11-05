@@ -1,0 +1,41 @@
+{
+  "context": "User reported no visible preview for the current film in window and cinema. Latest available interaction trace covers window.",
+  "eventCounts": {
+    "slider-end": 4,
+    "card-size": 5,
+    "card-disappeared": 3,
+    "slider-begin": 3,
+    "card-appeared": 2,
+    "frame-completed": 32,
+    "card-frame": 31
+  },
+  "completedFrames": 32,
+  "failedFrames": 0,
+  "cardSizes": [
+    {
+      "width": 19.5,
+      "height": 30.5,
+      "active": false
+    },
+    {
+      "width": 210,
+      "height": 134.5,
+      "active": true
+    },
+    {
+      "width": 19.5,
+      "height": 30.5,
+      "active": false
+    },
+    {
+      "width": 210,
+      "height": 134.5,
+      "active": true
+    },
+    {
+      "width": 19.5,
+      "height": 30.5,
+      "active": false
+    }
+  ]
+}

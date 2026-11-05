@@ -4,6 +4,39 @@ import UIKit
 
 extension PlayerModel {
     #if DEBUG
+    func runSeekPreviewFilmProbe(_ film: LibraryFilm) async {
+        var checks: [[String: Any]] = []
+        do {
+            let url = try library.resolve(film)
+            let center = min(max(0, film.position), max(0, film.duration - 1))
+            for engine in [PlaybackEngine.native, .vlc] {
+                let request = PlaybackRequest(url: url, engine: engine, layout: film.preferences.layout,
+                    swapEyes: film.preferences.swapped, securityScoped: false)
+                let reader = SeekFrameReader(request)
+                for second in [max(0, center - 5), center, min(max(0, film.duration - 0.1), center + 5)] {
+                    let start = ProcessInfo.processInfo.systemUptime
+                    let frame = await reader.frame(at: second, swapped: film.preferences.swapped)
+                    checks.append(["engine": engine.rawValue, "requestedTime": second,
+                        "actualTime": frame?.seconds ?? -1, "width": frame?.image.width ?? 0,
+                        "height": frame?.image.height ?? 0,
+                        "milliseconds": (ProcessInfo.processInfo.systemUptime - start) * 1000,
+                        "passed": frame != nil && abs((frame?.seconds ?? -10) - second) < 0.4])
+                }
+            }
+        } catch {
+            checks.append(["name": "resolve-selected-film", "passed": false])
+        }
+        let report = smokeMetadata().merging([
+            "sample": "seek-preview-film", "checks": checks,
+            "passed": checks.count == 6 && checks.allSatisfy { $0["passed"] as? Bool == true },
+            "scope": "Selected local film, both thumbnail engines at three nearby times. No source names, URLs or images saved. UI visibility requires wearer confirmation."
+        ]) { _, new in new }
+        if let data = try? JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted, .sortedKeys]) {
+            try? data.write(to: URL.documentsDirectory.appending(path: "smoke-seek-preview-film.json"), options: .atomic)
+        }
+        openFilm(film)
+    }
+
     func runSeekPreviewProbe() async {
         var checks: [[String: Any]] = []
         func check(_ name: String, _ passed: Bool) { checks.append(["name": name, "passed": passed]) }

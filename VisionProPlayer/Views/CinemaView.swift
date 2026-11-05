@@ -8,13 +8,6 @@ enum CinemaControlPlacement {
         return [0, bottom - 0.14 - controlsTop, -distance + 0.12]
     }
 
-    @MainActor static func placePreview(_ card: Entity, model: PlayerModel) {
-        card.isEnabled = model.seekPreview.activeID != nil && model.seekPreview.activeID == model.request?.id
-        card.position = [0, model.library.screenHeight, -model.library.screenDistance + 0.08]
-        let width = card.visualBounds(relativeTo: card).extents.x
-        if width > 0 { card.scale = SIMD3(repeating: model.library.screenWidth * 0.25 / width) }
-    }
-
     @MainActor static func placeCaptions(_ captions: Entity, model: PlayerModel, aspect: Float) {
         let offset = model.library.screenWidth / max(0.1, aspect) * 0.36
         captions.position = [0, model.library.screenHeight + (model.captionAtTop ? offset : -offset),
@@ -127,16 +120,18 @@ struct CinemaControls: View {
                 }
             }
             PlaybackSeekBar(model: model, holdKey: "cinema-seek")
-            HStack(spacing: 24) {
-                Button("后退 10 秒", systemImage: "gobackward.10") { model.skip(-10) }.labelStyle(.iconOnly)
-                Button(model.isPlaying ? "暂停" : "播放", systemImage: model.isPlaying ? "pause.fill" : "play.fill") { model.togglePlayback() }.labelStyle(.iconOnly)
-                Button("快进 10 秒", systemImage: "goforward.10") { model.skip(10) }.labelStyle(.iconOnly)
-                Spacer()
-                if model.request?.converts2D == true {
-                    Button("立体效果", systemImage: "view.3d") { depthEffects = true }
-                        .popover(isPresented: $depthEffects) { DepthEffectControls(model: model).padding(24).frame(width: 430) }
+            SeekPreviewControlsRow(model: model, surface: "cinema-controls") {
+                HStack(spacing: 24) {
+                    Button("后退 10 秒", systemImage: "gobackward.10") { model.skip(-10) }.labelStyle(.iconOnly)
+                    Button(model.isPlaying ? "暂停" : "播放", systemImage: model.isPlaying ? "pause.fill" : "play.fill") { model.togglePlayback() }.labelStyle(.iconOnly)
+                    Button("快进 10 秒", systemImage: "goforward.10") { model.skip(10) }.labelStyle(.iconOnly)
+                    Spacer()
+                    if model.request?.converts2D == true {
+                        Button("立体效果", systemImage: "view.3d") { depthEffects = true }
+                            .popover(isPresented: $depthEffects) { DepthEffectControls(model: model).padding(24).frame(width: 430) }
+                    }
+                    Button(adjust ? "收起屏幕调整" : "调整屏幕", systemImage: "slider.horizontal.3") { adjust.toggle() }
                 }
-                Button(adjust ? "收起屏幕调整" : "调整屏幕", systemImage: "slider.horizontal.3") { adjust.toggle() }
             }
             if adjust { ScreenAdjustments(model: model) }
             if let error = model.errorMessage ?? model.rendererError { Text(error).foregroundStyle(.orange).font(.caption) }

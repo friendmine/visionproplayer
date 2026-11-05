@@ -18,6 +18,12 @@ extension PlayerModel {
         guard let index = arguments.firstIndex(of: "--smoke"), arguments.indices.contains(index + 1),
               request == nil else { return }
         let name = arguments[index + 1]
+        if name == "seek-preview-film" {
+            guard let index = arguments.firstIndex(of: "--film-id"), arguments.indices.contains(index + 1),
+                  let id = UUID(uuidString: arguments[index + 1]), let film = library.film(id) else { return }
+            Task { await runSeekPreviewFilmProbe(film) }
+            return
+        }
         if name == "seek-preview" { Task { await runSeekPreviewProbe() }; return }
         if name == "product" { Task { await runProductProbe() }; return }
         if name.hasPrefix("depth-endurance-") { Task { await runDepthEnduranceProbe(name: name) }; return }

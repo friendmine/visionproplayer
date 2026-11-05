@@ -60,11 +60,31 @@ struct PlaybackSeekBar: View {
     }
 }
 
+struct SeekPreviewControlsRow<Controls: View>: View {
+    let model: PlayerModel
+    let surface: String
+    @ViewBuilder var controls: () -> Controls
+
+    private var active: Bool {
+        model.seekPreview.activeID != nil && model.seekPreview.activeID == model.request?.id
+    }
+
+    var body: some View {
+        ZStack {
+            controls().opacity(active ? 0 : 1).allowsHitTesting(!active).accessibilityHidden(active)
+            if active { SeekPreviewCard(preview: model.seekPreview, surface: surface) }
+        }
+        // Reserve the same row while dragging so neither the slider nor movie moves.
+        .frame(height: 80)
+        .frame(maxWidth: .infinity)
+    }
+}
+
 struct SeekPreviewCard: View {
     let preview: SeekPreview
-    var surface = "cinema"
+    let surface: String
     var body: some View {
-        VStack(spacing: 4) {
+        HStack(spacing: 12) {
             Group {
                 if let frame = preview.frame {
                     Image(decorative: frame.image, scale: 1)
@@ -74,9 +94,9 @@ struct SeekPreviewCard: View {
                 } else if preview.activeID != nil {
                     ProgressView()
                 }
-            }.frame(width: 194, height: 100)
+            }.frame(width: 132, height: 64)
             Text(preview.frame.map { PlayerModel.clock($0.seconds) } ?? " ")
-                .monospacedDigit().font(.caption)
+                .monospacedDigit().font(.caption).frame(minWidth: 60)
         }
         .padding(8)
         .background(.black.opacity(0.88), in: RoundedRectangle(cornerRadius: 12))

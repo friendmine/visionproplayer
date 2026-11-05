@@ -12,14 +12,17 @@ import uuid
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("device", help="CoreDevice identifier or UDID")
+    parser.add_argument("--film-id", type=uuid.UUID, help="Library film UUID for seek-preview-film only")
     parser.add_argument("--capture", action="store_true", help="Save the first converted eye textures in the app Documents directory (Debug only)")
     parser.add_argument("--baseline", action="store_true", help="Use the preserved 0.6.2 depth path for an AI comparison")
     parser.add_argument("--reference-064", action="store_true", help="Use 0.6.4 inference and edge refinement for comparison")
     parser.add_argument("--reference-063", action="store_true", help="Use 0.6.3 motion alignment without edge refinement")
     parser.add_argument("--resume-stress", action="store_true", help="Repeat paused-seek/resume checks with clock traces")
-    parser.add_argument("sample", choices=["seek-preview", "ou-native", "ou-vlc", "half-ou-native", "half-ou-vlc", "2d", "mkv", "sbs-native", "sbs-vlc", "bbb-native", "bbb-vlc", "lifecycle", "routing", "product", "depth-native", "depth-vlc", "depth-motion-native", "depth-motion-vlc", "depth-endurance-native", "depth-endurance-vlc",
+    parser.add_argument("sample", choices=["seek-preview-film", "seek-preview", "ou-native", "ou-vlc", "half-ou-native", "half-ou-vlc", "2d", "mkv", "sbs-native", "sbs-vlc", "bbb-native", "bbb-vlc", "lifecycle", "routing", "product", "depth-native", "depth-vlc", "depth-motion-native", "depth-motion-vlc", "depth-endurance-native", "depth-endurance-vlc",
                                            "hevc-mp4", "hevc-mkv", "half-h264-native", "half-h264-vlc", "half-hevc-native", "half-hevc-vlc"])
     args = parser.parse_args()
+    if (args.sample == "seek-preview-film") != (args.film_id is not None):
+        parser.error("seek-preview-film requires --film-id; other probes do not accept it")
     if sum([args.baseline, args.reference_063, args.reference_064]) > 1:
         parser.error("Choose one reference mode only")
     bundle = "com.jeff.visionproplayer"
@@ -50,7 +53,8 @@ def main():
         run_id = str(uuid.uuid4())
         result = run("device", "process", "launch", "--device", selected,
                      "--terminate-existing", "--timeout", "20", bundle,
-                     "--smoke", args.sample, "--smoke-run-id", run_id, *(["--depth-capture"] if args.capture else []),
+                     "--smoke", args.sample, "--smoke-run-id", run_id,
+                     *(["--film-id", str(args.film_id)] if args.film_id else []), *(["--depth-capture"] if args.capture else []),
                      *(["--depth-motion-baseline"] if args.baseline else []),
                      *(["--depth-reference-063"] if args.reference_063 else []),
                      *(["--depth-reference-064"] if args.reference_064 else []),
@@ -59,7 +63,7 @@ def main():
             raise SystemExit(result.stdout + result.stderr)
         print(f"Started {args.sample} on physical Vision Pro (run {run_id})", flush=True)
         endurance = args.sample.startswith("depth-endurance-")
-        report_timeout = 1380 if endurance else 180 if args.resume_stress else 150 if args.sample in ("product", "seek-preview") else 120 if args.sample.startswith("depth-") else (95 if args.sample == "routing" else 55)
+        report_timeout = 1380 if endurance else 180 if args.resume_stress else 150 if args.sample in ("product", "seek-preview", "seek-preview-film") else 120 if args.sample.startswith("depth-") else (95 if args.sample == "routing" else 55)
         deadline = time.monotonic() + report_timeout
         local = Path(temporary) / "report.json"
         progress_file = Path(temporary) / "progress.json"

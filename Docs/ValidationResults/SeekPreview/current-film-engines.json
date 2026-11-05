@@ -1,0 +1,65 @@
+{
+  "checks": [
+    {
+      "actualTime": 5933.822548365577,
+      "engine": "native",
+      "height": 336,
+      "milliseconds": 57.968499982962385,
+      "passed": true,
+      "requestedTime": 5933.831122417,
+      "width": 188
+    },
+    {
+      "actualTime": 5938.8258839226155,
+      "engine": "native",
+      "height": 336,
+      "milliseconds": 17.91883332771249,
+      "passed": true,
+      "requestedTime": 5938.831122417,
+      "width": 188
+    },
+    {
+      "actualTime": 5943.829219479653,
+      "engine": "native",
+      "height": 336,
+      "milliseconds": 7.523583335569128,
+      "passed": true,
+      "requestedTime": 5943.831122417,
+      "width": 188
+    },
+    {
+      "actualTime": 5933.822549,
+      "engine": "vlc",
+      "height": 682,
+      "milliseconds": 45.5131666676607,
+      "passed": true,
+      "requestedTime": 5933.831122417,
+      "width": 384
+    },
+    {
+      "actualTime": 5938.825884,
+      "engine": "vlc",
+      "height": 682,
+      "milliseconds": 31.382708315504715,
+      "passed": true,
+      "requestedTime": 5938.831122417,
+      "width": 384
+    },
+    {
+      "actualTime": 5943.82922,
+      "engine": "vlc",
+      "height": 682,
+      "milliseconds": 18.709083349676803,
+      "passed": true,
+      "requestedTime": 5943.831122417,
+      "width": 384
+    }
+  ],
+  "environment": "physical-device",
+  "passed": true,
+  "runID": "3f7ad0b0-0fe7-4a05-94ec-daaadc4d2864",
+  "sample": "seek-preview-film",
+  "scope": "Selected local film, both thumbnail engines at three nearby times. No source names, URLs or images saved. UI visibility requires wearer confirmation.",
+  "systemVersion": "Version 27.2 (Build 24N120)",
+  "timestamp": "2026-11-05T04:00:44Z"
+}

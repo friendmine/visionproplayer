@@ -376,10 +376,6 @@ struct StereoPlayerView: View {
                             content.add(controls)
                         }
                         if let captions = attachments.entity(for: "captions") { content.add(captions) }
-                        if let card = attachments.entity(for: "seek-preview") {
-                            CinemaControlPlacement.placePreview(card, model: model)
-                            content.add(card)
-                        }
                         ready = true
                     } catch {
                         if !Task.isCancelled, model.request?.id == request.id { model.rendererError = error.localizedDescription }
@@ -388,14 +384,12 @@ struct StereoPlayerView: View {
                     positionCinema()
                     if let controls = cinemaControls { CinemaControlPlacement.place(controls, model: model, aspect: aspect) }
                     content.entities.first(where: { $0.name == "CinemaBackground" })?.isEnabled = model.library.darkCinema
-                    if let card = attachments.entity(for: "seek-preview") { CinemaControlPlacement.placePreview(card, model: model) }
                     if let captions = attachments.entity(for: "captions") {
                         CinemaControlPlacement.placeCaptions(captions, model: model, aspect: aspect)
                     }
                     try? renderer.bindEyes(swapped: model.swapEyes)
                     renderer.setEyeCheck(model.eyeCheck)
                 } attachments: {
-                    Attachment(id: "seek-preview") { SeekPreviewCard(preview: model.seekPreview) }
                     Attachment(id: "controls") { CinemaControls(model: model) }
                     Attachment(id: "captions") {
                         CaptionOverlay(model: model).frame(width: 800).opacity(model.subtitleText.isEmpty ? 0 : 1)

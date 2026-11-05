@@ -52,16 +52,6 @@ struct PlayerScreen: View {
                 videoStage
             }
         }.padding(24)
-            .overlay {
-                if !model.cinemaActive, let id = model.request?.id, model.seekPreview.activeID == id {
-                    // Keep the preview outside the clipped video subtree and
-                    // in front of its native/RealityKit compositing surfaces.
-                    SeekPreviewCard(preview: model.seekPreview, surface: "window-overlay")
-                        .fixedSize()
-                        .offset(z: 48)
-                        .allowsHitTesting(false)
-                }
-            }
             .toolbar(.hidden, for: .navigationBar)
             .onChange(of: model.isPlaying) { _, _ in reveal() }
             .onChange(of: picture) { _, value in if !value { model.savePicturePreferences(); reveal() } }
@@ -126,23 +116,25 @@ struct PlayerScreen: View {
     private var transport: some View {
         VStack(spacing: 10) {
             PlaybackSeekBar(model: model, holdKey: "window-seek").font(.caption)
-            HStack(spacing: 20) {
-                Button("后退 10 秒", systemImage: "gobackward.10") { model.skip(-10); reveal() }.labelStyle(.iconOnly).disabled(!model.isSeekable)
-                Button(model.isPlaying ? "暂停" : "播放", systemImage: model.isPlaying ? "pause.fill" : "play.fill") { model.togglePlayback(); reveal() }
-                    .labelStyle(.iconOnly).keyboardShortcut(.space, modifiers: []).frame(minWidth: 60, minHeight: 60)
-                Button("快进 10 秒", systemImage: "goforward.10") { model.skip(10); reveal() }.labelStyle(.iconOnly).disabled(!model.isSeekable)
-                Spacer()
-                Button("字幕与音轨", systemImage: "captions.bubble") { model.loadTracks(); tracks = true; reveal() }
-                    .popover(isPresented: $tracks) { TrackSettings(model: model).frame(width: 460, height: 560) }
-                Button("更多", systemImage: "ellipsis") { more = true; reveal() }.labelStyle(.iconOnly)
-                    .popover(isPresented: $more) {
-                    VStack(alignment: .leading, spacing: 20) {
-                    Button("从头播放", systemImage: "arrow.counterclockwise") { model.restart(); reveal() }
-                    if model.currentFilm?.title.hasPrefix("Big Buck Bunny") == true || model.request?.url.lastPathComponent.hasPrefix("BBB-") == true {
-                        Text("Big Buck Bunny © 2008 Blender Foundation · CC BY 3.0")
+            SeekPreviewControlsRow(model: model, surface: "window-controls") {
+                HStack(spacing: 20) {
+                    Button("后退 10 秒", systemImage: "gobackward.10") { model.skip(-10); reveal() }.labelStyle(.iconOnly).disabled(!model.isSeekable)
+                    Button(model.isPlaying ? "暂停" : "播放", systemImage: model.isPlaying ? "pause.fill" : "play.fill") { model.togglePlayback(); reveal() }
+                        .labelStyle(.iconOnly).keyboardShortcut(.space, modifiers: []).frame(minWidth: 60, minHeight: 60)
+                    Button("快进 10 秒", systemImage: "goforward.10") { model.skip(10); reveal() }.labelStyle(.iconOnly).disabled(!model.isSeekable)
+                    Spacer()
+                    Button("字幕与音轨", systemImage: "captions.bubble") { model.loadTracks(); tracks = true; reveal() }
+                        .popover(isPresented: $tracks) { TrackSettings(model: model).frame(width: 460, height: 560) }
+                    Button("更多", systemImage: "ellipsis") { more = true; reveal() }.labelStyle(.iconOnly)
+                        .popover(isPresented: $more) {
+                        VStack(alignment: .leading, spacing: 20) {
+                        Button("从头播放", systemImage: "arrow.counterclockwise") { model.restart(); reveal() }
+                        if model.currentFilm?.title.hasPrefix("Big Buck Bunny") == true || model.request?.url.lastPathComponent.hasPrefix("BBB-") == true {
+                            Text("Big Buck Bunny © 2008 Blender Foundation · CC BY 3.0")
+                        }
+                        Button("返回片库", systemImage: "square.grid.2x2") { Task { await leave() } }
+                        }.padding(24).frame(width: 300)
                     }
-                    Button("返回片库", systemImage: "square.grid.2x2") { Task { await leave() } }
-                    }.padding(24).frame(width: 300)
                 }
             }
         }.padding(.horizontal, 24).padding(.vertical, 14).glassBackgroundEffect(in: RoundedRectangle(cornerRadius: 24))
