@@ -1,0 +1,19 @@
+{
+  "baselineLocalLengthRange" : [
+    0.23476733267307281,
+    3.4746308326721191
+  ],
+  "baselineMaximumLandmarkLengthError" : 0.057331681251525879,
+  "cases" : 126,
+  "maximumProtectedHorizontalSlope" : 0.070000588893890381,
+  "maximumProtectedVerticalSlope" : 0.070000290870666504,
+  "passed" : true,
+  "planarCoverage" : true,
+  "protectedCases" : 63,
+  "protectedLocalLengthRange" : [
+    0.91699260473251343,
+    1.0842163562774658
+  ],
+  "protectedMaximumLandmarkLengthError" : 0.020172238349914551,
+  "scope" : "Synthetic GPU projection fixtures, local deformation relative to uniform coverage scale; no human detection or wearer acceptance"
+}

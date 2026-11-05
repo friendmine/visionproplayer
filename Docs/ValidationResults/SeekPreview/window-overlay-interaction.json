@@ -1,0 +1,725 @@
+[
+  {
+    "active" : true,
+    "displayTime" : 852.97699999999998,
+    "event" : "card-frame",
+    "frameTime" : 852.97699999999998,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147975.09244116666
+  },
+  {
+    "active" : true,
+    "displayTime" : 886.96900000000005,
+    "event" : "card-frame",
+    "frameTime" : 886.96900000000005,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147975.14671841668
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 890.47299999999996,
+    "requestedTime" : 890.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147975.20009570834
+  },
+  {
+    "active" : true,
+    "displayTime" : 890.47299999999996,
+    "event" : "card-frame",
+    "frameTime" : 890.47299999999996,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147975.201733125
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 927.46799999999996,
+    "requestedTime" : 927.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147975.28999125
+  },
+  {
+    "active" : true,
+    "displayTime" : 927.46799999999996,
+    "event" : "card-frame",
+    "frameTime" : 927.46799999999996,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147975.29172808334
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 953.49400000000003,
+    "requestedTime" : 953.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147975.37742375
+  },
+  {
+    "active" : true,
+    "displayTime" : 953.49400000000003,
+    "event" : "card-frame",
+    "frameTime" : 953.49400000000003,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147975.37901450001
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 971.971,
+    "requestedTime" : 972,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147975.46973320833
+  },
+  {
+    "active" : true,
+    "displayTime" : 971.971,
+    "event" : "card-frame",
+    "frameTime" : 971.971,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147975.47212629169
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 989.48900000000003,
+    "requestedTime" : 989.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147975.57113979169
+  },
+  {
+    "active" : true,
+    "displayTime" : 989.48900000000003,
+    "event" : "card-frame",
+    "frameTime" : 989.48900000000003,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147975.57529129167
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 994.49400000000003,
+    "requestedTime" : 994.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147975.660347
+  },
+  {
+    "active" : true,
+    "displayTime" : 994.49400000000003,
+    "event" : "card-frame",
+    "frameTime" : 994.49400000000003,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147975.66222237502
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 995.495,
+    "requestedTime" : 995.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147975.90916108334
+  },
+  {
+    "active" : true,
+    "displayTime" : 995.495,
+    "event" : "card-frame",
+    "frameTime" : 995.495,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147975.91105029167
+  },
+  {
+    "active" : true,
+    "displayTime" : 994.49400000000003,
+    "event" : "card-frame",
+    "frameTime" : 994.49400000000003,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147975.93586879168
+  },
+  {
+    "active" : true,
+    "event" : "slider-end",
+    "frameTime" : 994.49400000000003,
+    "playing" : true,
+    "seekable" : true,
+    "surface" : "window-seek",
+    "unavailable" : false,
+    "uptime" : 147975.95254229166
+  },
+  {
+    "active" : false,
+    "event" : "card-size",
+    "frameTime" : -1,
+    "height" : 30.5,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147975.95739200001,
+    "width" : 19.5
+  },
+  {
+    "active" : false,
+    "event" : "card-disappeared",
+    "frameTime" : -1,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147975.96171925002
+  },
+  {
+    "active" : false,
+    "event" : "slider-begin",
+    "frameTime" : -1,
+    "playing" : true,
+    "seekable" : true,
+    "surface" : "window-seek",
+    "unavailable" : false,
+    "uptime" : 147981.96845295833
+  },
+  {
+    "active" : true,
+    "event" : "card-size",
+    "frameTime" : -1,
+    "height" : 134.5,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147981.97564904168,
+    "width" : 210
+  },
+  {
+    "active" : true,
+    "event" : "card-appeared",
+    "frameTime" : -1,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147981.97708050002
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 967.96699999999998,
+    "requestedTime" : 968,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147982.08720512502
+  },
+  {
+    "active" : true,
+    "displayTime" : 967.96699999999998,
+    "event" : "card-frame",
+    "frameTime" : 967.96699999999998,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147982.09135691667
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 935.97699999999998,
+    "requestedTime" : 936,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147982.181946125
+  },
+  {
+    "active" : true,
+    "displayTime" : 935.97699999999998,
+    "event" : "card-frame",
+    "frameTime" : 935.97699999999998,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147982.18389575
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 906.98900000000003,
+    "requestedTime" : 907,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147982.27222679168
+  },
+  {
+    "active" : true,
+    "displayTime" : 906.98900000000003,
+    "event" : "card-frame",
+    "frameTime" : 906.98900000000003,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147982.27428708333
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 876.95899999999995,
+    "requestedTime" : 877,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147982.37233308333
+  },
+  {
+    "active" : true,
+    "displayTime" : 876.95899999999995,
+    "event" : "card-frame",
+    "frameTime" : 876.95899999999995,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147982.37420054167
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 853.93600000000004,
+    "requestedTime" : 854,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147982.46234316667
+  },
+  {
+    "active" : true,
+    "displayTime" : 853.93600000000004,
+    "event" : "card-frame",
+    "frameTime" : 853.93600000000004,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147982.46450550001
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 834.5,
+    "requestedTime" : 834.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147982.57389404168
+  },
+  {
+    "active" : true,
+    "displayTime" : 834.5,
+    "event" : "card-frame",
+    "frameTime" : 834.5,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147982.57578500002
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 805.471,
+    "requestedTime" : 805.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147982.66533245833
+  },
+  {
+    "active" : true,
+    "displayTime" : 805.471,
+    "event" : "card-frame",
+    "frameTime" : 805.471,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147982.66711162502
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 785.49300000000005,
+    "requestedTime" : 785.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147982.75701279167
+  },
+  {
+    "active" : true,
+    "displayTime" : 785.49300000000005,
+    "event" : "card-frame",
+    "frameTime" : 785.49300000000005,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147982.76070345833
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 767.976,
+    "requestedTime" : 768,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147982.8621345
+  },
+  {
+    "active" : true,
+    "displayTime" : 767.976,
+    "event" : "card-frame",
+    "frameTime" : 767.976,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147982.86421987502
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 762.971,
+    "requestedTime" : 763,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147982.97205354169
+  },
+  {
+    "active" : true,
+    "displayTime" : 762.971,
+    "event" : "card-frame",
+    "frameTime" : 762.971,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147982.97437258335
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 779.98800000000006,
+    "requestedTime" : 780,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147983.16235833336
+  },
+  {
+    "active" : true,
+    "displayTime" : 779.98800000000006,
+    "event" : "card-frame",
+    "frameTime" : 779.98800000000006,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147983.16439025002
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 800.96699999999998,
+    "requestedTime" : 801,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147983.26786720834
+  },
+  {
+    "active" : true,
+    "displayTime" : 800.96699999999998,
+    "event" : "card-frame",
+    "frameTime" : 800.96699999999998,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147983.271760125
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 829.495,
+    "requestedTime" : 829.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147983.36128537499
+  },
+  {
+    "active" : true,
+    "displayTime" : 829.495,
+    "event" : "card-frame",
+    "frameTime" : 829.495,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147983.36321616668
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 858.48299999999995,
+    "requestedTime" : 858.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147983.45151483334
+  },
+  {
+    "active" : true,
+    "displayTime" : 858.48299999999995,
+    "event" : "card-frame",
+    "frameTime" : 858.48299999999995,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147983.45340700002
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 883.96600000000001,
+    "requestedTime" : 884,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147983.54278591668
+  },
+  {
+    "active" : true,
+    "displayTime" : 883.96600000000001,
+    "event" : "card-frame",
+    "frameTime" : 883.96600000000001,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147983.544857125
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 908.99099999999999,
+    "requestedTime" : 909,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147983.64286237501
+  },
+  {
+    "active" : true,
+    "displayTime" : 908.99099999999999,
+    "event" : "card-frame",
+    "frameTime" : 908.99099999999999,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147983.64486708335
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 933.97500000000002,
+    "requestedTime" : 934,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147983.734118875
+  },
+  {
+    "active" : true,
+    "displayTime" : 933.97500000000002,
+    "event" : "card-frame",
+    "frameTime" : 933.97500000000002,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147983.73604341666
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 956.49699999999996,
+    "requestedTime" : 956.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147983.82283637501
+  },
+  {
+    "active" : true,
+    "displayTime" : 956.49699999999996,
+    "event" : "card-frame",
+    "frameTime" : 956.49699999999996,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147983.82633541667
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 981.48099999999999,
+    "requestedTime" : 981.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147983.92466766667
+  },
+  {
+    "active" : true,
+    "displayTime" : 981.48099999999999,
+    "event" : "card-frame",
+    "frameTime" : 981.48099999999999,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147983.92670075002
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 1006.4640000000001,
+    "requestedTime" : 1006.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147984.02564908334
+  },
+  {
+    "active" : true,
+    "displayTime" : 1006.4640000000001,
+    "event" : "card-frame",
+    "frameTime" : 1006.4640000000001,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147984.02771854168
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 1023.481,
+    "requestedTime" : 1023.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147984.12501945836
+  },
+  {
+    "active" : true,
+    "displayTime" : 1023.481,
+    "event" : "card-frame",
+    "frameTime" : 1023.481,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147984.12700725
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 1038.9960000000001,
+    "requestedTime" : 1039,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147984.24489954166
+  },
+  {
+    "active" : true,
+    "displayTime" : 1038.9960000000001,
+    "event" : "card-frame",
+    "frameTime" : 1038.9960000000001,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147984.24686745834
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 1059.4749999999999,
+    "requestedTime" : 1059.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147984.34273887501
+  },
+  {
+    "active" : true,
+    "displayTime" : 1059.4749999999999,
+    "event" : "card-frame",
+    "frameTime" : 1059.4749999999999,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147984.34499812502
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 1071.4870000000001,
+    "requestedTime" : 1071.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147984.43204054167
+  },
+  {
+    "active" : true,
+    "displayTime" : 1071.4870000000001,
+    "event" : "card-frame",
+    "frameTime" : 1071.4870000000001,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147984.43399870835
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 1080.4960000000001,
+    "requestedTime" : 1080.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147984.52459812502
+  },
+  {
+    "active" : true,
+    "displayTime" : 1080.4960000000001,
+    "event" : "card-frame",
+    "frameTime" : 1080.4960000000001,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147984.52689475002
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 1087.962,
+    "requestedTime" : 1088,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147984.62045308333
+  },
+  {
+    "active" : true,
+    "displayTime" : 1087.962,
+    "event" : "card-frame",
+    "frameTime" : 1087.962,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147984.62234937501
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 1091.4649999999999,
+    "requestedTime" : 1091.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147984.71137087501
+  },
+  {
+    "active" : true,
+    "displayTime" : 1091.4649999999999,
+    "event" : "card-frame",
+    "frameTime" : 1091.4649999999999,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147984.71359970834
+  },
+  {
+    "active" : true,
+    "event" : "slider-end",
+    "frameTime" : 1091.4649999999999,
+    "playing" : true,
+    "seekable" : true,
+    "surface" : "window-seek",
+    "unavailable" : false,
+    "uptime" : 147984.80801045834
+  },
+  {
+    "active" : false,
+    "event" : "card-size",
+    "frameTime" : -1,
+    "height" : 30.5,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147984.81757041666,
+    "width" : 19.5
+  },
+  {
+    "active" : false,
+    "event" : "card-disappeared",
+    "frameTime" : -1,
+    "surface" : "window-overlay",
+    "unavailable" : false,
+    "uptime" : 147984.82332737502
+  }
+]

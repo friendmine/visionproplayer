@@ -1,0 +1,17 @@
+1920x1080: model input square ratio old=0.7424242424242424 new=1.0
+restored depth maximum error 0.0002464056
+1080x1920: model input square ratio old=2.324324324324324 new=1.0
+restored depth maximum error 0.0002452731
+3840x1600: model input square ratio old=0.5538461538461539 new=1.0
+restored depth maximum error 0.00024741888
+1600x3840: model input square ratio old=3.0714285714285716 new=1.0
+restored depth maximum error 0.00024580956
+518x392: model input square ratio old=1.0 new=1.0
+restored depth maximum error 0.00024414062
+{
+  "maximumModelInputShapeRatioError" : 0,
+  "maximumRestoredDepthError" : 0.00024741888046264648,
+  "passed" : true,
+  "preservedNearTailSeparation" : 0.03662109375,
+  "scope" : "Preprocessing geometry, padding, monotonic near-tail and projection coverage; not measured human depth accuracy or headset performance"
+}

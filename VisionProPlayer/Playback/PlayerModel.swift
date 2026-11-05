@@ -2,10 +2,18 @@ import AVFoundation
 import Observation
 import SwiftUI
 
+// Track identifiers belong to a decoder and source. Carry explicit choices only
+// when rebuilding that same film on the same engine (e.g. entering the cinema).
+struct PlaybackTrackChoices {
+    var audio: String?
+    var subtitle: String?
+}
+
 @MainActor @Observable
 final class PlayerModel {
     let library = MediaLibrary()
     let focus = FocusPlayback()
+    let seekPreview = SeekPreview()
     var showingPlayer = false
     var missingFilmID: UUID?
     var cinemaActive = false
@@ -13,6 +21,7 @@ final class PlayerModel {
     var spatialStereoActive = false
     var audioTracks: [PlaybackTrack] = []
     var subtitleTracks: [PlaybackTrack] = []
+    @ObservationIgnored var preferredTracks = PlaybackTrackChoices()
     var selectedAudio = ""
     var selectedSubtitle = "off"
     var subtitleText = ""
@@ -35,6 +44,7 @@ final class PlayerModel {
     // Session-only diagnostic choice; never overwrite per-film picture settings.
     var depthMotionAlignment = true
     var depthEdgeRefinement = true
+    var depthSubjectAccuracy = true
     @ObservationIgnored var depthScreenWidthMeters: Float = 0
     var depthRevision = 0
     var depthStatus = "等待转换"
@@ -124,7 +134,8 @@ final class PlayerModel {
 
     func open(_ url: URL, layout: StereoLayout? = nil, engine: PlaybackEngine? = nil, convert2D: Bool? = nil,
               recovery: (seconds: Double, playing: Bool)? = nil, libraryID: UUID? = nil,
-              cinema: Bool = false, resolvedEngine: PlaybackEngine? = nil) {
+              cinema: Bool = false, resolvedEngine: PlaybackEngine? = nil,
+              restoringTracks: PlaybackTrackChoices = PlaybackTrackChoices()) {
         showingPlayer = true
         // Take access before the fileImporter callback returns; release only after decoder shutdown.
         let scoped = url.isFileURL && url.startAccessingSecurityScopedResource()
@@ -160,6 +171,7 @@ final class PlayerModel {
                 return
             }
             if let libraryID { self.library.update(libraryID) { $0.isSpatialVideo = spatial } }
+            self.preferredTracks = restoringTracks
             self.start(PlaybackRequest(url: url, engine: selectedEngine, layout: selectedLayout,
                                        swapEyes: self.swapEyes, securityScoped: scoped,
                                        allowsNativeFallback: preference == .automatic && !spatial,
@@ -417,9 +429,11 @@ final class PlayerModel {
     }
 
     private func shutdown(releaseSecurityScope: Bool = true) async {
+        seekPreview.reset()
         checkpoint()
         trackTask?.cancel(); trackTask = nil
         audioGroup = nil; subtitleGroup = nil; captionReceiver = nil
+        preferredTracks = PlaybackTrackChoices()
         audioTracks = []; subtitleTracks = []; selectedAudio = ""; selectedSubtitle = "off"
         subtitleText = ""; subtitleCues = []; subtitleOffset = 0
         isClosing = true

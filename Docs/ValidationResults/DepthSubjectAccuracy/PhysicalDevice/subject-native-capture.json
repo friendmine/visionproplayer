@@ -1,0 +1,24 @@
+{
+  "depthContentRegion" : [
+    0,
+    0.1283482164144516,
+    1,
+    0.74330359697341919
+  ],
+  "disparityGain" : 1,
+  "displayMipLevels" : 11,
+  "edgeRefinement" : true,
+  "frontLimit" : 0.039999999105930328,
+  "height" : 1080,
+  "mapping" : "anchored-relief-v2",
+  "motionAlignment" : true,
+  "popOut" : 0.60000002384185791,
+  "projectionSampling" : "proportion-protected-forward-v1",
+  "proportionProtection" : true,
+  "rearLimit" : 0.012000000104308128,
+  "runID" : "e27f47bf-a7d5-4a6d-83e6-8dce7e77f1bc",
+  "strength" : 0.34999999403953552,
+  "subjectAccuracy" : true,
+  "timestamp" : "2026-11-02T12:13:51Z",
+  "width" : 1920
+}

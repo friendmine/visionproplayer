@@ -1,0 +1,31 @@
+{
+  "date": "2026-11-02",
+  "algorithm": "aspect-near-tail-planar-v2",
+  "sourceSHA256": {
+    "VisionProPlayer/Rendering/DepthStereo.metal": "9355d297254d99da7102ca0becf2ed1c5e3a2e999488aab32cd62c266b6a91ea",
+    "VisionProPlayer/Rendering/StereoReprojector.swift": "f220931759954a7a5de0c83088ebd3da04578982707260b7e1705dff90930e00",
+    "VisionProPlayer/Rendering/StereoRenderer.swift": "9d7d65ef63f9c5e5c8fc8c4b9c4539fa5d16759d434c8b16c9841b48ec575875",
+    "VisionProPlayer/Playback/DepthSmokeTest.swift": "ba08d34cc70462390267f45c80233510602280fed1494dbba92a445f8ccf7ef2",
+    "Scripts/test_depth_planes.swift": "7d3a9338d44a11773f0c62fdee7882ed65399eb35fc403837407afd7266e2415",
+    "Scripts/test_proportion_protection.swift": "cd96fedbb622aa6480115a9507ede682404a65f5108e885bd7c4ce7b76ab1952"
+  },
+  "localGPUChecks": {
+    "planes": 216,
+    "proportions": 126,
+    "passed": true,
+    "referenceProportions": 126
+  },
+  "deviceBuild": "Debug build passed /tmp/vpp-planar-validation-build.log; diagnostic depthMapping label corrected, renderer unchanged",
+  "physicalDeviceStatus": "native and VLC revised-path short probes passed, 17 checks each; wearer comparison pending",
+  "wearerAcceptance": "partial: normal proportions/edges/playback/audio; acceptable crop; central concavity remains obvious",
+  "scope": "Reproduced artificial curvature of constant depth from edge taper and endpoint constraints. Does not establish sole cause of actual scene; no ground truth. No long test.",
+  "validationDate": "2026-11-04",
+  "installationDirectory": "2A74621C-3DB6-45CE-80EE-505F2A6E7A27",
+  "physicalDeviceSummary": "PhysicalDevice/Summary.json",
+  "wearerFeedback": {
+    "date": "2026-11-04",
+    "centralConcavity": "有改善，但仍明显",
+    "proportionsEdgesPlaybackAudioAndCrop": "都正常，裁边能接受",
+    "status": "partial improvement; central concavity remains unresolved"
+  }
+}

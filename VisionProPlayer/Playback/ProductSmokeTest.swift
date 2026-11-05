@@ -46,6 +46,10 @@ extension PlayerModel {
             check("legacy-library-defaults-to-balanced-pop-out", legacyPreferences.popOut == nil && legacyPreferences.strength == 0.35)
             check("legacy-library-enables-proportion-protection", legacyPreferences.proportionProtection ?? true)
             let store = MediaLibrary(root: folder.appending(path: "store"), defaults: defaults)
+            store.externalCaptionSize = .large
+            store.externalCaptionAtTop = true
+            let reopened = MediaLibrary(root: folder.appending(path: "store"), defaults: defaults)
+            check("caption-appearance-survives-relaunch", reopened.externalCaptionSize == .large && reopened.externalCaptionAtTop)
             let nativeURL = folder.appending(path: "product-native.mp4")
             let vlcURL = folder.appending(path: "product-vlc.mkv")
             try FileManager.default.copyItem(at: .documentsDirectory.appending(path: "ProductTracks.mp4"), to: nativeURL)
@@ -150,6 +154,19 @@ extension PlayerModel {
             seek(to: 0.25); try? await Task.sleep(for: .milliseconds(400))
             if isPlaying { togglePlayback() }
             let paused = elapsed
+            let chosenAudio = selectedAudio
+            selectSubtitle("off")
+            setCinema(true); await waitForPendingChange()
+            await wait { duration > 0 && !audioTracks.isEmpty && selectedAudio == chosenAudio && !subtitleTracks.isEmpty && selectedSubtitle == "off" }
+            check("cinema-restores-audio-and-disabled-subtitle", request?.isCinema == true && selectedSubtitle == "off" && !chosenAudio.isEmpty && selectedAudio == chosenAudio)
+            let cinemaRequest = request?.id
+            if let first = audioTracks.first { selectAudio(first.id) }
+            selectSubtitle("external")
+            let cinemaAudio = selectedAudio
+            check("cinema-track-switch-keeps-session", request?.id == cinemaRequest && selectedSubtitle == "external" && !isPlaying && abs(elapsed - paused) < 0.6)
+            setCinema(false); await waitForPendingChange()
+            await wait { duration > 0 && selectedAudio == cinemaAudio && !audioTracks.isEmpty && abs(elapsed - paused) < 0.6 }
+            check("cinema-tracks-return-to-window", request?.isCinema == false && selectedAudio == cinemaAudio && selectedSubtitle == "external" && !isPlaying)
             setLayout(.halfSBS); await waitForPendingChange()
             await wait { duration > 0 && abs(elapsed - paused) < 0.6 && renderedFrames > 0 }
             check("format-change-preserves-paused-position", request?.layout == .halfSBS && !isPlaying && abs(elapsed - paused) < 0.6 && renderedFrames > 0)

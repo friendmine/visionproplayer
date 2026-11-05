@@ -35,6 +35,7 @@ let landmarks: [(String, SIMD2<Float>, SIMD2<Float>)] = [
     ("left-leg", [0.44,0.62], [0.39,0.94]),
     ("right-leg", [0.56,0.62], [0.67,0.93])
 ]
+let planar = CommandLine.arguments.contains("--planar")
 var cases = 0, protectedCases = 0
 var protectedMin: Float = 1, protectedMax: Float = 1, baselineMin: Float = 1, baselineMax: Float = 1
 var protectedLandmarkError: Float = 0, baselineLandmarkError: Float = 0
@@ -74,7 +75,7 @@ for (width, height) in [(640,360), (360,640), (641,359)] {
             for enabled in [false, true] {
                 let command = queue.makeCommandBuffer()!
                 try projector.encode(color: color, depth: depth, parameters: params, protectProportions: enabled,
-                    left: left, right: right, commands: command)
+                    preserveDepthPlanes: planar, left: left, right: right, commands: command)
                 let field = projector.outputDisparity!
                 let copy = texture(.r32Float, field.width, field.height)
                 let blit = command.makeBlitCommandEncoder()!
@@ -89,7 +90,8 @@ for (width, height) in [(640,360), (360,640), (641,359)] {
                     from: MTLRegionMake2D(0,0,fw,fh), mipmapLevel: 0) }
                 require(values.allSatisfy { $0.isFinite && $0 >= -params.w * 0.5 - 0.000001 && $0 <= params.z * 0.5 + 0.000001 }, "Disparity caps or finite output")
                 if params.x == 0 { require(values.allSatisfy { $0 == 0 }, "Zero must remain exactly flat") }
-                for y in 0..<fh { require(values[y*fw] == 0 && values[(y+1)*fw-1] == 0, "Horizontal endpoints must stay fixed") }
+                if !planar { for y in 0..<fh { require(values[y*fw] == 0 && values[(y+1)*fw-1] == 0, "Legacy horizontal endpoints must stay fixed") } }
+                let zoom = planar ? StereoReprojector.coverageScale(parameters: params) : 1
                 // Match the vertex shader's shared vertical average before
                 // measuring the two triangles in every cell, in pixel units.
                 var sampled = values
@@ -106,7 +108,7 @@ for (width, height) in [(640,360), (360,640), (641,359)] {
                             require(abs(dx) <= 0.07002 && abs(dy) <= 0.07002, "Both pixel-space derivatives must be bounded, including portrait and odd sizes")
                         }
                         for eye: Float in [-1,1] {
-                            let a = 1 + eye * dx, b = eye * dy
+                            let a = 1 + eye * dx / zoom, b = eye * dy / zoom
                             let trace = a*a + b*b + 1
                             let discriminant = sqrt(max(0, trace*trace - 4*a*a))
                             let low = sqrt(max(0, (trace-discriminant)*0.5)), high = sqrt((trace+discriminant)*0.5)
@@ -123,7 +125,7 @@ for (width, height) in [(640,360), (360,640), (641,359)] {
                     let fx = gx-Float(x), fy = gy-Float(y)
                     let a = sampled[y*fw+x], b = sampled[y*fw+x+1], c = sampled[(y+1)*fw+x], d = sampled[(y+1)*fw+x+1]
                     let shift = fx+fy <= 1 ? a*(1-fx-fy)+b*fx+c*fy : d*(fx+fy-1)+c*(1-fx)+b*(1-fy)
-                    return SIMD2<Float>((p.x+eye*shift)*Float(width), p.y*Float(height))
+                    return SIMD2<Float>((p.x+eye*shift/zoom)*Float(width), p.y*Float(height))
                 }
                 if pattern == 1 {
                     for (name,a,b) in landmarks { for eye: Float in [-1,1] {
@@ -152,9 +154,9 @@ for (width, height) in [(640,360), (360,640), (641,359)] {
 }
 require(baselineMax > 1.1 && baselineLandmarkError > protectedLandmarkError,
         "Fixtures must expose pre-existing deformation and show improvement")
-let report: [String: Any] = ["cases":cases, "protectedCases":protectedCases,
+let report: [String: Any] = ["cases":cases, "protectedCases":protectedCases, "planarCoverage":planar,
     "protectedLocalLengthRange":[protectedMin,protectedMax], "baselineLocalLengthRange":[baselineMin,baselineMax],
     "protectedMaximumLandmarkLengthError":protectedLandmarkError, "baselineMaximumLandmarkLengthError":baselineLandmarkError,
     "maximumProtectedHorizontalSlope":largestHorizontal, "maximumProtectedVerticalSlope":largestVertical,
-    "scope":"Synthetic GPU projection fixtures; no human detection or wearer acceptance", "passed":true]
+    "scope":"Synthetic GPU projection fixtures, local deformation relative to uniform coverage scale; no human detection or wearer acceptance", "passed":true]
 print(String(data:try JSONSerialization.data(withJSONObject:report, options:[.prettyPrinted,.sortedKeys]),encoding:.utf8)!)

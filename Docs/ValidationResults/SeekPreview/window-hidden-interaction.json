@@ -1,0 +1,719 @@
+[
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 834.95899999999995,
+    "requestedTime" : 835,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147823.440478
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 785.49300000000005,
+    "requestedTime" : 785.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147823.531521125
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 741.49099999999999,
+    "requestedTime" : 747.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147823.63200620835
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 719.96900000000005,
+    "requestedTime" : 720,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147823.72371816667
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 689.48000000000002,
+    "requestedTime" : 689.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147823.82237004169
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 669.96100000000001,
+    "requestedTime" : 670,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147823.92951216668
+  },
+  {
+    "active" : true,
+    "event" : "slider-end",
+    "frameTime" : 669.96100000000001,
+    "playing" : true,
+    "seekable" : true,
+    "surface" : "window-seek",
+    "unavailable" : false,
+    "uptime" : 147823.96543554167
+  },
+  {
+    "active" : false,
+    "event" : "card-disappeared",
+    "frameTime" : -1,
+    "unavailable" : false,
+    "uptime" : 147823.97255570834
+  },
+  {
+    "active" : false,
+    "event" : "slider-begin",
+    "frameTime" : -1,
+    "playing" : true,
+    "seekable" : true,
+    "surface" : "window-seek",
+    "unavailable" : false,
+    "uptime" : 147825.38499145836
+  },
+  {
+    "active" : true,
+    "event" : "card-appeared",
+    "frameTime" : -1,
+    "unavailable" : false,
+    "uptime" : 147825.39085216669
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 696.48699999999997,
+    "requestedTime" : 696.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147825.51307616668
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 764.47199999999998,
+    "requestedTime" : 764.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147825.69023633335
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 795.96199999999999,
+    "requestedTime" : 796,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147825.78920658334
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 833.49900000000002,
+    "requestedTime" : 833.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147825.89066704168
+  },
+  {
+    "active" : true,
+    "event" : "slider-end",
+    "frameTime" : 833.49900000000002,
+    "playing" : true,
+    "seekable" : true,
+    "surface" : "window-seek",
+    "unavailable" : false,
+    "uptime" : 147825.97573862501
+  },
+  {
+    "active" : false,
+    "event" : "card-disappeared",
+    "frameTime" : -1,
+    "unavailable" : false,
+    "uptime" : 147825.98438529167
+  },
+  {
+    "active" : false,
+    "event" : "slider-begin",
+    "frameTime" : -1,
+    "playing" : true,
+    "seekable" : true,
+    "surface" : "window-seek",
+    "unavailable" : false,
+    "uptime" : 147829.87810304167
+  },
+  {
+    "active" : true,
+    "event" : "card-appeared",
+    "frameTime" : -1,
+    "unavailable" : false,
+    "uptime" : 147829.89713112501
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 802.96900000000005,
+    "requestedTime" : 803,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147830.00841095834
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 745.495,
+    "requestedTime" : 745.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147830.09705758333
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 702.99400000000003,
+    "requestedTime" : 703,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147830.19763195835
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 688.98000000000002,
+    "requestedTime" : 689,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147830.29687283334
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 672.96400000000006,
+    "requestedTime" : 673,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147830.38713066667
+  },
+  {
+    "active" : true,
+    "event" : "slider-end",
+    "frameTime" : 672.96400000000006,
+    "playing" : true,
+    "seekable" : true,
+    "surface" : "window-seek",
+    "unavailable" : false,
+    "uptime" : 147830.44323487501
+  },
+  {
+    "active" : false,
+    "event" : "card-disappeared",
+    "frameTime" : -1,
+    "unavailable" : false,
+    "uptime" : 147830.45113091668
+  },
+  {
+    "active" : false,
+    "event" : "slider-begin",
+    "frameTime" : -1,
+    "playing" : true,
+    "seekable" : true,
+    "surface" : "window-seek",
+    "unavailable" : false,
+    "uptime" : 147834.16810704168
+  },
+  {
+    "active" : true,
+    "event" : "slider-end",
+    "frameTime" : -1,
+    "playing" : true,
+    "seekable" : true,
+    "surface" : "window-seek",
+    "unavailable" : false,
+    "uptime" : 147834.17209166667
+  },
+  {
+    "active" : false,
+    "event" : "slider-begin",
+    "frameTime" : -1,
+    "playing" : true,
+    "seekable" : true,
+    "surface" : "window-seek",
+    "unavailable" : false,
+    "uptime" : 147835.33675262501
+  },
+  {
+    "active" : true,
+    "event" : "slider-end",
+    "frameTime" : -1,
+    "playing" : true,
+    "seekable" : true,
+    "surface" : "window-seek",
+    "unavailable" : false,
+    "uptime" : 147835.342239625
+  },
+  {
+    "active" : false,
+    "event" : "slider-begin",
+    "frameTime" : -1,
+    "playing" : true,
+    "seekable" : true,
+    "surface" : "window-seek",
+    "unavailable" : false,
+    "uptime" : 147836.3461995
+  },
+  {
+    "active" : true,
+    "event" : "card-appeared",
+    "frameTime" : -1,
+    "unavailable" : false,
+    "uptime" : 147836.36920204168
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 683.47400000000005,
+    "requestedTime" : 683.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147836.48913720835
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 710.46000000000004,
+    "requestedTime" : 710.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147836.59543370834
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 731.98099999999999,
+    "requestedTime" : 732,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147836.68540579168
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 746.99599999999998,
+    "requestedTime" : 747,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147836.78152983333
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 773.48099999999999,
+    "requestedTime" : 773.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147836.86865266669
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 795.96199999999999,
+    "requestedTime" : 796,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147836.96598533334
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 825.95000000000005,
+    "requestedTime" : 826,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147837.05526220833
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 840.96500000000003,
+    "requestedTime" : 841,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147837.14667954168
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 852.47699999999998,
+    "requestedTime" : 852.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147837.24668762501
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 861.48599999999999,
+    "requestedTime" : 861.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147837.33718629167
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 866.99099999999999,
+    "requestedTime" : 867,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147837.437056625
+  },
+  {
+    "active" : true,
+    "event" : "slider-end",
+    "frameTime" : 866.99099999999999,
+    "playing" : true,
+    "seekable" : true,
+    "surface" : "window-seek",
+    "unavailable" : false,
+    "uptime" : 147837.49232916668
+  },
+  {
+    "active" : false,
+    "event" : "card-disappeared",
+    "frameTime" : -1,
+    "unavailable" : false,
+    "uptime" : 147837.50015800001
+  },
+  {
+    "active" : false,
+    "event" : "slider-begin",
+    "frameTime" : -1,
+    "playing" : true,
+    "seekable" : true,
+    "surface" : "window-seek",
+    "unavailable" : false,
+    "uptime" : 147840.733606375
+  },
+  {
+    "active" : true,
+    "event" : "card-appeared",
+    "frameTime" : -1,
+    "unavailable" : false,
+    "uptime" : 147840.74778033333
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 3161.440960640427,
+    "requestedTime" : 3161.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147840.867685
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 3022.4816544362907,
+    "requestedTime" : 3022.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147840.96710408333
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 2869.9799866577719,
+    "requestedTime" : 2870,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147841.057371
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 2754.4362908605735,
+    "requestedTime" : 2754.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147841.16973545833
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 2701.9346230820547,
+    "requestedTime" : 2702,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147841.26281320833
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 2701.4676450967313,
+    "requestedTime" : 2701.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147841.351569875
+  },
+  {
+    "active" : true,
+    "dragging" : true,
+    "event" : "slider-value",
+    "fraction" : 0.38044437171239776,
+    "frameTime" : 2701.4676450967313,
+    "playing" : true,
+    "surface" : "window-seek",
+    "unavailable" : false,
+    "uptime" : 147841.605484625
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 2834.4896597731822,
+    "requestedTime" : 2834.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147841.61064937501
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 3219.4796531020679,
+    "requestedTime" : 3219.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147841.71885958334
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 3527.4849899933288,
+    "requestedTime" : 3527.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147841.81820645835
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 3740.9606404269512,
+    "requestedTime" : 3741,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147841.90684887502
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 3935.4903268845896,
+    "requestedTime" : 3935.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147842.01762895833
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 4105.9372915276854,
+    "requestedTime" : 4106,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147842.12899916669
+  },
+  {
+    "active" : true,
+    "event" : "slider-end",
+    "frameTime" : 4105.9372915276854,
+    "playing" : true,
+    "seekable" : true,
+    "surface" : "window-seek",
+    "unavailable" : false,
+    "uptime" : 147842.23247095835
+  },
+  {
+    "active" : false,
+    "event" : "card-disappeared",
+    "frameTime" : -1,
+    "unavailable" : false,
+    "uptime" : 147842.24203391667
+  },
+  {
+    "active" : false,
+    "event" : "card-appeared",
+    "frameTime" : -1,
+    "unavailable" : false,
+    "uptime" : 147849.10331791668
+  },
+  {
+    "active" : false,
+    "event" : "slider-begin",
+    "frameTime" : -1,
+    "playing" : true,
+    "seekable" : true,
+    "surface" : "cinema-seek",
+    "unavailable" : false,
+    "uptime" : 147849.94261354167
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 745.995,
+    "requestedTime" : 746,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147850.06573758335
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 637.971,
+    "requestedTime" : 638,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147850.17376791668
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 572.98900000000003,
+    "requestedTime" : 573,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147850.27438866667
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 539.08000000000004,
+    "requestedTime" : 539,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147850.36717783334
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 533.49099999999999,
+    "requestedTime" : 533.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147850.45834887502
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 528.98699999999997,
+    "requestedTime" : 529,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147850.61618445834
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 589.42200000000003,
+    "requestedTime" : 589.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147850.74445137501
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 685.97699999999998,
+    "requestedTime" : 686,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147850.84411741668
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 767.976,
+    "requestedTime" : 768,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147850.955689375
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 811.47699999999998,
+    "requestedTime" : 811.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147851.07749875
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 847.97199999999998,
+    "requestedTime" : 848,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147851.16944958334
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 883.96600000000001,
+    "requestedTime" : 884,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147851.25769500001
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 912.495,
+    "requestedTime" : 912.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147851.35817258334
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 939.48000000000002,
+    "requestedTime" : 939.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147851.46880295835
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 947.48800000000006,
+    "requestedTime" : 947.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147851.56761870833
+  },
+  {
+    "active" : true,
+    "event" : "frame-completed",
+    "frameTime" : 948.48900000000003,
+    "requestedTime" : 948.5,
+    "success" : true,
+    "unavailable" : false,
+    "uptime" : 147851.66972995835
+  },
+  {
+    "active" : true,
+    "event" : "slider-end",
+    "frameTime" : 948.48900000000003,
+    "playing" : true,
+    "seekable" : true,
+    "surface" : "cinema-seek",
+    "unavailable" : false,
+    "uptime" : 147851.86515237502
+  }
+]

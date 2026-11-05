@@ -1,0 +1,10 @@
+{
+  "baselineMaximumFlatPlaneDisparitySpan" : 0.019999999552965164,
+  "cases" : 216,
+  "maximumCoverageScale" : 1.0399999618530273,
+  "maximumProtectedPixelSlope" : 0.070000357925891876,
+  "maximumUniformShapeRatioError" : 0.0010152459144592285,
+  "passed" : true,
+  "revisedMaximumFlatPlaneDisparitySpan" : 0,
+  "scope" : "Actual GPU synthetic planar\/ramp\/foreground\/noisy projection and final RGB checks; not proof of the user's scene root cause or ground-truth depth accuracy"
+}

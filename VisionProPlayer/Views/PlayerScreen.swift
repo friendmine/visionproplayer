@@ -9,8 +9,6 @@ struct PlayerScreen: View {
     @State private var picture = false
     @State private var tracks = false
     @State private var cinema = false
-    @State private var seekValue = 0.0
-    @State private var seeking = false
     @State private var more = false
 
     private var stereoControls: Bool {
@@ -53,8 +51,18 @@ struct PlayerScreen: View {
             } else {
                 videoStage
             }
-        }.padding(24).toolbar(.hidden, for: .navigationBar)
-            .onChange(of: model.progress, initial: true) { _, value in if !seeking { seekValue = value } }
+        }.padding(24)
+            .overlay {
+                if !model.cinemaActive, let id = model.request?.id, model.seekPreview.activeID == id {
+                    // Keep the preview outside the clipped video subtree and
+                    // in front of its native/RealityKit compositing surfaces.
+                    SeekPreviewCard(preview: model.seekPreview, surface: "window-overlay")
+                        .fixedSize()
+                        .offset(z: 48)
+                        .allowsHitTesting(false)
+                }
+            }
+            .toolbar(.hidden, for: .navigationBar)
             .onChange(of: model.isPlaying) { _, _ in reveal() }
             .onChange(of: picture) { _, value in if !value { model.savePicturePreferences(); reveal() } }
             .onChange(of: tracks) { _, value in if !value { reveal() } }
@@ -63,9 +71,8 @@ struct PlayerScreen: View {
             .onChange(of: tracks) { _, value in model.focus.hold("window-tracks", value) }
             .onChange(of: cinema) { _, value in model.focus.hold("window-cinema", value) }
             .onChange(of: more) { _, value in model.focus.hold("window-more", value) }
-            .onChange(of: seeking) { _, value in model.focus.hold("window-seek", value) }
             .onDisappear {
-                for key in ["window-picture", "window-tracks", "window-cinema", "window-seek", "window-more"] { model.focus.hold(key, false) }
+                for key in ["window-picture", "window-tracks", "window-cinema", "window-more"] { model.focus.hold(key, false) }
             }
             .animation(.easeInOut(duration: 0.25), value: controlsVisible)
             .modifier(FocusPlaybackModifier(model: model))
@@ -85,8 +92,11 @@ struct PlayerScreen: View {
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
             Color.clear.contentShape(Rectangle()).onTapGesture { reveal() }.offset(z: stereoControls ? 24 : 0)
             if !model.subtitleText.isEmpty && !model.cinemaActive {
-                CaptionOverlay(text: model.subtitleText)
-                    .padding(.bottom, stereoControls ? 24 : (controlsVisible ? 150 : 30)).padding(.horizontal, 32).offset(z: stereoControls ? 24 : 0.02)
+                CaptionOverlay(model: model)
+                    .padding(model.captionAtTop ? .top : .bottom, model.captionAtTop || stereoControls ? 24 : (controlsVisible ? 150 : 30))
+                    .padding(.horizontal, 32)
+                    .frame(maxHeight: .infinity, alignment: model.captionAtTop ? .top : .bottom)
+                    .offset(z: stereoControls ? 24 : 0.02)
                     .allowsHitTesting(false)
             }
             if model.errorMessage != nil || model.rendererError != nil {
@@ -115,13 +125,7 @@ struct PlayerScreen: View {
     }
     private var transport: some View {
         VStack(spacing: 10) {
-            HStack(spacing: 16) {
-                Text(PlayerModel.clock(seeking ? seekValue * model.duration : model.elapsed)).monospacedDigit().frame(minWidth: 65)
-                Slider(value: $seekValue, in: 0...1, onEditingChanged: { editing in
-                    seeking = editing; reveal(); if !editing { model.seek(to: seekValue) }
-                }).disabled(!model.isSeekable).accessibilityLabel("播放进度")
-                Text(PlayerModel.clock(model.duration)).monospacedDigit().frame(minWidth: 65)
-            }.font(.caption)
+            PlaybackSeekBar(model: model, holdKey: "window-seek").font(.caption)
             HStack(spacing: 20) {
                 Button("后退 10 秒", systemImage: "gobackward.10") { model.skip(-10); reveal() }.labelStyle(.iconOnly).disabled(!model.isSeekable)
                 Button(model.isPlaying ? "暂停" : "播放", systemImage: model.isPlaying ? "pause.fill" : "play.fill") { model.togglePlayback(); reveal() }
@@ -163,12 +167,19 @@ struct PlayerScreen: View {
 }
 
 struct CaptionOverlay: View {
-    let text: String
+    let model: PlayerModel
+    private var font: Font {
+        switch model.selectedSubtitle == "external" ? model.library.externalCaptionSize : .standard {
+        case .small: .body
+        case .standard: .title3
+        case .large: .title
+        }
+    }
     var body: some View {
-        Text(text).font(.title3.weight(.medium)).multilineTextAlignment(.center)
+        Text(model.subtitleText).font(font.weight(.medium)).multilineTextAlignment(.center)
             .foregroundStyle(.white).padding(.horizontal, 18).padding(.vertical, 9)
             .background(.black.opacity(0.7), in: RoundedRectangle(cornerRadius: 12))
-            .accessibilityLabel("字幕：\(text)")
+            .accessibilityLabel("字幕：\(model.subtitleText)")
     }
 }
 
@@ -239,11 +250,11 @@ struct MotionAlignmentComparison: View {
     @Bindable var model: PlayerModel
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Picker("画面处理", selection: $model.depthEdgeRefinement) {
-                Text("稳定版 0.6.3").tag(false)
-                Text("边缘与细节 · 实验").tag(true)
+            Picker("画面处理", selection: $model.depthSubjectAccuracy) {
+                Text("稳定版 0.6.4").tag(false)
+                Text("人物与前景 · 实验").tag(true)
             }
-            Text("两种模式均使用运动对齐。保持影片位置和立体参数不变作对比。只在本次使用期间生效，暂停时也可切换。")
+            Text("新版保留深度平面，轻微等比放大并裁去边缘，避免边缘回拉。保留运动对齐和比例保护。保持参数不变作对比；切换后重新估计当前画面深度，只在本次使用期间生效。")
                 .font(.caption).foregroundStyle(.secondary)
         }
     }
@@ -252,8 +263,10 @@ struct MotionAlignmentComparison: View {
 
 struct TrackSettings: View {
     @Bindable var model: PlayerModel
+    var done: (() -> Void)? = nil
     @State private var importing = false
     var body: some View {
+        @Bindable var library = model.library
         NavigationStack {
             Form {
                 Section("音轨") {
@@ -278,11 +291,23 @@ struct TrackSettings: View {
                         Text("这条 3D 播放路径请使用外挂文字字幕，避免内嵌字幕被左右画面切分。").font(.caption).foregroundStyle(.secondary)
                     }
                     if model.selectedSubtitle == "external" {
+                        Picker("字号", selection: $library.externalCaptionSize) {
+                            Text("小").tag(CaptionSize.small)
+                            Text("标准").tag(CaptionSize.standard)
+                            Text("大").tag(CaptionSize.large)
+                        }.pickerStyle(.segmented)
+                        Picker("位置", selection: $library.externalCaptionAtTop) {
+                            Text("下方").tag(false)
+                            Text("上方").tag(true)
+                        }.pickerStyle(.segmented)
                         Stepper("字幕延后 \(model.subtitleOffset, specifier: "%.1f") 秒", value: $model.subtitleOffset, in: -10...10, step: 0.5)
                             .onChange(of: model.subtitleOffset) { _, _ in model.savePicturePreferences() }
                     }
                 }
             }.navigationTitle("字幕与音轨")
+                .toolbar {
+                    if let done { ToolbarItem(placement: .confirmationAction) { Button("完成", action: done) } }
+                }
         }.fileImporter(isPresented: $importing, allowedContentTypes: [UTType(filenameExtension: "srt") ?? .plainText, UTType(filenameExtension: "vtt") ?? .plainText, .plainText]) { result in
             if case .success(let url) = result { model.importSubtitle(url) }
         }

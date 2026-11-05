@@ -67,6 +67,9 @@ float disparity(float nearDepth, float2 source, float4 params) {
 // horizontal shift can shear a face or arm even though vertical UV is unchanged.
 // Horizontal border coverage is still constrained to exactly zero at both ends.
 float projectionDisparity(float d, float2 uv, float4 params, float4 protection) {
+    // A constant depth plane must stay planar, including at the image edges.
+    // The experimental path covers those edges with uniform overscan instead.
+    if (protection.w > 0.5) return disparity(d, float2(0.5), params);
     return disparity(d, protection.z > 0.5 ? float2(uv.x, 0.5) : uv, params);
 }
 
@@ -103,7 +106,7 @@ kernel void regularizeDisparity(texture2d<float, access::sample> depth [[texture
         float bounded = 0.5 * (max(upper, forward.x) + min(lower, forward.y));
         // Preserve exact outer-border coverage, without introducing a fold.
         float boundary = step * min(float(x), float(width - 1 - x));
-        bounded = clamp(bounded, -boundary, boundary);
+        if (protection.w < 0.5) bounded = clamp(bounded, -boundary, boundary);
         result.write(float4(bounded, 0, 0, 1), uint2(x, row));
     }
 }
@@ -149,7 +152,8 @@ struct ProjectedVertex {
 
 vertex ProjectedVertex projectStereoVertex(uint id [[vertex_id]],
     texture2d<float, access::sample> field [[texture(0)]],
-    constant float4 &grid [[buffer(1)]]) {
+    constant float4 &grid [[buffer(1)]],
+    constant float &coverageScale [[buffer(2)]]) {
     const uint2 corners[6] = {uint2(0,0), uint2(1,0), uint2(0,1),
                              uint2(1,0), uint2(1,1), uint2(0,1)};
     uint cell = id / 6;
@@ -162,7 +166,8 @@ vertex ProjectedVertex projectStereoVertex(uint id [[vertex_id]],
         + field.sample(linearClamp, sampleUV + float2(0, 1.0 / size.y)).r * 0.25
         + field.sample(linearClamp, sampleUV - float2(0, 1.0 / size.y)).r * 0.25;
     ProjectedVertex out;
-    out.position = float4(2.0 * (uv.x + grid.z * shift * grid.w) - 1.0, 1.0 - 2.0 * uv.y, 0.5, 1.0);
+    out.position = float4((2.0 * uv.x - 1.0) * coverageScale + 2.0 * grid.z * shift * grid.w,
+                          (1.0 - 2.0 * uv.y) * coverageScale, 0.5, 1.0);
     out.uv = uv;
     return out;
 }

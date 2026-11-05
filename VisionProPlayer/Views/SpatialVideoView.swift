@@ -28,17 +28,22 @@ struct SpatialVideoView: View {
                         content.add(controls)
                     }
                     if let captions = attachments.entity(for: "captions") { content.add(captions) }
+                    if let card = attachments.entity(for: "seek-preview") {
+                        CinemaControlPlacement.placePreview(card, model: model)
+                        content.add(card)
+                    }
                 } update: { content, attachments in
                     positionCinema()
                     if let controls = cinemaControls { CinemaControlPlacement.place(controls, model: model, aspect: size.x / size.y) }
                     content.entities.first(where: { $0.name == "CinemaBackground" })?.isEnabled = model.library.darkCinema
+                    if let card = attachments.entity(for: "seek-preview") { CinemaControlPlacement.placePreview(card, model: model) }
                     if let captions = attachments.entity(for: "captions") {
-                        captions.position = [0, model.library.screenHeight - model.library.screenWidth * size.y / size.x * 0.36, -model.library.screenDistance + 0.03]
-                        captions.scale = [1.5, 1.5, 1.5]
+                        CinemaControlPlacement.placeCaptions(captions, model: model, aspect: size.x / size.y)
                     }
                 } attachments: {
+                    Attachment(id: "seek-preview") { SeekPreviewCard(preview: model.seekPreview) }
                     Attachment(id: "controls") { CinemaControls(model: model) }
-                    Attachment(id: "captions") { CaptionOverlay(text: model.subtitleText).frame(width: 800).opacity(model.subtitleText.isEmpty ? 0 : 1) }
+                    Attachment(id: "captions") { CaptionOverlay(model: model).frame(width: 800).opacity(model.subtitleText.isEmpty ? 0 : 1) }
                 }
             } else {
                 GeometryReader3D { geometry in

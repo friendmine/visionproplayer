@@ -1,0 +1,80 @@
+{
+  "date": "2026-11-02",
+  "automaticShortChecksPassed": true,
+  "wearerAcceptance": "reopened: central concavity reported in both modes after initial acceptance",
+  "scope": "Four sequential 1080p/30fps physical-device short probes; not scanout or ground-truth human depth accuracy. No endurance run.",
+  "rows": [
+    {
+      "engine": "native",
+      "mode": "0.6.4ok",
+      "report": "depth-motion-native-reference-064.json",
+      "runID": "3509f28b-55c8-4120-bb1d-f5fbcc778c15",
+      "checks": 17,
+      "submittedFPS": 29.99644754569832,
+      "highReliefFPS": 29.998278848741332,
+      "gpuMeanMS": 12.146231528410377,
+      "gpuP95MS": 15.94275000388734,
+      "inferenceMeanMS": 43.275035995963115,
+      "inferenceP95MS": 49.85345833119936,
+      "submissionIntervalP95MS": 37.66412497498095,
+      "submissionMaximumIntervalMS": 44.830124999862164
+    },
+    {
+      "engine": "native",
+      "mode": "aspect-near-tail-v1",
+      "report": "depth-motion-native.json",
+      "runID": "e27f47bf-a7d5-4a6d-83e6-8dce7e77f1bc",
+      "checks": 17,
+      "submittedFPS": 29.992098206799813,
+      "highReliefFPS": 29.994632679097958,
+      "gpuMeanMS": 12.007207917728616,
+      "gpuP95MS": 15.138624992687255,
+      "inferenceMeanMS": 42.08865540508791,
+      "inferenceP95MS": 47.903791652061045,
+      "submissionIntervalP95MS": 37.45058333151974,
+      "submissionMaximumIntervalMS": 41.46149998996407
+    },
+    {
+      "engine": "vlc",
+      "mode": "0.6.4ok",
+      "report": "depth-motion-vlc-reference-064.json",
+      "runID": "92e841e3-6c0a-42e3-9f69-282e3b47be81",
+      "checks": 17,
+      "submittedFPS": 29.79742748871311,
+      "highReliefFPS": 29.740614202912585,
+      "gpuMeanMS": 12.25551118597235,
+      "gpuP95MS": 15.483249997487292,
+      "inferenceMeanMS": 41.06880236331317,
+      "inferenceP95MS": 45.54012499283999,
+      "submissionIntervalP95MS": 37.94658332481049,
+      "submissionMaximumIntervalMS": 88.75062500010245
+    },
+    {
+      "engine": "vlc",
+      "mode": "aspect-near-tail-v1",
+      "report": "depth-motion-vlc.json",
+      "runID": "3d7f6fb1-3de3-41d8-8519-87b0eb9a779a",
+      "checks": 17,
+      "submittedFPS": 29.89243185903569,
+      "highReliefFPS": 29.745365145318818,
+      "gpuMeanMS": 11.982924191212675,
+      "gpuP95MS": 15.580541657982394,
+      "inferenceMeanMS": 39.210785554605536,
+      "inferenceP95MS": 44.176291674375534,
+      "submissionIntervalP95MS": 38.3245833509136,
+      "submissionMaximumIntervalMS": 86.888291669311
+    }
+  ],
+  "wearerFeedback": {
+    "date": "2026-11-02",
+    "depthAndProportions": "新版层次更自然，人物比例正常",
+    "playbackAndPausedSwitch": "两条路径都正常，暂停切换也稳定",
+    "scope": "Subjective comparison of the viewed scenes and settings; no ground-truth depth error measurement or endurance validation."
+  },
+  "followupFeedback": {
+    "date": "2026-11-02",
+    "comparison": "两种模式都有，程度接近",
+    "symptom": "画面中央整片区域像凹进去",
+    "fixValidation": "2026-11-04 native/VLC revised-path short probes passed; wearer: partial concavity improvement, still obvious; proportions/edges/playback/audio normal and crop acceptable. Scene identification requested."
+  }
+}

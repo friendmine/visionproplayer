@@ -1,0 +1,20 @@
+{
+  "maximumModelInputShapeRatioError": 0,
+  "maximumRestoredDepthError": 0.0002474188804626465,
+  "passed": true,
+  "preservedNearTailSeparation": 0.03662109375,
+  "scope": "Preprocessing geometry, padding, monotonic near-tail and projection coverage; not measured human depth accuracy or headset performance",
+  "date": "2026-11-02",
+  "algorithm": "aspect-near-tail-v1",
+  "baseline": "0.6.4ok",
+  "physicalDeviceStatus": "Original four short probes passed; subsequent wearer report of central concavity reopens acceptance. Revised projection pending validation.",
+  "sourceSHA256": {
+    "VisionProPlayer/Rendering/DepthInferenceGeometry.swift": "a0f8a56e1cb5ab552c2057999f8bf4ef51773d3531c294bcace283b117383b18",
+    "VisionProPlayer/Rendering/DepthSubjectPreparer.swift": "14ac7929e798b1a6972843ab986f4e2fd13bdf90a76c1411f7decfa084b1cf5d",
+    "VisionProPlayer/Rendering/DepthSubjects.metal": "832adf047521224e98240f3ca0f0b463f7bc07682080fc969e74225159e36ed3",
+    "VisionProPlayer/Rendering/DepthEstimator.swift": "1e4d0da97af38933ac870ba6111e580ae54c88ebcdb2ce70f479060a9ed0bae7",
+    "VisionProPlayer/Rendering/StereoRenderer.swift": "ac2cc60c8b2c025dec858f26a724ad56c0b8a79589c12c97ccae537242ef5440",
+    "VisionProPlayer/Playback/DepthSmokeTest.swift": "53bec8c3d3714b8587e46710ee0e13d2b8233a33729112c31c992755b7c60103",
+    "Scripts/test_depth_subjects.swift": "30bf74f18f11dbb2a813eabd0da4d45175cb3f9c12475be2a591b7bfd74315ff"
+  }
+}

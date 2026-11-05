@@ -37,6 +37,7 @@ final class StereoRenderer {
     private var motionDepthPipeline: MTLComputePipelineState?
     private var motionAligner: DepthMotionAligner?
     private var edgeRefiner: DepthEdgeRefiner?
+    private var subjectPreparer: DepthSubjectPreparer?
     private var depthGuideConverters: [VideoColorConverter] = []
     private var depthGuides: [MTLTexture?] = [nil, nil]
     private var currentGuideConverter: VideoColorConverter?
@@ -62,6 +63,7 @@ final class StereoRenderer {
             reprojector = try StereoReprojector(device: device, library: library)
             motionAligner = try DepthMotionAligner(device: device, library: library)
             edgeRefiner = try DepthEdgeRefiner(device: device, library: library)
+            subjectPreparer = try DepthSubjectPreparer(device: device, library: library)
             if let filter = library.makeFunction(name: "stabilizeMotionDepth") {
                 motionDepthPipeline = try await device.makeComputePipelineState(function: filter)
             }
@@ -122,7 +124,7 @@ final class StereoRenderer {
     }
 
     /// Returns false when a previous GPU frame is still in flight; caller drops rather than queues frames.
-    func render(_ buffer: CVPixelBuffer, swapped: Bool, layout: StereoLayout = .flat) throws -> Bool {
+    func render(_ buffer: CVPixelBuffer, swapped: Bool, layout: StereoLayout = .flat, coverageScale: Float = 1) throws -> Bool {
         guard !inFlight, let context = ciContext, let commandQueue else { return false }
         let packedWidth = CVPixelBufferGetWidth(buffer)
         let sourceHeight = CVPixelBufferGetHeight(buffer)
@@ -141,8 +143,13 @@ final class StereoRenderer {
         guard let leftSurface, let rightSurface, let commands = commandQueue.makeCommandBuffer() else { return false }
         let left = leftSurface.replace(using: commands)
         let right = rightSurface.replace(using: commands)
-        let image = CIImage(cvPixelBuffer: buffer).oriented(.downMirrored)
+        var image = CIImage(cvPixelBuffer: buffer).oriented(.downMirrored)
             .transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+        if !layout.isStereo && coverageScale > 1 {
+            let zoom = CGFloat(coverageScale)
+            image = image.transformed(by: CGAffineTransform(a: zoom, b: 0, c: 0, d: zoom,
+                tx: CGFloat(width) * (1 - zoom) / 2, ty: CGFloat(height) * (1 - zoom) / 2))
+        }
         let leftImage = image.cropped(to: regions.left)
         let rightImage = image.cropped(to: regions.right)
             .transformed(by: CGAffineTransform(translationX: -regions.right.minX, y: -regions.right.minY))
@@ -249,10 +256,17 @@ final class StereoRenderer {
                 depthGuides[nextDepthIndex] = guide
                 filter = motionDepthPipeline
             }
+            var inputDepth = raw.0
+            var normalization = SIMD2<Float>(depth.lower, 1 / (depth.upper - depth.lower))
+            if depth.subjectAccuracy {
+                guard let subjectPreparer else { throw RenderError.unavailable }
+                inputDepth = try subjectPreparer.encode(raw: raw.0, crop: depth.contentRegion, lower: depth.lower, upper: depth.upper, commands: commands)
+                normalization = SIMD2(0, 1)
+            }
             guard let encoder = commands.makeComputeCommandEncoder() else { throw RenderError.unavailable }
-            var params = SIMD4<Float>(depth.lower, 1 / (depth.upper - depth.lower), (!depthHistoryValid || depth.resetHistory) ? 1 : 0, 0)
+            var params = SIMD4<Float>(normalization.x, normalization.y, (!depthHistoryValid || depth.resetHistory) ? 1 : 0, 0)
             encoder.setComputePipelineState(filter)
-            encoder.setTexture(raw.0, index: 0); encoder.setTexture(previous, index: 1); encoder.setTexture(smooth, index: 2)
+            encoder.setTexture(inputDepth, index: 0); encoder.setTexture(previous, index: 1); encoder.setTexture(smooth, index: 2)
             encoder.setBytes(&params, length: MemoryLayout<SIMD4<Float>>.stride, index: 0)
             encoder.dispatchThreads(MTLSize(width: dw, height: dh, depth: 1), threadsPerThreadgroup: MTLSize(width: 16, height: 8, depth: 1))
             encoder.endEncoding()
@@ -275,7 +289,7 @@ final class StereoRenderer {
             guard let edgeRefiner else { throw RenderError.unavailable }
             displayedDepth = try edgeRefiner.encode(color: color, depth: displayedDepth, hasConfidence: alignMotion, commands: commands)
         }
-        try reprojector.encode(color: color, depth: displayedDepth, parameters: warpParams, protectProportions: protectProportions, sourceIsLinear: true, disparityGain: disparityGain,
+        try reprojector.encode(color: color, depth: displayedDepth, parameters: warpParams, protectProportions: protectProportions, sourceIsLinear: true, disparityGain: disparityGain, preserveDepthPlanes: depth.subjectAccuracy,
                                left: left, right: right, commands: commands)
         try generateDisplayMipmaps(left, right, using: commands)
         depthIndex = nextDepthIndex; depthHistoryValid = true; processedDepthBuffer = depth.buffer; inFlight = true
@@ -305,8 +319,8 @@ final class StereoRenderer {
                         }
                         let arguments = ProcessInfo.processInfo.arguments
                         let runID = arguments.firstIndex(of: "--smoke-run-id").flatMap { arguments.indices.contains($0 + 1) ? arguments[$0 + 1] : nil } ?? "manual"
-                        let metadata: [String: Any] = ["runID": runID, "mapping": "anchored-relief-v2", "projectionSampling": "proportion-protected-forward-v1", "proportionProtection": protectProportions,
-                            "strength": capturedParameters.x, "popOut": capturedParameters.y, "disparityGain": disparityGain, "motionAlignment": alignMotion, "edgeRefinement": refineEdges,
+                        let metadata: [String: Any] = ["runID": runID, "mapping": depth.subjectAccuracy ? "planar-coverage-v1" : "anchored-relief-v2", "projectionSampling": "proportion-protected-forward-v1", "proportionProtection": protectProportions,
+                            "strength": capturedParameters.x, "popOut": capturedParameters.y, "disparityGain": disparityGain, "motionAlignment": alignMotion, "edgeRefinement": refineEdges, "subjectAccuracy": depth.subjectAccuracy, "depthContentRegion": [depth.contentRegion.x, depth.contentRegion.y, depth.contentRegion.z, depth.contentRegion.w],
                             "frontLimit": capturedParameters.z, "rearLimit": capturedParameters.w,
                             "width": width, "height": height, "displayMipLevels": left.mipmapLevelCount, "timestamp": ISO8601DateFormatter().string(from: Date())]
                         try JSONSerialization.data(withJSONObject: metadata, options: [.prettyPrinted, .sortedKeys]).write(to: manifestURL, options: .atomic)
@@ -362,6 +376,10 @@ struct StereoPlayerView: View {
                             content.add(controls)
                         }
                         if let captions = attachments.entity(for: "captions") { content.add(captions) }
+                        if let card = attachments.entity(for: "seek-preview") {
+                            CinemaControlPlacement.placePreview(card, model: model)
+                            content.add(card)
+                        }
                         ready = true
                     } catch {
                         if !Task.isCancelled, model.request?.id == request.id { model.rendererError = error.localizedDescription }
@@ -370,16 +388,17 @@ struct StereoPlayerView: View {
                     positionCinema()
                     if let controls = cinemaControls { CinemaControlPlacement.place(controls, model: model, aspect: aspect) }
                     content.entities.first(where: { $0.name == "CinemaBackground" })?.isEnabled = model.library.darkCinema
+                    if let card = attachments.entity(for: "seek-preview") { CinemaControlPlacement.placePreview(card, model: model) }
                     if let captions = attachments.entity(for: "captions") {
-                        captions.position = [0, model.library.screenHeight - model.library.screenWidth / aspect * 0.36, -model.library.screenDistance + 0.03]
-                        captions.scale = [1.5, 1.5, 1.5]
+                        CinemaControlPlacement.placeCaptions(captions, model: model, aspect: aspect)
                     }
                     try? renderer.bindEyes(swapped: model.swapEyes)
                     renderer.setEyeCheck(model.eyeCheck)
                 } attachments: {
+                    Attachment(id: "seek-preview") { SeekPreviewCard(preview: model.seekPreview) }
                     Attachment(id: "controls") { CinemaControls(model: model) }
                     Attachment(id: "captions") {
-                        CaptionOverlay(text: model.subtitleText).frame(width: 800).opacity(model.subtitleText.isEmpty ? 0 : 1)
+                        CaptionOverlay(model: model).frame(width: 800).opacity(model.subtitleText.isEmpty ? 0 : 1)
                     }
                 }
             } else {
@@ -444,6 +463,7 @@ struct StereoPlayerView: View {
             var lastProportionProtection: Bool?
             var lastMotionAlignment: Bool?
             var lastEdgeRefinement: Bool?
+            var lastSubjectAccuracy: Bool?
             var lastDisparityLimits = SIMD2<Float>(repeating: -1)
             var lastRevision = model.depthRevision
             var presentation = DepthPresentationEnvelope()
@@ -462,14 +482,17 @@ struct StereoPlayerView: View {
                     || (abs(disparityLimits.x - lastDisparityLimits.x) > 0.00001 || abs(disparityLimits.y - lastDisparityLimits.y) > 0.00001))
                 let protectionChanged = request.converts2D && model.depthProportionProtection != lastProportionProtection
                 let alignmentChanged = request.converts2D && (model.depthMotionAlignment != lastMotionAlignment || model.depthEdgeRefinement != lastEdgeRefinement)
+                let accuracyChanged = request.converts2D && model.depthSubjectAccuracy != lastSubjectAccuracy
                 let depthChangedWhilePaused = request.converts2D && !model.isPlaying && stream.version != lastDepthVersion
                 if let failure = stream.error { model.rendererError = failure; return }
-                if let buffer = newBuffer ?? ((strengthChanged || protectionChanged || alignmentChanged || depthChangedWhilePaused) ? lastBuffer : nil) {
+                if let buffer = newBuffer ?? ((strengthChanged || protectionChanged || alignmentChanged || accuracyChanged || depthChangedWhilePaused) ? lastBuffer : nil) {
                     do {
                         let width = CVPixelBufferGetWidth(buffer), height = CVPixelBufferGetHeight(buffer)
                         var rendered = false
                         if request.converts2D && model.depthStrength > 0 {
-                            if newBuffer != nil || strengthChanged { stream.offer(buffer, revision: model.depthRevision) }
+                            if newBuffer != nil || strengthChanged || accuracyChanged || (depthChangedWhilePaused && stream.latest == nil) {
+                                stream.offer(buffer, revision: model.depthRevision, subjectAccuracy: model.depthSubjectAccuracy)
+                            }
                             let now = ProcessInfo.processInfo.systemUptime
                             let gain = presentation.update(now: now, capturedAt: stream.latest?.capturedAt,
                                                            generation: stream.generation, playing: model.isPlaying)
@@ -480,7 +503,9 @@ struct StereoPlayerView: View {
                                     model.recordConvertedFrame(age: (ProcessInfo.processInfo.systemUptime - latest.capturedAt) * 1000)
                                 }
                             } else {
-                                rendered = try renderer.render(buffer, swapped: model.swapEyes, layout: .flat)
+                                let coverage = model.depthSubjectAccuracy ? StereoReprojector.coverageScale(parameters:
+                                    SIMD4(model.depthStrength, model.depthPopOut, disparityLimits.x, disparityLimits.y)) : 1
+                                rendered = try renderer.render(buffer, swapped: model.swapEyes, layout: .flat, coverageScale: coverage)
                                 model.depthStatus = "正在更新深度 · 暂用平面画面"
                             }
                             if rendered, newBuffer != nil {
@@ -499,6 +524,7 @@ struct StereoPlayerView: View {
                             lastProportionProtection = model.depthProportionProtection
                             lastMotionAlignment = model.depthMotionAlignment
                             lastEdgeRefinement = model.depthEdgeRefinement
+                            lastSubjectAccuracy = model.depthSubjectAccuracy
                             lastDisparityLimits = disparityLimits
                             aspect = request.layout.displayAspect(width: width, height: height)
                             let eye = request.layout.eyeRegions(width: width, height: height).left

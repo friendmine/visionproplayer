@@ -39,7 +39,18 @@ final class StereoReprojector {
         pipeline = try device.makeRenderPipelineState(descriptor: descriptor)
     }
 
-    func encode(color: MTLTexture, depth: MTLTexture, parameters: SIMD4<Float>, protectProportions: Bool = true, sourceIsLinear: Bool = false, disparityGain: Float = 1,
+    // Fixed by viewing settings, never by per-frame depth or confidence: cuts
+    // and stale-depth fallback must not make the image breathe in size.
+    static func coverageScale(parameters p: SIMD4<Float>) -> Float {
+        let strength = max(0, min(1, p.x)), pop = max(0, min(1, p.y))
+        let relief = strength * (2 - strength)
+        let t = max(0, min(1, strength / 0.25)), activation = t * t * (3 - 2 * t)
+        let near = min(0.012, p.z) * relief * (1 - pop) + p.z * activation * pop
+        let far = min(0.012, p.w) * relief
+        return 1 + max(near, far)
+    }
+
+    func encode(color: MTLTexture, depth: MTLTexture, parameters: SIMD4<Float>, protectProportions: Bool = true, sourceIsLinear: Bool = false, disparityGain: Float = 1, preserveDepthPlanes: Bool = false,
                 left: MTLTexture, right: MTLTexture, commands: MTLCommandBuffer) throws {
         if multisampleColor?.width != left.width || multisampleColor?.height != left.height {
             let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba16Float,
@@ -74,7 +85,7 @@ final class StereoReprojector {
         // Together they bound arbitrary-direction local stretch to about 10%.
         // Preserve the validated 0.5OK mapping when the switch is off.
         var protection = SIMD4<Float>(protectProportions ? 0.07 : 0.45,
-            0.07 * Float(left.height) / Float(left.width), protectProportions ? 1 : 0, 0)
+            0.07 * Float(left.height) / Float(left.width), protectProportions ? 1 : 0, preserveDepthPlanes ? 1 : 0)
         for stage in [forward, regularize] {
             guard let compute = commands.makeComputeCommandEncoder() else { throw Failure.unavailable }
             compute.label = "AI bounded disparity field"
@@ -114,6 +125,8 @@ final class StereoReprojector {
             encoder.setCullMode(.none)
             var grid = SIMD4<Float>(Float(columns), Float(rows), eye, max(0, min(1, disparityGain)))
             encoder.setVertexBytes(&grid, length: MemoryLayout<SIMD4<Float>>.stride, index: 1)
+            var coverageScale: Float = preserveDepthPlanes ? Self.coverageScale(parameters: parameters) : 1
+            encoder.setVertexBytes(&coverageScale, length: MemoryLayout<Float>.stride, index: 2)
             encoder.setVertexTexture(projectedField, index: 0)
             encoder.setFragmentTexture(color, index: 0)
             var linear: UInt32 = sourceIsLinear ? 1 : 0

@@ -8,6 +8,7 @@ struct DepthInput: @unchecked Sendable {
     let buffer: CVPixelBuffer
     let requestID: UUID
     let revision: Int
+    var subjectAccuracy: Bool = false
 }
 struct EstimatedDepth: @unchecked Sendable {
     let buffer: CVPixelBuffer
@@ -18,6 +19,8 @@ struct EstimatedDepth: @unchecked Sendable {
     let upper: Float
     let resetHistory: Bool
     let milliseconds: Double
+    var contentRegion = SIMD4<Float>(0, 0, 1, 1)
+    var subjectAccuracy: Bool = false
 }
 
 actor DepthEstimator {
@@ -27,6 +30,7 @@ actor DepthEstimator {
     private let colorSpace = CGColorSpace(name: CGColorSpace.sRGB)!
     private var previousID: UUID?
     private var previousRevision = -1
+    private var previousAccuracy = false
     private var lower: Float = 0
     private var upper: Float = 1
 
@@ -56,26 +60,28 @@ actor DepthEstimator {
         let began = ProcessInfo.processInfo.systemUptime
         let width = CVPixelBufferGetWidth(inputBuffer), height = CVPixelBufferGetHeight(inputBuffer)
         let image = CIImage(cvPixelBuffer: input.buffer)
-        // Match Apple's fixed-size model input. The same normalized UV mapping
-        // is used to restore the depth to the original video's aspect ratio.
-        let scaled = image.transformed(by: CGAffineTransform(scaleX: CGFloat(width) / image.extent.width,
-                                                             y: CGFloat(height) / image.extent.height))
+        let geometry = DepthInferenceGeometry(source: image.extent.size, canvas: CGSize(width: width, height: height))
+        let region = input.subjectAccuracy ? geometry.normalizedContent : SIMD4<Float>(0, 0, 1, 1)
+        let scaled = input.subjectAccuracy ? geometry.image(image)
+            : image.transformed(by: CGAffineTransform(scaleX: CGFloat(width) / image.extent.width,
+                                                     y: CGFloat(height) / image.extent.height))
         context.render(scaled, to: inputBuffer, bounds: CGRect(x: 0, y: 0, width: width, height: height), colorSpace: colorSpace)
         // The stream checks every offered video frame, including those skipped
         // by inference. Do not detect cuts again between sparse model inputs:
         // their larger motion used to trigger additional false resets.
-        let reset = previousID != input.requestID || previousRevision != input.revision
+        let reset = previousID != input.requestID || previousRevision != input.revision || previousAccuracy != input.subjectAccuracy
         let prediction = try model.prediction(from: MLDictionaryFeatureProvider(dictionary: ["image": MLFeatureValue(pixelBuffer: inputBuffer)]))
         try Task.checkCancellation()
         guard let depth = prediction.featureValue(for: "depth")?.imageBufferValue else { throw DepthError.invalidOutput }
-        let values = try Self.depthSamples(depth).filter { $0.isFinite }.sorted()
+        let values = try Self.depthSamples(depth, region: region).filter { $0.isFinite }.sorted()
         guard values.count > 20 else { throw DepthError.invalidOutput }
         let low = values[values.count / 20], high = max(low + 0.0001, values[values.count * 19 / 20])
         lower = reset ? low : lower * 0.85 + low * 0.15
         upper = reset ? high : upper * 0.85 + high * 0.15
-        previousID = input.requestID; previousRevision = input.revision
+        previousID = input.requestID; previousRevision = input.revision; previousAccuracy = input.subjectAccuracy
         return EstimatedDepth(buffer: depth, source: input.buffer, lower: lower, upper: max(lower + 0.0001, upper),
-            resetHistory: reset, milliseconds: (ProcessInfo.processInfo.systemUptime - began) * 1000)
+            resetHistory: reset, milliseconds: (ProcessInfo.processInfo.systemUptime - began) * 1000,
+            contentRegion: region, subjectAccuracy: input.subjectAccuracy)
     }
 
     static func lumaSamples(_ buffer: CVPixelBuffer) -> [Float] {
@@ -101,7 +107,7 @@ actor DepthEstimator {
         return result
     }
 
-    private static func depthSamples(_ buffer: CVPixelBuffer) throws -> [Float] {
+    static func depthSamples(_ buffer: CVPixelBuffer, region: SIMD4<Float> = SIMD4(0, 0, 1, 1)) throws -> [Float] {
         let format = CVPixelBufferGetPixelFormatType(buffer)
         guard format == kCVPixelFormatType_OneComponent16Half || format == kCVPixelFormatType_OneComponent32Float else {
             throw DepthError.invalidOutput
@@ -110,9 +116,12 @@ actor DepthEstimator {
         defer { CVPixelBufferUnlockBaseAddress(buffer, .readOnly) }
         guard let base = CVPixelBufferGetBaseAddress(buffer) else { throw DepthError.invalidOutput }
         var result: [Float] = []
-        for y in stride(from: 0, to: CVPixelBufferGetHeight(buffer), by: 12) {
+        let w = CVPixelBufferGetWidth(buffer), h = CVPixelBufferGetHeight(buffer)
+        let x0 = max(0, Int(ceil(Float(w) * region.x))), x1 = min(w, Int(floor(Float(w) * (region.x + region.z))))
+        let y0 = max(0, Int(ceil(Float(h) * region.y))), y1 = min(h, Int(floor(Float(h) * (region.y + region.w))))
+        for y in stride(from: y0, to: y1, by: 12) {
             let row = base.advanced(by: y * CVPixelBufferGetBytesPerRow(buffer))
-            for x in stride(from: 0, to: CVPixelBufferGetWidth(buffer), by: 12) {
+            for x in stride(from: x0, to: x1, by: 12) {
                 result.append(format == kCVPixelFormatType_OneComponent32Float
                     ? row.assumingMemoryBound(to: Float.self)[x]
                     : Float(Float16(bitPattern: row.assumingMemoryBound(to: UInt16.self)[x])))
@@ -148,6 +157,7 @@ final class DepthStream {
     private var token = 0
     var generation: Int { token }
     private var revision = -1
+    private var subjectAccuracy = false
     private var signature: [Float] = []
     private(set) var latest: Result?
     private(set) var version = 0
@@ -159,8 +169,11 @@ final class DepthStream {
     func reset(revision: Int) {
         self.revision = revision; token += 1; latest = nil; signature = []; version += 1
     }
-    func offer(_ buffer: CVPixelBuffer, revision: Int) {
-        if self.revision != revision { reset(revision: revision) }
+    func offer(_ buffer: CVPixelBuffer, revision: Int, subjectAccuracy: Bool = false) {
+        if self.revision != revision || self.subjectAccuracy != subjectAccuracy {
+            self.subjectAccuracy = subjectAccuracy
+            reset(revision: revision)
+        }
         let newSignature = DepthEstimator.lumaSamples(buffer)
         if !signature.isEmpty, DepthSceneChange.detected(previous: signature, current: newSignature) {
             token += 1; latest = nil; version += 1
@@ -170,13 +183,13 @@ final class DepthStream {
         guard job == nil else { return }
         let submittedToken = token
         let capturedAt = ProcessInfo.processInfo.systemUptime
-        let input = DepthInput(buffer: buffer, requestID: requestID, revision: submittedToken)
+        let input = DepthInput(buffer: buffer, requestID: requestID, revision: submittedToken, subjectAccuracy: subjectAccuracy)
         job = Task { [weak self, estimator] in
             do {
                 let result = try await estimator.estimate(input)
                 guard let self else { return }
                 self.job = nil
-                guard !Task.isCancelled, self.token == submittedToken else { return }
+                guard !Task.isCancelled, self.token == submittedToken else { self.version += 1; return }
                 self.latest = Result(depth: result, capturedAt: capturedAt)
                 self.version += 1
                 self.onPrediction(result.milliseconds)

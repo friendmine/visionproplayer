@@ -3,6 +3,10 @@ import Observation
 import AVFoundation
 import UIKit
 
+enum CaptionSize: String {
+    case small, standard, large
+}
+
 struct FilmPreferences: Codable, Equatable {
     var layout: StereoLayout = .flat
     var converts2D = false
@@ -43,6 +47,12 @@ final class MediaLibrary {
     var screenWidth: Float = 3 { didSet { defaults.set(screenWidth, forKey: "screenWidth") } }
     var screenDistance: Float = 3 { didSet { defaults.set(screenDistance, forKey: "screenDistance") } }
     var screenHeight: Float = 1.5 { didSet { defaults.set(screenHeight, forKey: "screenHeight") } }
+    var externalCaptionSize: CaptionSize = .standard {
+        didSet { defaults.set(externalCaptionSize.rawValue, forKey: "externalCaptionSize") }
+    }
+    var externalCaptionAtTop = false {
+        didSet { defaults.set(externalCaptionAtTop, forKey: "externalCaptionAtTop") }
+    }
     var darkCinema = false { didSet { defaults.set(darkCinema, forKey: "darkCinema") } }
     private var persistenceAvailable = true
     private let root: URL
@@ -57,6 +67,8 @@ final class MediaLibrary {
         screenWidth = min(5, max(1.5, defaults.float(forKey: "screenWidth") == 0 ? 3 : defaults.float(forKey: "screenWidth")))
         screenDistance = min(6, max(2, defaults.float(forKey: "screenDistance") == 0 ? 3 : defaults.float(forKey: "screenDistance")))
         screenHeight = min(2.2, max(1, defaults.float(forKey: "screenHeight") == 0 ? 1.5 : defaults.float(forKey: "screenHeight")))
+        externalCaptionSize = defaults.string(forKey: "externalCaptionSize").flatMap(CaptionSize.init(rawValue:)) ?? .standard
+        externalCaptionAtTop = defaults.bool(forKey: "externalCaptionAtTop")
         darkCinema = defaults.bool(forKey: "darkCinema")
         do {
             try FileManager.default.createDirectory(at: self.root, withIntermediateDirectories: true)

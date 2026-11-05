@@ -1,0 +1,623 @@
+{
+  "checks" : [
+    {
+      "actualColor" : [
+        252,
+        0,
+        0
+      ],
+      "actualTime" : 1,
+      "aspect" : 1.3333333730697632,
+      "expectedColor" : [
+        255,
+        0,
+        0
+      ],
+      "name" : "native-flat-1.0-swap-false",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        0,
+        0,
+        252
+      ],
+      "actualTime" : 4,
+      "aspect" : 1.3333333730697632,
+      "expectedColor" : [
+        0,
+        0,
+        255
+      ],
+      "name" : "native-flat-4.0-swap-false",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        252,
+        0,
+        0
+      ],
+      "actualTime" : 1,
+      "aspect" : 0.66666668653488159,
+      "expectedColor" : [
+        255,
+        0,
+        0
+      ],
+      "name" : "native-fullSBS-1.0-swap-false",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        255,
+        142,
+        0
+      ],
+      "actualTime" : 1,
+      "aspect" : 0.66666668653488159,
+      "expectedColor" : [
+        0,
+        255,
+        0
+      ],
+      "name" : "native-fullSBS-1.0-swap-true",
+      "passed" : false
+    },
+    {
+      "actualColor" : [
+        0,
+        0,
+        252
+      ],
+      "actualTime" : 4,
+      "aspect" : 0.66666668653488159,
+      "expectedColor" : [
+        0,
+        0,
+        255
+      ],
+      "name" : "native-fullSBS-4.0-swap-false",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        252,
+        253,
+        253
+      ],
+      "actualTime" : 4,
+      "aspect" : 0.66666668653488159,
+      "expectedColor" : [
+        255,
+        255,
+        255
+      ],
+      "name" : "native-fullSBS-4.0-swap-true",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        252,
+        0,
+        0
+      ],
+      "actualTime" : 1,
+      "aspect" : 1.3333333730697632,
+      "expectedColor" : [
+        255,
+        0,
+        0
+      ],
+      "name" : "native-halfSBS-1.0-swap-false",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        255,
+        142,
+        0
+      ],
+      "actualTime" : 1,
+      "aspect" : 1.3333333730697632,
+      "expectedColor" : [
+        0,
+        255,
+        0
+      ],
+      "name" : "native-halfSBS-1.0-swap-true",
+      "passed" : false
+    },
+    {
+      "actualColor" : [
+        0,
+        0,
+        252
+      ],
+      "actualTime" : 4,
+      "aspect" : 1.3333333730697632,
+      "expectedColor" : [
+        0,
+        0,
+        255
+      ],
+      "name" : "native-halfSBS-4.0-swap-false",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        252,
+        253,
+        253
+      ],
+      "actualTime" : 4,
+      "aspect" : 1.3333333730697632,
+      "expectedColor" : [
+        255,
+        255,
+        255
+      ],
+      "name" : "native-halfSBS-4.0-swap-true",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        252,
+        0,
+        0
+      ],
+      "actualTime" : 1,
+      "aspect" : 2.6666667461395264,
+      "expectedColor" : [
+        255,
+        0,
+        0
+      ],
+      "name" : "native-fullOU-1.0-swap-false",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        0,
+        0,
+        252
+      ],
+      "actualTime" : 1,
+      "aspect" : 2.6666667461395264,
+      "expectedColor" : [
+        0,
+        0,
+        255
+      ],
+      "name" : "native-fullOU-1.0-swap-true",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        0,
+        0,
+        252
+      ],
+      "actualTime" : 4,
+      "aspect" : 2.6666667461395264,
+      "expectedColor" : [
+        0,
+        0,
+        255
+      ],
+      "name" : "native-fullOU-4.0-swap-false",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        252,
+        0,
+        0
+      ],
+      "actualTime" : 4,
+      "aspect" : 2.6666667461395264,
+      "expectedColor" : [
+        255,
+        0,
+        0
+      ],
+      "name" : "native-fullOU-4.0-swap-true",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        252,
+        0,
+        0
+      ],
+      "actualTime" : 1,
+      "aspect" : 1.3333333730697632,
+      "expectedColor" : [
+        255,
+        0,
+        0
+      ],
+      "name" : "native-halfOU-1.0-swap-false",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        0,
+        0,
+        252
+      ],
+      "actualTime" : 1,
+      "aspect" : 1.3333333730697632,
+      "expectedColor" : [
+        0,
+        0,
+        255
+      ],
+      "name" : "native-halfOU-1.0-swap-true",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        0,
+        0,
+        252
+      ],
+      "actualTime" : 4,
+      "aspect" : 1.3333333730697632,
+      "expectedColor" : [
+        0,
+        0,
+        255
+      ],
+      "name" : "native-halfOU-4.0-swap-false",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        252,
+        0,
+        0
+      ],
+      "actualTime" : 4,
+      "aspect" : 1.3333333730697632,
+      "expectedColor" : [
+        255,
+        0,
+        0
+      ],
+      "name" : "native-halfOU-4.0-swap-true",
+      "passed" : true
+    },
+    {
+      "elapsed" : 0.018939201999999999,
+      "name" : "native-preview-keeps-main-player-paused",
+      "passed" : true,
+      "playing" : false,
+      "position" : 0.018939201999999999,
+      "previewTime" : 5
+    },
+    {
+      "name" : "native-dismiss-rejects-late-frame",
+      "passed" : true
+    },
+    {
+      "elapsed" : 4.7999999999999998,
+      "name" : "native-release-seek-reaches-preview-time",
+      "passed" : true,
+      "target" : 4.8000000000000007
+    },
+    {
+      "actualColor" : [
+        229,
+        0,
+        1
+      ],
+      "actualTime" : 1.023001,
+      "aspect" : 1.3333333730697632,
+      "expectedColor" : [
+        255,
+        0,
+        0
+      ],
+      "name" : "vlc-flat-1.0-swap-false",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        0,
+        0,
+        240
+      ],
+      "actualTime" : 4.0230009999999998,
+      "aspect" : 1.3333333730697632,
+      "expectedColor" : [
+        0,
+        0,
+        255
+      ],
+      "name" : "vlc-flat-4.0-swap-false",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        229,
+        0,
+        1
+      ],
+      "actualTime" : 1.023001,
+      "aspect" : 0.66666668653488159,
+      "expectedColor" : [
+        255,
+        0,
+        0
+      ],
+      "name" : "vlc-fullSBS-1.0-swap-false",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        19,
+        255,
+        6
+      ],
+      "actualTime" : 1.023001,
+      "aspect" : 0.66666668653488159,
+      "expectedColor" : [
+        0,
+        255,
+        0
+      ],
+      "name" : "vlc-fullSBS-1.0-swap-true",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        0,
+        0,
+        240
+      ],
+      "actualTime" : 4.0230009999999998,
+      "aspect" : 0.66666668653488159,
+      "expectedColor" : [
+        0,
+        0,
+        255
+      ],
+      "name" : "vlc-fullSBS-4.0-swap-false",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        250,
+        254,
+        253
+      ],
+      "actualTime" : 4.0230009999999998,
+      "aspect" : 0.66666668653488159,
+      "expectedColor" : [
+        255,
+        255,
+        255
+      ],
+      "name" : "vlc-fullSBS-4.0-swap-true",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        229,
+        0,
+        1
+      ],
+      "actualTime" : 1.023001,
+      "aspect" : 1.3333333730697632,
+      "expectedColor" : [
+        255,
+        0,
+        0
+      ],
+      "name" : "vlc-halfSBS-1.0-swap-false",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        19,
+        255,
+        6
+      ],
+      "actualTime" : 1.023001,
+      "aspect" : 1.3333333730697632,
+      "expectedColor" : [
+        0,
+        255,
+        0
+      ],
+      "name" : "vlc-halfSBS-1.0-swap-true",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        0,
+        0,
+        240
+      ],
+      "actualTime" : 4.0230009999999998,
+      "aspect" : 1.3333333730697632,
+      "expectedColor" : [
+        0,
+        0,
+        255
+      ],
+      "name" : "vlc-halfSBS-4.0-swap-false",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        250,
+        254,
+        253
+      ],
+      "actualTime" : 4.0230009999999998,
+      "aspect" : 1.3333333730697632,
+      "expectedColor" : [
+        255,
+        255,
+        255
+      ],
+      "name" : "vlc-halfSBS-4.0-swap-true",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        229,
+        0,
+        1
+      ],
+      "actualTime" : 1.023001,
+      "aspect" : 2.6666667461395264,
+      "expectedColor" : [
+        255,
+        0,
+        0
+      ],
+      "name" : "vlc-fullOU-1.0-swap-false",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        0,
+        0,
+        240
+      ],
+      "actualTime" : 1.023001,
+      "aspect" : 2.6666667461395264,
+      "expectedColor" : [
+        0,
+        0,
+        255
+      ],
+      "name" : "vlc-fullOU-1.0-swap-true",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        0,
+        0,
+        240
+      ],
+      "actualTime" : 4.0230009999999998,
+      "aspect" : 2.6666667461395264,
+      "expectedColor" : [
+        0,
+        0,
+        255
+      ],
+      "name" : "vlc-fullOU-4.0-swap-false",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        229,
+        0,
+        1
+      ],
+      "actualTime" : 4.0230009999999998,
+      "aspect" : 2.6666667461395264,
+      "expectedColor" : [
+        255,
+        0,
+        0
+      ],
+      "name" : "vlc-fullOU-4.0-swap-true",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        229,
+        0,
+        1
+      ],
+      "actualTime" : 1.023001,
+      "aspect" : 1.3333333730697632,
+      "expectedColor" : [
+        255,
+        0,
+        0
+      ],
+      "name" : "vlc-halfOU-1.0-swap-false",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        0,
+        0,
+        240
+      ],
+      "actualTime" : 1.023001,
+      "aspect" : 1.3333333730697632,
+      "expectedColor" : [
+        0,
+        0,
+        255
+      ],
+      "name" : "vlc-halfOU-1.0-swap-true",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        0,
+        0,
+        240
+      ],
+      "actualTime" : 4.0230009999999998,
+      "aspect" : 1.3333333730697632,
+      "expectedColor" : [
+        0,
+        0,
+        255
+      ],
+      "name" : "vlc-halfOU-4.0-swap-false",
+      "passed" : true
+    },
+    {
+      "actualColor" : [
+        229,
+        0,
+        1
+      ],
+      "actualTime" : 4.0230009999999998,
+      "aspect" : 1.3333333730697632,
+      "expectedColor" : [
+        255,
+        0,
+        0
+      ],
+      "name" : "vlc-halfOU-4.0-swap-true",
+      "passed" : true
+    },
+    {
+      "elapsed" : 0.023001000000000001,
+      "name" : "vlc-preview-keeps-main-player-paused",
+      "passed" : true,
+      "playing" : false,
+      "position" : 0.023001000000000001,
+      "previewTime" : 5.0230009999999998
+    },
+    {
+      "name" : "vlc-dismiss-rejects-late-frame",
+      "passed" : true
+    },
+    {
+      "elapsed" : 4.723001,
+      "name" : "vlc-release-seek-reaches-preview-time",
+      "passed" : true,
+      "target" : 4.8184000000000005
+    }
+  ],
+  "environment" : "simulator",
+  "passed" : false,
+  "runID" : "seek-preview-capture-20261105",
+  "sample" : "seek-preview",
+  "scope" : "Real native\/VLC independent frame extraction, known colors at two times, all packed layouts\/eye order, rapid targets, dismissal and paused-player isolation. UI placement and gesture comfort require wearer confirmation.",
+  "systemVersion" : "Version 27.0 (Build 24M362)",
+  "timestamp" : "2026-11-05T03:35:49Z"
+}

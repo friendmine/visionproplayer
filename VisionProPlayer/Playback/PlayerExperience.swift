@@ -2,6 +2,7 @@ import AVFoundation
 import Foundation
 
 extension PlayerModel {
+    var captionAtTop: Bool { selectedSubtitle == "external" && library.externalCaptionAtTop }
     var currentFilm: LibraryFilm? { request?.libraryID.flatMap { library.film($0) } }
     var movieTitle: String { currentFilm?.title ?? request?.url.deletingPathExtension().lastPathComponent ?? "正在打开影片" }
     var pictureTitle: String {
@@ -55,7 +56,7 @@ extension PlayerModel {
         eyeCheck = false
         open(current.url, layout: layout, engine: current.allowsNativeFallback ? .automatic : current.engine,
              convert2D: conversion, recovery: (seconds.isFinite ? seconds : 0, playing),
-             libraryID: current.libraryID, cinema: cinema, resolvedEngine: current.engine)
+             libraryID: current.libraryID, cinema: cinema, resolvedEngine: current.engine, restoringTracks: preferredTracks)
     }
     func setLayout(_ layout: StereoLayout) {
         guard let current = request, current.layout != layout else { return }
@@ -96,6 +97,7 @@ extension PlayerModel {
             // text subtitles are rendered once on the display plane for both eyes.
             if request.usesTextureOutput || selectedSubtitle == "external" { vlc.selectSubtitleTrack("") }
             else if let chosen = subs.first(where: { $0["selected"] as? Bool == true }) { selectedSubtitle = chosen["id"] as? String ?? "off" }
+            restoreTrackChoices()
             return
         }
         guard trackTask == nil, let item = nativePlayer?.currentItem else { return }
@@ -112,13 +114,27 @@ extension PlayerModel {
                 if let audio, let chosen = item.currentMediaSelection.selectedMediaOption(in: audio), let index = audio.options.firstIndex(of: chosen) { self.selectedAudio = String(index) }
                 if self.selectedSubtitle == "external", let subtitles { item.select(nil, in: subtitles) }
                 else if let subtitles, let chosen = item.currentMediaSelection.selectedMediaOption(in: subtitles), let index = subtitles.options.firstIndex(of: chosen) { self.selectedSubtitle = String(index) }
+                self.restoreTrackChoices()
             } catch { /* Media without selection groups can still play normally. */ }
+        }
+    }
+    private func restoreTrackChoices() {
+        if let audio = preferredTracks.audio, selectedAudio != audio {
+            selectAudio(audio)
+        }
+        guard let subtitle = preferredTracks.subtitle, selectedSubtitle != subtitle else { return }
+        if subtitle == "off" || (subtitle == "external" && !subtitleCues.isEmpty) {
+            selectSubtitle(subtitle)
+        } else if subtitleTracks.contains(where: { $0.id == subtitle }),
+                  !(request?.engine == .vlc && request?.usesTextureOutput == true) {
+            selectSubtitle(subtitle)
         }
     }
     func selectAudio(_ id: String) {
         guard audioTracks.contains(where: { $0.id == id }) else { return }
         if let group = audioGroup, let index = Int(id), group.options.indices.contains(index) { nativePlayer?.currentItem?.select(group.options[index], in: group) }
         else { vlc?.selectAudioTrack(id) }
+        preferredTracks.audio = id
         selectedAudio = id
     }
     func selectSubtitle(_ id: String) {
@@ -130,6 +146,7 @@ extension PlayerModel {
             nativePlayer?.currentItem?.select(group.options[index], in: group)
         } else if request?.usesTextureOutput == false { vlc?.selectSubtitleTrack(id) }
         else { return }
+        preferredTracks.subtitle = id
         selectedSubtitle = id
     }
     func importSubtitle(_ url: URL) {

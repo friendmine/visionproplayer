@@ -12,7 +12,9 @@ extension PlayerModel {
         let testedAlignment = !ProcessInfo.processInfo.arguments.contains("--depth-motion-baseline")
         let testedEdges = testedAlignment && !ProcessInfo.processInfo.arguments.contains("--depth-reference-063")
         depthMotionAlignment = testedAlignment
+        let testedSubjects = testedEdges && !ProcessInfo.processInfo.arguments.contains("--depth-reference-064")
         depthEdgeRefinement = testedEdges
+        depthSubjectAccuracy = testedSubjects
         do {
             depthPopOut = 0.6
             depthStrength = 0.35
@@ -172,6 +174,21 @@ extension PlayerModel {
                     "depthUpdates": depthPredictions - predictions, "settledFrameUpdates": renderedFrames - settled])
             }
             checks.append(["name": "paused-edge-comparison-same-frame", "passed": edgeRedraws, "samples": edgeSamples])
+            var subjectRedraws = true
+            var subjectSamples: [[String: Any]] = []
+            for enabled in [!testedSubjects, testedSubjects] {
+                let before = renderedFrames, predictions = depthPredictions
+                depthSubjectAccuracy = enabled
+                try await waitUntil(seconds: 5) { depthPredictions > predictions && renderedFrames > before }
+                try await pause(.seconds(1))
+                let settled = renderedFrames, settledDepth = depthPredictions
+                try await pause(.milliseconds(600))
+                subjectRedraws = subjectRedraws && renderedFrames > before && depthPredictions > predictions
+                    && renderedFrames == settled && depthPredictions == settledDepth && !isPlaying && abs(elapsed - paused) < 0.2
+                subjectSamples.append(["enabled": enabled, "frameUpdates": renderedFrames - before,
+                    "depthUpdates": depthPredictions - predictions, "settledFrameUpdates": renderedFrames - settled])
+            }
+            checks.append(["name": "paused-subject-comparison-reinfers-and-settles", "passed": subjectRedraws, "samples": subjectSamples])
             let beforePausedSeek = renderedFrames
             seek(to: 0.2)
             try await waitUntil { renderedFrames > beforePausedSeek && abs(elapsed - 6) < 0.6 }
@@ -240,9 +257,10 @@ extension PlayerModel {
             try await waitUntil { depthPredictions > 5 }
             checks.append(["name": "reenable-conversion", "passed": request?.converts2D == true && depthPredictions > 5 && rendererError == nil])
             let report = smokeMetadata().merging([
-                "sample": name, "engine": engine.rawValue, "depthMapping": "anchored-relief-v2", "projectionSampling": "proportion-protected-forward-v1", "proportionProtection": depthProportionProtection, "checks": checks, "popOut": depthPopOut, "screenWidthMeters": depthScreenWidthMeters,
+                "sample": name, "engine": engine.rawValue, "depthMapping": testedSubjects ? "planar-coverage-v1" : "anchored-relief-v2", "projectionSampling": "proportion-protected-forward-v1", "proportionProtection": depthProportionProtection, "checks": checks, "popOut": depthPopOut, "screenWidthMeters": depthScreenWidthMeters,
                 "benchmarkSeconds": seconds, "submittedFPS": fps,
                 "temporalPolicy": "motion-aware-cuts-continuous-history-v1",
+                "subjectAccuracy": testedSubjects, "subjectAlgorithm": testedSubjects ? "aspect-near-tail-planar-v2" : "baseline-0.6.4",
                 "edgeRefinement": testedEdges, "edgeAlgorithm": testedEdges ? "color-guided-depth-v1" : "baseline-0.6.3",
                 "motionAlignment": testedAlignment, "motionAlgorithm": testedAlignment ? "bidirectional-patch-v1" : "baseline-0.6.2",
                 "submissionIntervalP95MS": percentile(intervals, 0.95), "submissionMaximumIntervalMS": intervals.last ?? 0,
@@ -264,6 +282,7 @@ extension PlayerModel {
         } catch {
             writeReport(smokeMetadata().merging(["sample": name, "passed": false, "cancelled": true,
                 "error": "测试影片已切换或关闭，检查已停止，不操作后续影片", "checks": checks,
+                "subjectAccuracy": testedSubjects, "subjectAlgorithm": testedSubjects ? "aspect-near-tail-planar-v2" : "baseline-0.6.4",
                 "edgeRefinement": testedEdges, "motionAlignment": testedAlignment]) { _, new in new })
         }
     }

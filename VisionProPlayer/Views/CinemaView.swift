@@ -8,6 +8,20 @@ enum CinemaControlPlacement {
         return [0, bottom - 0.14 - controlsTop, -distance + 0.12]
     }
 
+    @MainActor static func placePreview(_ card: Entity, model: PlayerModel) {
+        card.isEnabled = model.seekPreview.activeID != nil && model.seekPreview.activeID == model.request?.id
+        card.position = [0, model.library.screenHeight, -model.library.screenDistance + 0.08]
+        let width = card.visualBounds(relativeTo: card).extents.x
+        if width > 0 { card.scale = SIMD3(repeating: model.library.screenWidth * 0.25 / width) }
+    }
+
+    @MainActor static func placeCaptions(_ captions: Entity, model: PlayerModel, aspect: Float) {
+        let offset = model.library.screenWidth / max(0.1, aspect) * 0.36
+        captions.position = [0, model.library.screenHeight + (model.captionAtTop ? offset : -offset),
+                             -model.library.screenDistance + 0.03]
+        captions.scale = SIMD3(repeating: 1.5)
+    }
+
     @MainActor static func place(_ controls: Entity, model: PlayerModel, aspect: Float) {
         controls.scale = SIMD3(repeating: 1.2)
         let bounds = controls.visualBounds(relativeTo: controls)
@@ -74,14 +88,36 @@ struct CinemaControls: View {
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     @Environment(\.openWindow) private var openWindow
     @State private var adjust = false
+    @State private var tracks = false
     @State private var depthEffects = false
-    @State private var seek = 0.0
-    @State private var dragging = false
     var body: some View {
+        Group {
+            if tracks {
+                TrackSettings(model: model, done: { tracks = false }).frame(height: 390)
+            } else {
+                transport
+            }
+        }.padding(24).frame(width: 700).glassBackgroundEffect()
+            .opacity(model.focus.visible ? 1 : 0).allowsHitTesting(model.focus.visible).accessibilityHidden(!model.focus.visible)
+            .animation(.easeInOut(duration: 0.25), value: model.focus.visible)
+            .simultaneousGesture(TapGesture().onEnded { model.focus.reveal() })
+            .onChange(of: adjust) { _, value in model.focus.hold("cinema-adjust", value) }
+            .onChange(of: tracks) { _, value in model.focus.hold("cinema-tracks", value) }
+            .onChange(of: depthEffects) { _, value in model.focus.hold("cinema-depth", value) }
+            .onDisappear {
+                for key in ["cinema-adjust", "cinema-depth", "cinema-tracks"] { model.focus.hold(key, false) }
+            }
+            .modifier(FocusPlaybackModifier(model: model))
+    }
+    private var transport: some View {
         VStack(spacing: 12) {
             HStack {
                 Text(model.movieTitle).lineLimit(1).font(.headline)
                 Spacer()
+                Button("字幕与音轨", systemImage: "captions.bubble") {
+                    model.loadTracks()
+                    tracks = true
+                }
                 Button("返回窗口", systemImage: "arrow.down.right.and.arrow.up.left") {
                     Task {
                         openWindow(id: "main")
@@ -90,11 +126,7 @@ struct CinemaControls: View {
                     }
                 }
             }
-            HStack {
-                Text(PlayerModel.clock(dragging ? seek * model.duration : model.elapsed)).monospacedDigit()
-                Slider(value: $seek, in: 0...1, onEditingChanged: { editing in dragging = editing; if !editing { model.seek(to: seek) } }).accessibilityLabel("播放进度").disabled(!model.isSeekable)
-                Text(PlayerModel.clock(model.duration)).monospacedDigit()
-            }
+            PlaybackSeekBar(model: model, holdKey: "cinema-seek")
             HStack(spacing: 24) {
                 Button("后退 10 秒", systemImage: "gobackward.10") { model.skip(-10) }.labelStyle(.iconOnly)
                 Button(model.isPlaying ? "暂停" : "播放", systemImage: model.isPlaying ? "pause.fill" : "play.fill") { model.togglePlayback() }.labelStyle(.iconOnly)
@@ -108,17 +140,6 @@ struct CinemaControls: View {
             }
             if adjust { ScreenAdjustments(model: model) }
             if let error = model.errorMessage ?? model.rendererError { Text(error).foregroundStyle(.orange).font(.caption) }
-        }.padding(24).frame(width: 700).glassBackgroundEffect()
-            .opacity(model.focus.visible ? 1 : 0).allowsHitTesting(model.focus.visible).accessibilityHidden(!model.focus.visible)
-            .animation(.easeInOut(duration: 0.25), value: model.focus.visible)
-            .simultaneousGesture(TapGesture().onEnded { model.focus.reveal() })
-            .onChange(of: adjust) { _, value in model.focus.hold("cinema-adjust", value) }
-            .onChange(of: depthEffects) { _, value in model.focus.hold("cinema-depth", value) }
-            .onChange(of: dragging) { _, value in model.focus.hold("cinema-seek", value) }
-            .onDisappear {
-                for key in ["cinema-adjust", "cinema-depth", "cinema-seek"] { model.focus.hold(key, false) }
-            }
-            .modifier(FocusPlaybackModifier(model: model))
-            .onChange(of: model.progress, initial: true) { _, value in if !dragging { seek = value } }
+        }
     }
 }

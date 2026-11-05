@@ -1,0 +1,21 @@
+{
+  "date": "2026-11-04",
+  "buildPassed": true,
+  "iconName": "AppIcon",
+  "compiledLayers": 2,
+  "installationDirectory": "B8BA5FA7-6F2D-42BD-8A8F-10C641EB525A",
+  "deviceInstalled": true,
+  "homeScreenAppearance": "not independently observed on headset",
+  "assets": {
+    "VisionProPlayer/Resources/Assets.xcassets/AppIcon.solidimagestack/Front.solidimagestacklayer/Content.imageset/front.png": {
+      "sha256": "e4cea9632d4f73a0b5f1c0f75fd3d2100da937d6ebf6d9a45602c18026cd253a",
+      "width": 1024,
+      "height": 1024
+    },
+    "VisionProPlayer/Resources/Assets.xcassets/AppIcon.solidimagestack/Back.solidimagestacklayer/Content.imageset/back.png": {
+      "sha256": "1a614996241e79c8897338278430a388b8449bec159cbcd3b468d1ec55812ba8",
+      "width": 1024,
+      "height": 1024
+    }
+  }
+}

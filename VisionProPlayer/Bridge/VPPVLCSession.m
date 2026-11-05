@@ -284,8 +284,8 @@ static BOOL VPPFramesEqual(CVPixelBufferRef a, CVPixelBufferRef b) {
         int result = libvlc_media_player_set_position(_player, MAX(0, MIN(1, fraction)), false);
         // A paused vout may keep redisplaying its old picture until stepped.
         // Decode one frame at the requested position without resuming audio.
-        if (result == 0 && wasPaused && _mailbox) {
-            _pausedSeekPending = YES;
+        if (result == 0 && wasPaused) {
+            _pausedSeekPending = _mailbox != nil;
             libvlc_media_player_next_frame(_player);
         }
     }

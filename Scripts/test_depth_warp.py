@@ -25,7 +25,7 @@ with tempfile.TemporaryDirectory(prefix="vpp-depth-gpu-") as temporary:
     if "--scenes" in arguments:
         arguments.remove("--scenes")
         fixture = "test_motion_scenes.swift"
-        support = [str(root / "VisionProPlayer/Rendering/DepthEstimator.swift")]
+        support = [str(root / "VisionProPlayer/Rendering/DepthEstimator.swift"), str(root / "VisionProPlayer/Rendering/DepthInferenceGeometry.swift")]
     if "--motion" in arguments:
         arguments.remove("--motion")
         fixture = "test_depth_motion.swift"
@@ -34,6 +34,13 @@ with tempfile.TemporaryDirectory(prefix="vpp-depth-gpu-") as temporary:
         arguments.remove("--edges")
         fixture = "test_depth_edges.swift"
         support = [str(root / "VisionProPlayer/Rendering/DepthEdgeRefiner.swift")]
+    if "--planes" in arguments:
+        arguments.remove("--planes")
+        fixture = "test_depth_planes.swift"
+    if "--subjects" in arguments:
+        arguments.remove("--subjects")
+        fixture = "test_depth_subjects.swift"
+        support = [str(root / "VisionProPlayer/Rendering/DepthSubjectPreparer.swift"), str(root / "VisionProPlayer/Rendering/DepthInferenceGeometry.swift"), str(root / "VisionProPlayer/Rendering/DepthEstimator.swift")]
     shutil.copyfile(root / "Scripts" / fixture, main)
     executable = folder / "test-depth-warp"
     subprocess.run(["swiftc", "-O", str(root / "VisionProPlayer/Rendering/StereoReprojector.swift"),

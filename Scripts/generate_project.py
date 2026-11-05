@@ -13,13 +13,17 @@ def add(name, body):
     key = uid(name); objects[key] = body; return key
 sources=[]; resources=[]; refs=[]
 for path in sorted((root/'VisionProPlayer').rglob('*')):
-    if not path.is_file() or path.name.startswith('.'): continue
+    # Asset catalogs are compiled as a unit; their PNG/JSON children must not
+    # also be copied into the app as loose resources.
+    if any(parent.suffix == '.xcassets' for parent in path.parents): continue
+    is_catalog = path.is_dir() and path.suffix == '.xcassets'
+    if (not path.is_file() and not is_catalog) or path.name.startswith('.'): continue
     rel=path.relative_to(root).as_posix()
     ext=path.suffix
-    types={'.swift':'sourcecode.swift','.metal':'sourcecode.metal','.m':'sourcecode.c.objc','.h':'sourcecode.c.h','.usda':'text','.png':'image.png','.mp4':'file','.mkv':'file','.plist':'text.plist.xml'}
+    types={'.xcassets':'folder.assetcatalog','.swift':'sourcecode.swift','.metal':'sourcecode.metal','.m':'sourcecode.c.objc','.h':'sourcecode.c.h','.usda':'text','.png':'image.png','.mp4':'file','.mkv':'file','.plist':'text.plist.xml'}
     ref=add(rel, f'isa = PBXFileReference; lastKnownFileType = {q(types.get(ext,"text"))}; path = {q(rel)}; sourceTree = SOURCE_ROOT;')
     refs.append(ref)
-    if ext in ('.swift','.metal','.m','.usda','.png','.mp4','.mkv','.txt'):
+    if ext in ('.swift','.metal','.m','.usda','.png','.mp4','.mkv','.txt','.xcassets'):
         build=add('build:'+rel, f'isa = PBXBuildFile; fileRef = {ref};')
         (sources if ext in ('.swift','.m','.metal') else resources).append(build)
 model_path = '.build/Models/DepthAnythingV2SmallF16.mlmodelc'
@@ -44,6 +48,7 @@ for mode in ['Debug','Release']:
       'XROS_DEPLOYMENT_TARGET':'2.0','SWIFT_VERSION':'5.0','SWIFT_STRICT_CONCURRENCY':'targeted',
       'GENERATE_INFOPLIST_FILE':'YES','INFOPLIST_FILE':'VisionProPlayer/App/Info.plist',
       'INFOPLIST_KEY_CFBundleDisplayName':'Vision Player',
+      'ASSETCATALOG_COMPILER_APPICON_NAME':'AppIcon',
       'INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace':'YES',
       'INFOPLIST_KEY_UISupportsDocumentBrowser':'YES',
       'INFOPLIST_KEY_NSLocalNetworkUsageDescription':'播放你选择的局域网视频地址。',

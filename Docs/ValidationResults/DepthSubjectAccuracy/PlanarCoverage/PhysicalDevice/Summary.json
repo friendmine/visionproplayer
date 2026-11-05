@@ -1,0 +1,46 @@
+{
+  "date": "2026-11-04",
+  "automaticShortChecksPassed": true,
+  "rows": [
+    {
+      "report": "depth-motion-native.json",
+      "checks": 17,
+      "engine": "native",
+      "runID": "60e96ae1-e02d-41b8-a808-9b3bfc2c120f",
+      "subjectAlgorithm": "aspect-near-tail-planar-v2",
+      "submittedFPS": 29.999472384278175,
+      "highReliefFPS": 29.994058676884414,
+      "gpuMeanMS": 13.637240694952197,
+      "gpuP95MS": 17.08179166598711,
+      "inferenceMeanMS": 48.561310763943766,
+      "inferenceP95MS": 57.84795833460521,
+      "submissionIntervalP95MS": 37.78554165910464,
+      "submissionMaximumIntervalMS": 44.426874999771826,
+      "systemVersion": "Version 27.2 (Build 24N120)"
+    },
+    {
+      "report": "depth-motion-vlc.json",
+      "checks": 17,
+      "engine": "vlc",
+      "runID": "3a20cdb3-4433-446b-b947-3131749a4161",
+      "subjectAlgorithm": "aspect-near-tail-planar-v2",
+      "submittedFPS": 29.896168307791612,
+      "highReliefFPS": 29.74312608469569,
+      "gpuMeanMS": 14.018403707618395,
+      "gpuP95MS": 17.5161249935627,
+      "inferenceMeanMS": 41.635126688905416,
+      "inferenceP95MS": 46.522833334165625,
+      "submissionIntervalP95MS": 38.32137500285171,
+      "submissionMaximumIntervalMS": 87.77075000398327,
+      "systemVersion": "Version 27.2 (Build 24N120)"
+    }
+  ],
+  "wearerAcceptance": "partial: normal proportions/edges/playback/audio; acceptable crop; central concavity remains obvious",
+  "scope": "Two revised-path physical short probes, each includes paused baseline/revised switching. Earlier baseline benchmark on different OS is not a controlled performance comparison. Not scanout FPS or long-duration validation.",
+  "wearerFeedback": {
+    "date": "2026-11-04",
+    "centralConcavity": "有改善，但仍明显",
+    "proportionsEdgesPlaybackAudioAndCrop": "都正常，裁边能接受",
+    "status": "partial improvement; central concavity remains unresolved"
+  }
+}
