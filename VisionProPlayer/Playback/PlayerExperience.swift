@@ -102,23 +102,37 @@ extension PlayerModel {
     func skip(_ seconds: Double) { if duration > 0 { seek(to: (elapsed + seconds) / duration) } }
     func restart() { seek(to: 0); if !isPlaying { togglePlayback() } }
 
+    func switchEngine(_ engine: PlaybackEngine) {
+        guard let current = request, engine != current.engine, engine != .automatic,
+              !current.isSpatialVideo else { return }
+        checkpoint()
+        let seconds = nativePlayer?.currentTime().seconds ?? elapsed
+        open(current.url, layout: current.layout, engine: engine, convert2D: current.converts2D,
+             recovery: (seconds.isFinite ? seconds : 0, isPlaying), libraryID: current.libraryID,
+             cinema: current.isCinema, restoringTracks: preferredTracks)
+    }
+
     func loadTracks() {
         guard let request else { return }
         if let vlc {
             let audio = vlc.audioTracks, subs = vlc.subtitleTracks
-            audioTracks = audio.compactMap { entry in
-                guard let id = entry["id"] as? String, let title = entry["title"] as? String else { return nil }
-                return PlaybackTrack(id: id, title: title)
+            func tracks(_ entries: [[String: Any]]) -> [PlaybackTrack] {
+                entries.compactMap { entry in
+                    guard let id = entry["id"] as? String, let title = entry["title"] as? String else { return nil }
+                    return PlaybackTrack(id: id, title: title, language: entry["language"] as? String)
+                }
             }
-            subtitleTracks = subs.compactMap { entry in
-                guard let id = entry["id"] as? String, let title = entry["title"] as? String else { return nil }
-                return PlaybackTrack(id: id, title: title)
+            audioTracks = tracks(audio); subtitleTracks = tracks(subs)
+            selectedAudio = audio.first(where: { $0["selected"] as? Bool == true })?["id"] as? String ?? ""
+            let embedded = subs.first(where: { $0["selected"] as? Bool == true })?["id"] as? String
+            let externalActive = preferredTracks.subtitle?.mode == .external && !subtitleCues.isEmpty
+            selectedSubtitle = embedded ?? (externalActive ? "external" : "off")
+            if request.usesTextureOutput {
+                // Keep the preference, but do not burn one embedded caption into
+                // both packed eyes. Returning to a supported path restores it.
+                if embedded != nil { vlc.selectSubtitleTrack("") }
+                selectedSubtitle = externalActive ? "external" : "off"
             }
-            if let chosen = audio.first(where: { $0["selected"] as? Bool == true }) { selectedAudio = chosen["id"] as? String ?? "" }
-            // Bitmap/burned-in subtitles across SBS are not safe to split. External
-            // text subtitles are rendered once on the display plane for both eyes.
-            if request.usesTextureOutput || selectedSubtitle == "external" { vlc.selectSubtitleTrack("") }
-            else if let chosen = subs.first(where: { $0["selected"] as? Bool == true }) { selectedSubtitle = chosen["id"] as? String ?? "off" }
             restoreTrackChoices()
             return
         }
@@ -131,46 +145,106 @@ extension PlayerModel {
                 let subtitles = try await item.asset.loadMediaSelectionGroup(for: .legible)
                 guard !Task.isCancelled, let self, self.request?.id == requestID else { return }
                 self.audioGroup = audio; self.subtitleGroup = subtitles
-                self.audioTracks = audio?.options.enumerated().map { PlaybackTrack(id: String($0.offset), title: $0.element.displayName) } ?? []
-                self.subtitleTracks = subtitles?.options.enumerated().map { PlaybackTrack(id: String($0.offset), title: $0.element.displayName) } ?? []
+                func tracks(_ group: AVMediaSelectionGroup?) -> [PlaybackTrack] {
+                    group?.options.enumerated().map {
+                        PlaybackTrack(id: String($0.offset), title: $0.element.displayName,
+                                      language: $0.element.extendedLanguageTag ?? $0.element.locale?.identifier,
+                                      isForcedOnly: $0.element.hasMediaCharacteristic(.containsOnlyForcedSubtitles))
+                    } ?? []
+                }
+                self.audioTracks = tracks(audio); self.subtitleTracks = tracks(subtitles)
                 if let audio, let chosen = item.currentMediaSelection.selectedMediaOption(in: audio), let index = audio.options.firstIndex(of: chosen) { self.selectedAudio = String(index) }
-                if self.selectedSubtitle == "external", let subtitles { item.select(nil, in: subtitles) }
-                else if let subtitles, let chosen = item.currentMediaSelection.selectedMediaOption(in: subtitles), let index = subtitles.options.firstIndex(of: chosen) { self.selectedSubtitle = String(index) }
+                if let subtitles, let chosen = item.currentMediaSelection.selectedMediaOption(in: subtitles), let index = subtitles.options.firstIndex(of: chosen) { self.selectedSubtitle = String(index) }
+                else { self.selectedSubtitle = "off" }
                 self.restoreTrackChoices()
             } catch { /* Media without selection groups can still play normally. */ }
         }
     }
-    private func restoreTrackChoices() {
-        if let audio = preferredTracks.audio, selectedAudio != audio {
-            selectAudio(audio)
-        }
-        guard let subtitle = preferredTracks.subtitle, selectedSubtitle != subtitle else { return }
-        if subtitle == "off" || (subtitle == "external" && !subtitleCues.isEmpty) {
-            selectSubtitle(subtitle)
-        } else if subtitleTracks.contains(where: { $0.id == subtitle }),
-                  !(request?.engine == .vlc && request?.usesTextureOutput == true) {
-            selectSubtitle(subtitle)
-        }
+
+    private func saveTrackChoices() {
+        guard let id = request?.libraryID else { return }
+        let choices = preferredTracks
+        library.update(id) { $0.preferences.trackChoices = choices }
     }
-    func selectAudio(_ id: String) {
-        guard audioTracks.contains(where: { $0.id == id }) else { return }
-        if let group = audioGroup, let index = Int(id), group.options.indices.contains(index) { nativePlayer?.currentItem?.select(group.options[index], in: group) }
-        else { vlc?.selectAudioTrack(id) }
-        preferredTracks.audio = id
+
+    private func restoreTrackChoices() {
+        guard let request else { return }
+        var notices: [String] = []
+        if let audio = preferredTracks.audio {
+            if let track = audio.resolve(in: audioTracks, engine: request.engine.rawValue) {
+                if selectedAudio != track.id { applyAudio(track.id) }
+            } else if !audioTracks.isEmpty {
+                notices.append("暂未找到原先选择的音轨，正在使用可用音轨；原选择已保留。")
+            }
+        }
+        if let subtitle = preferredTracks.subtitle {
+            switch subtitle.mode {
+            case .off: applySubtitle("off")
+            case .external:
+                if !subtitleCues.isEmpty { applySubtitle("external") }
+                else {
+                    applySubtitle("off")
+                    notices.append("原先选择的外挂字幕无法读取，请重新导入；原选择已保留。")
+                }
+            case .embedded:
+                if request.engine == .vlc && request.usesTextureOutput {
+                    applySubtitle("off")
+                    notices.append("已记住内嵌字幕选择；当前 VLC 立体或影院模式暂不显示，返回支持的播放模式后恢复。")
+                } else if let track = subtitle.track?.resolve(in: subtitleTracks, engine: request.engine.rawValue) {
+                    if selectedSubtitle != track.id { applySubtitle(track.id) }
+                } else {
+                    applySubtitle("off")
+                    notices.append("暂未找到原先选择的内嵌字幕；原选择已保留。")
+                }
+            }
+        }
+        trackPreferenceNotice = notices.isEmpty ? nil : notices.joined(separator: "\n")
+    }
+
+    private func applyAudio(_ id: String) {
+        if let group = audioGroup, let index = Int(id), group.options.indices.contains(index) {
+            nativePlayer?.appliesMediaSelectionCriteriaAutomatically = false
+            nativePlayer?.currentItem?.select(group.options[index], in: group)
+        } else { vlc?.selectAudioTrack(id) }
         selectedAudio = id
     }
-    func selectSubtitle(_ id: String) {
-        subtitleText = ""
-        if id == "external" || id == "off" {
-            if let group = subtitleGroup { nativePlayer?.currentItem?.select(nil, in: group) }
-            vlc?.selectSubtitleTrack("")
-        } else if let group = subtitleGroup, let index = Int(id), group.options.indices.contains(index) {
-            nativePlayer?.currentItem?.select(group.options[index], in: group)
-        } else if request?.usesTextureOutput == false { vlc?.selectSubtitleTrack(id) }
-        else { return }
-        preferredTracks.subtitle = id
+
+    private func applySubtitle(_ id: String) {
+        if id != selectedSubtitle { subtitleText = "" }
+        if let group = subtitleGroup, let player = nativePlayer {
+            player.appliesMediaSelectionCriteriaAutomatically = false
+            let option = Int(id).flatMap { group.options.indices.contains($0) ? group.options[$0] : nil }
+            if player.currentItem?.currentMediaSelection.selectedMediaOption(in: group) != option {
+                player.currentItem?.select(option, in: group)
+            }
+        } else if let vlc, selectedSubtitle != id {
+            // loadTracks reflects actual selection before restoring; no periodic
+            // deselect calls when subtitles are already disabled.
+            if id == "off" || id == "external" {
+                if selectedSubtitle != "off" && selectedSubtitle != "external" { vlc.selectSubtitleTrack("") }
+            } else { vlc.selectSubtitleTrack(id) }
+        }
         selectedSubtitle = id
+        if id == "off" { subtitleText = "" }
     }
+
+    func selectAudio(_ id: String) {
+        guard let request, let track = audioTracks.first(where: { $0.id == id }) else { return }
+        preferredTracks.audio = SavedPlaybackTrack(track, engine: request.engine.rawValue)
+        applyAudio(id); saveTrackChoices(); restoreTrackChoices()
+    }
+
+    func selectSubtitle(_ id: String) {
+        guard let request else { return }
+        if id == "off" { preferredTracks.subtitle = SavedSubtitleChoice(mode: .off) }
+        else if id == "external", !subtitleCues.isEmpty { preferredTracks.subtitle = SavedSubtitleChoice(mode: .external) }
+        else if !(request.engine == .vlc && request.usesTextureOutput),
+                let track = subtitleTracks.first(where: { $0.id == id }) {
+            preferredTracks.subtitle = SavedSubtitleChoice(mode: .embedded, track: SavedPlaybackTrack(track, engine: request.engine.rawValue))
+        } else { return }
+        applySubtitle(id); saveTrackChoices(); restoreTrackChoices()
+    }
+
     func importSubtitle(_ url: URL) {
         guard let id = request?.libraryID else { errorMessage = "请先从片库打开影片，再添加字幕。"; return }
         do { subtitleCues = try library.importSubtitle(url, for: id); selectSubtitle("external") }

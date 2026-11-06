@@ -271,6 +271,23 @@ struct TrackSettings: View {
         @Bindable var library = model.library
         NavigationStack {
             Form {
+                if let notice = model.trackPreferenceNotice {
+                    Section { Text(notice).font(.callout).foregroundStyle(.secondary) }
+                }
+                if model.currentFilm != nil {
+                    Section {
+                        Text("音轨和字幕选择会记住到当前影片，包括关闭字幕。")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+                if let request = model.request, !request.isSpatialVideo {
+                    Section("播放兼容性") {
+                        Picker("播放引擎", selection: Binding(get: { model.request?.engine ?? .native }, set: { model.switchEngine($0) })) {
+                            Text("Apple 原生").tag(PlaybackEngine.native)
+                            Text("VLCKit").tag(PlaybackEngine.vlc)
+                        }.disabled(model.isClosing || model.isSwitchingEngine)
+                    }
+                }
                 Section("音轨") {
                     if model.audioTracks.isEmpty { Text("此影片未提供可选音轨").foregroundStyle(.secondary) }
                     else {

@@ -378,6 +378,7 @@ static BOOL VPPFramesEqual(CVPixelBufferRef a, CVPixelBufferRef b) {
         NSString *language = track->psz_language ? [NSString stringWithUTF8String:track->psz_language] : nil;
         [result addObject:@{@"id": [NSString stringWithUTF8String:track->psz_id],
                             @"title": name ?: language ?: [NSString stringWithFormat:@"轨道 %zu", i+1],
+                            @"language": language ?: @"",
                             @"selected": @(track->selected)}];
     }
     libvlc_media_tracklist_delete(list);

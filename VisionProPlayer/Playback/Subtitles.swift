@@ -38,11 +38,6 @@ struct SubtitleCue: Equatable {
     }
 }
 
-struct PlaybackTrack: Identifiable, Equatable {
-    let id: String
-    let title: String
-}
-
 final class CaptionReceiver: NSObject, AVPlayerItemLegibleOutputPushDelegate {
     var receive: ((String) -> Void)?
     func legibleOutput(_ output: AVPlayerItemLegibleOutput, didOutputAttributedStrings strings: [NSAttributedString], nativeSampleBuffers: [Any], forItemTime itemTime: CMTime) {

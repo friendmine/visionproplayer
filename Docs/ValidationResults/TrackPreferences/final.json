@@ -1,0 +1,168 @@
+{
+  "checks": [
+    {
+      "name": "legacy-preferences-without-track-fields-decode",
+      "passed": true
+    },
+    {
+      "name": "mp4-tracks-ready",
+      "passed": true
+    },
+    {
+      "name": "mp4-explicit-selection-applied-to-engine",
+      "passed": true
+    },
+    {
+      "name": "mp4-choices-written-to-disk",
+      "passed": true
+    },
+    {
+      "name": "mp4-reopen-restores-engine-tracks",
+      "passed": true
+    },
+    {
+      "name": "native-to-vlc-semantic-track-match",
+      "passed": true
+    },
+    {
+      "name": "vlc-to-native-semantic-track-match",
+      "passed": true
+    },
+    {
+      "name": "mp4-cinema-retains-track-intent",
+      "passed": true
+    },
+    {
+      "name": "mp4-window-restores-embedded-subtitle",
+      "passed": true
+    },
+    {
+      "name": "mp4-paused-position-survives-cinema-return",
+      "passed": true
+    },
+    {
+      "name": "mp4-external-disables-embedded",
+      "passed": true
+    },
+    {
+      "name": "mp4-external-survives-reopen",
+      "passed": true
+    },
+    {
+      "name": "mp4-off-written-to-disk",
+      "passed": true
+    },
+    {
+      "name": "mp4-off-overrides-imported-subtitle-file",
+      "passed": true
+    },
+    {
+      "name": "off-and-audio-survive-engine-switch",
+      "passed": true
+    },
+    {
+      "name": "mp4-off-survives-cinema",
+      "passed": true
+    },
+    {
+      "name": "mp4-off-survives-window-return",
+      "passed": true
+    },
+    {
+      "name": "mp4-external-survives-cinema",
+      "passed": true
+    },
+    {
+      "name": "mp4-external-survives-window-return",
+      "passed": true
+    },
+    {
+      "name": "mp4-diagnostic-does-not-overwrite-film",
+      "passed": true
+    },
+    {
+      "name": "mkv-tracks-ready",
+      "passed": true
+    },
+    {
+      "name": "mkv-explicit-selection-applied-to-engine",
+      "passed": true
+    },
+    {
+      "name": "mkv-choices-written-to-disk",
+      "passed": true
+    },
+    {
+      "name": "mkv-reopen-restores-engine-tracks",
+      "passed": true
+    },
+    {
+      "name": "mkv-cinema-retains-track-intent",
+      "passed": true
+    },
+    {
+      "name": "mkv-window-restores-embedded-subtitle",
+      "passed": true
+    },
+    {
+      "name": "mkv-paused-position-survives-cinema-return",
+      "passed": true
+    },
+    {
+      "name": "mkv-external-disables-embedded",
+      "passed": true
+    },
+    {
+      "name": "mkv-external-survives-reopen",
+      "passed": true
+    },
+    {
+      "name": "mkv-off-written-to-disk",
+      "passed": true
+    },
+    {
+      "name": "mkv-off-overrides-imported-subtitle-file",
+      "passed": true
+    },
+    {
+      "name": "mkv-off-survives-cinema",
+      "passed": true
+    },
+    {
+      "name": "mkv-off-survives-window-return",
+      "passed": true
+    },
+    {
+      "name": "mkv-external-survives-cinema",
+      "passed": true
+    },
+    {
+      "name": "mkv-external-survives-window-return",
+      "passed": true
+    },
+    {
+      "name": "mkv-diagnostic-does-not-overwrite-film",
+      "passed": true
+    },
+    {
+      "name": "subtitle-only-preference-preserves-default-audio",
+      "passed": true
+    },
+    {
+      "name": "legacy-external-subtitle-keeps-existing-behavior",
+      "passed": true
+    },
+    {
+      "name": "missing-external-keeps-preference-and-shows-notice",
+      "passed": true
+    }
+  ],
+  "environment": "physical-device",
+  "error": "",
+  "passed": true,
+  "runID": "b1c60d29-70fe-4938-9633-2fb8f9a0753b",
+  "sample": "track-preferences",
+  "scope": "Disk reload and actual native/VLC selection; same-film engine changes; cinema session changes; external/off/missing subtitles; legacy records and diagnostic isolation. Physical UI interaction and audible track identity require wearer confirmation.",
+  "systemVersion": "Version 27.2 (Build 24N120)",
+  "timestamp": "2026-11-06T07:29:27Z"
+}

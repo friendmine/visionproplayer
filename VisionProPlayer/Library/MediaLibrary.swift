@@ -17,6 +17,7 @@ struct FilmPreferences: Codable, Equatable {
     var swapped = false
     var subtitleFile: String?
     var subtitleOffset = 0.0
+    var trackChoices: PlaybackTrackChoices? // Absent in old libraries; migrate external subtitles on playback.
 
     var depthEffect: DepthEffect {
         get { DepthEffect(strength: strength, popOut: popOut ?? 0, proportionProtection: proportionProtection ?? true, preset: depthPreset) }

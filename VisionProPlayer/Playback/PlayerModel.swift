@@ -2,13 +2,6 @@ import AVFoundation
 import Observation
 import SwiftUI
 
-// Track identifiers belong to a decoder and source. Carry explicit choices only
-// when rebuilding that same film on the same engine (e.g. entering the cinema).
-struct PlaybackTrackChoices {
-    var audio: String?
-    var subtitle: String?
-}
-
 @MainActor @Observable
 final class PlayerModel {
     let library = MediaLibrary()
@@ -22,6 +15,7 @@ final class PlayerModel {
     var audioTracks: [PlaybackTrack] = []
     var subtitleTracks: [PlaybackTrack] = []
     @ObservationIgnored var preferredTracks = PlaybackTrackChoices()
+    var trackPreferenceNotice: String?
     var selectedAudio = ""
     var selectedSubtitle = "off"
     var subtitleText = ""
@@ -136,7 +130,7 @@ final class PlayerModel {
     func open(_ url: URL, layout: StereoLayout? = nil, engine: PlaybackEngine? = nil, convert2D: Bool? = nil,
               recovery: (seconds: Double, playing: Bool)? = nil, libraryID: UUID? = nil,
               cinema: Bool = false, resolvedEngine: PlaybackEngine? = nil,
-              restoringTracks: PlaybackTrackChoices = PlaybackTrackChoices()) {
+              restoringTracks: PlaybackTrackChoices? = nil) {
         showingPlayer = true
         // Take access before the fileImporter callback returns; release only after decoder shutdown.
         let scoped = url.isFileURL && url.startAccessingSecurityScopedResource()
@@ -172,7 +166,7 @@ final class PlayerModel {
                 return
             }
             if let libraryID { self.library.update(libraryID) { $0.isSpatialVideo = spatial } }
-            self.preferredTracks = restoringTracks
+            self.preferredTracks = restoringTracks ?? libraryID.flatMap { self.library.film($0)?.preferences.trackChoices } ?? PlaybackTrackChoices()
             self.start(PlaybackRequest(url: url, engine: selectedEngine, layout: selectedLayout,
                                        swapEyes: self.swapEyes, securityScoped: scoped,
                                        allowsNativeFallback: preference == .automatic && !spatial,
@@ -190,7 +184,11 @@ final class PlayerModel {
             subtitleOffset = film.preferences.subtitleOffset
             if let file = film.preferences.subtitleFile,
                let data = try? Data(contentsOf: library.subtitleURL(file)), let cues = try? SubtitleCue.parse(data) {
-                subtitleCues = cues; selectedSubtitle = "external"
+                subtitleCues = cues
+                // Older records always enabled their imported subtitle. Explicit
+                // new choices (especially Off) take precedence over the file.
+                if preferredTracks.subtitle == nil { preferredTracks.subtitle = SavedSubtitleChoice(mode: .external) }
+                if preferredTracks.subtitle?.mode == .external { selectedSubtitle = "external" }
             }
         }
         lastCheckpoint = ProcessInfo.processInfo.systemUptime
@@ -227,7 +225,7 @@ final class PlayerModel {
                 let receiver = CaptionReceiver()
                 receiver.receive = { [weak self] text in
                     Task { @MainActor [weak self] in
-                        guard let self, self.request?.id == next.id, self.selectedSubtitle != "external" else { return }
+                        guard let self, self.request?.id == next.id, self.selectedSubtitle != "external", self.selectedSubtitle != "off" else { return }
                         self.subtitleText = text
                     }
                 }
@@ -235,6 +233,7 @@ final class PlayerModel {
                 item.add(captions); captionReceiver = receiver
                 let player = AVPlayer(playerItem: item)
                 nativePlayer = player
+                if preferredTracks.audio != nil || preferredTracks.subtitle != nil { player.appliesMediaSelectionCriteriaAutomatically = false }
                 nativeStatus = item.observe(\.status, options: [.initial, .new]) { [weak self] item, _ in
                     let failed = item.status == .failed
                     let ready = item.status == .readyToPlay
@@ -271,6 +270,9 @@ final class PlayerModel {
                 if recovery == nil { player.play() }
             } else {
                 vlc = try VPPVLCSession(url: next.url, stereo: next.usesTextureOutput, steadyClock: next.converts2D)
+                // Public libVLC preselection applies before playback starts.
+                // Avoid briefly showing a default subtitle before restoration.
+                if next.usesTextureOutput || preferredTracks.subtitle != nil { vlc?.selectSubtitleTrack("") }
                 // Flat video starts after its UIView has attached; SBS starts with its frame mailbox.
                 if next.usesTextureOutput { vlc?.play() }
             }
@@ -302,6 +304,7 @@ final class PlayerModel {
         // between decoders. A newer open/stop invalidates this queued recovery.
         isSwitchingEngine = true
         stateText = "正在切换到 VLC"
+        let tracksToRestore = preferredTracks
         let recovery = (seconds: elapsed.isFinite ? max(0, elapsed) : 0, playing: wantsPlayback)
         openGeneration += 1
         let generation = openGeneration
@@ -314,6 +317,7 @@ final class PlayerModel {
                 if old.securityScoped { old.url.stopAccessingSecurityScopedResource() }
                 return
             }
+            self.preferredTracks = tracksToRestore
             self.start(PlaybackRequest(url: old.url, engine: .vlc, layout: old.layout,
                                        swapEyes: old.swapEyes, securityScoped: old.securityScoped, converts2D: old.converts2D, libraryID: old.libraryID, isCinema: old.isCinema),
                        recovery: (recovery.seconds, self.wantsPlayback), notice: "原生播放失败，已自动切换到 VLC。")
@@ -432,7 +436,7 @@ final class PlayerModel {
         checkpoint()
         trackTask?.cancel(); trackTask = nil
         audioGroup = nil; subtitleGroup = nil; captionReceiver = nil
-        preferredTracks = PlaybackTrackChoices()
+        preferredTracks = PlaybackTrackChoices(); trackPreferenceNotice = nil
         audioTracks = []; subtitleTracks = []; selectedAudio = ""; selectedSubtitle = "off"
         subtitleText = ""; subtitleCues = []; subtitleOffset = 0
         isClosing = true
