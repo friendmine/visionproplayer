@@ -33,8 +33,7 @@ struct FocusPlaybackModifier: ViewModifier {
                 while !Task.isCancelled {
                     model.focus.update(enabled: model.library.focusViewing, playing: model.isPlaying,
                         blocked: model.hasEnded || model.request == nil || model.errorMessage != nil
-                            || model.rendererError != nil || model.isSwitchingEngine
-                            || model.stateText.contains("打开") || model.stateText.contains("缓冲"))
+                            || model.rendererError != nil || model.loadingTitle != nil)
                     try? await Task.sleep(for: .milliseconds(100))
                 }
             }

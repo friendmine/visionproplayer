@@ -56,6 +56,7 @@ struct ScreenAdjustments: View {
 }
 
 struct CinemaScene: View {
+    @State private var page: PlaybackSettingsPage?
     @Bindable var model: PlayerModel
     @Environment(\.openWindow) private var openWindow
     @Environment(\.scenePhase) private var phase
@@ -63,12 +64,25 @@ struct CinemaScene: View {
         ZStack {
             if let request = model.request, request.isCinema {
                 if request.isSpatialVideo, let player = model.nativePlayer {
-                    SpatialVideoView(model: model, player: player, immersive: true).id(request.id)
-                } else { StereoPlayerView(model: model, request: request, immersive: true).id(request.id) }
+                    SpatialVideoView(model: model, player: player, immersive: true, cinemaPage: $page).id(request.id)
+                } else { StereoPlayerView(model: model, request: request, immersive: true, cinemaPage: $page).id(request.id) }
+            } else if model.cinemaActive {
+                RealityView { content, attachments in
+                    if let controls = attachments.entity(for: "recovery") {
+                        controls.position = [0, 1.35, -2]
+                        content.add(controls)
+                    }
+                } attachments: {
+                    Attachment(id: "recovery") { CinemaControls(model: model, panel: $page) }
+                }
             }
+        }.onChange(of: page) { _, destination in
+            model.focus.hold("cinema-panel", destination != nil)
         }.onChange(of: phase) { _, value in
             if value == .background { model.pauseForBackground(); model.checkpoint() }
         }.onDisappear {
+            page = nil
+            model.focus.hold("cinema-panel", false)
             if model.cinemaActive {
                 model.pauseForBackground(); model.setCinema(false); openWindow(id: "main")
             }
@@ -80,64 +94,63 @@ struct CinemaControls: View {
     @Bindable var model: PlayerModel
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     @Environment(\.openWindow) private var openWindow
-    @State private var adjust = false
-    @State private var tracks = false
-    @State private var depthEffects = false
+    @Binding var panel: PlaybackSettingsPage?
+
     var body: some View {
-        Group {
-            if tracks {
-                TrackSettings(model: model, done: { tracks = false }).frame(height: 390)
-            } else {
-                transport
+        VStack(spacing: 16) {
+            // Keep the exit outside every settings page and the seek-preview row.
+            // Immersive navigation must not depend on opening a popover.
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(model.movieTitle).lineLimit(1).font(.headline)
+                    Text(model.playbackNotice ?? model.pictureTitle).lineLimit(2).font(.caption).foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 8)
+                if panel != nil {
+                    Button("返回播放", systemImage: "chevron.left") { panel = nil }
+                }
+                Button(model.cinemaTransition ? "正在退出…" : "退出影院", systemImage: "arrow.down.right.and.arrow.up.left") {
+                    leaveCinema()
+                }.disabled(model.cinemaTransition).frame(minHeight: 44)
+                    .accessibilityHint("返回播放窗口并保留当前进度")
             }
+            Group {
+                if panel == nil { transport }
+                else { PlaybackSettingsPanel(model: model, page: $panel).frame(height: 390) }
+            }.disabled(model.cinemaTransition)
         }.padding(24).frame(width: 700).glassBackgroundEffect()
             .opacity(model.focus.visible ? 1 : 0).allowsHitTesting(model.focus.visible).accessibilityHidden(!model.focus.visible)
             .animation(.easeInOut(duration: 0.25), value: model.focus.visible)
             .simultaneousGesture(TapGesture().onEnded { model.focus.reveal() })
-            .onChange(of: adjust) { _, value in model.focus.hold("cinema-adjust", value) }
-            .onChange(of: tracks) { _, value in model.focus.hold("cinema-tracks", value) }
-            .onChange(of: depthEffects) { _, value in model.focus.hold("cinema-depth", value) }
-            .onDisappear {
-                for key in ["cinema-adjust", "cinema-depth", "cinema-tracks"] { model.focus.hold(key, false) }
-            }
             .modifier(FocusPlaybackModifier(model: model))
     }
     private var transport: some View {
         VStack(spacing: 12) {
-            HStack {
-                Text(model.movieTitle).lineLimit(1).font(.headline)
-                Spacer()
-                Button("字幕与音轨", systemImage: "captions.bubble") {
-                    model.loadTracks()
-                    tracks = true
-                }
-                Button("返回窗口", systemImage: "arrow.down.right.and.arrow.up.left") {
-                    Task {
-                        openWindow(id: "main")
-                        model.setCinema(false)
-                        await dismissImmersiveSpace()
-                    }
-                }
-            }
             PlaybackSeekBar(model: model, holdKey: "cinema-seek")
             SeekPreviewControlsRow(model: model, surface: "cinema-controls") {
-                HStack(spacing: 24) {
-                    Button("后退 10 秒", systemImage: "gobackward.10") { model.skip(-10) }.labelStyle(.iconOnly)
-                    Button(model.isPlaying ? "暂停" : "播放", systemImage: model.isPlaying ? "pause.fill" : "play.fill") { model.togglePlayback() }.labelStyle(.iconOnly)
-                    Button("快进 10 秒", systemImage: "goforward.10") { model.skip(10) }.labelStyle(.iconOnly)
-                    Spacer()
-                    if model.request?.converts2D == true {
-                        Button("立体效果", systemImage: "view.3d") { depthEffects = true }
-                            .popover(isPresented: $depthEffects) {
-                                ScrollView { DepthEffectControls(model: model).padding(24) }
-                                    .frame(width: 430).frame(maxHeight: 560)
-                            }
-                    }
-                    Button(adjust ? "收起屏幕调整" : "调整屏幕", systemImage: "slider.horizontal.3") { adjust.toggle() }
-                }
+                AdaptivePlaybackControls(model: model, page: $panel)
             }
-            if adjust { ScreenAdjustments(model: model) }
-            if let error = model.errorMessage ?? model.rendererError { Text(error).foregroundStyle(.orange).font(.caption) }
+            if let error = model.errorMessage ?? model.rendererError {
+                HStack {
+                    Text(error).font(.callout)
+                    Button("重试") { model.retryPlayback() }
+                }
+            } else if let title = model.loadingTitle { ProgressView(title) }
+        }
+    }
+    private func leaveCinema() {
+        guard !model.cinemaTransition else { return }
+        model.cinemaTransition = true
+        model.focus.hold("cinema-exit", true)
+        Task { @MainActor in
+            defer {
+                model.cinemaTransition = false
+                model.focus.hold("cinema-exit", false)
+            }
+            // Restore a window before dismissing the app's immersive scene.
+            openWindow(id: "main")
+            model.setCinema(false)
+            await dismissImmersiveSpace()
         }
     }
 }

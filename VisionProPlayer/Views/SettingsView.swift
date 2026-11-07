@@ -23,7 +23,7 @@ struct SettingsView: View {
                     LabeledContent("默认预设", value: model.library.defaultDepthEffect.preset.title)
                     Text("强度 \(Int(model.library.defaultDepthEffect.strength * 100))% · 出屏 \(Int(model.library.defaultDepthEffect.popOut * 100))% · 比例保护\(model.library.defaultDepthEffect.proportionProtection ? "开启" : "关闭")")
                         .font(.caption).foregroundStyle(.secondary)
-                    Text("播放中可在「画面」或影院的「立体效果」里保存新默认值。新影片开启 AI 立体后生效。").font(.caption).foregroundStyle(.secondary)
+                    Text("播放中可在窗口或影院的「画面」里保存新默认值。新影片开启 AI 立体后生效。").font(.caption).foregroundStyle(.secondary)
                     Button("恢复自然预设") { model.library.saveDefaultDepthEffect(.natural) }
                         .disabled(model.library.defaultDepthEffect == .natural)
                 }

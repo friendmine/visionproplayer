@@ -1,3 +1,4 @@
+#import "VPPNetworkAuthentication.h"
 #import "VPPSeekThumbnails.h"
 #import <VLCKit/vlc/vlc.h>
 
@@ -23,14 +24,18 @@ static void thumbnailReady(void *opaque, libvlc_parser_task *task, libvlc_pictur
 
 @implementation VPPSeekThumbnails {
     NSURL *_url;
+    NSDictionary<NSString *,NSString *> *_credentials;
     dispatch_queue_t _queue;
     libvlc_instance_t *_instance;
     libvlc_media_t *_media;
     libvlc_parser_t *_parser;
 }
 - (instancetype)initWithURL:(NSURL *)url {
+    return [self initWithURL:url networkCredentials:@{}];
+}
+- (instancetype)initWithURL:(NSURL *)url networkCredentials:(NSDictionary<NSString *,NSString *> *)networkCredentials {
     if ((self = [super init])) {
-        _url = url;
+        _url = url; _credentials = [networkCredentials copy];
         _queue = dispatch_queue_create("com.jeff.visionproplayer.seek-preview", DISPATCH_QUEUE_SERIAL);
     }
     return self;
@@ -41,6 +46,7 @@ static void thumbnailReady(void *opaque, libvlc_parser_task *task, libvlc_pictur
     if (!_instance) return NO;
     _media = _url.isFileURL ? libvlc_media_new_path(_url.fileSystemRepresentation)
                             : libvlc_media_new_location(_url.absoluteString.UTF8String);
+    if (_media && [_url.scheme.lowercaseString isEqualToString:@"smb"]) VPPApplyNetworkCredentials(_media, _credentials);
     struct libvlc_parser_cfg cfg = { .max_thumbnailer_threads = 1, .timeout = 2500000 };
     _parser = libvlc_parser_new(_instance, &cfg);
     return _parser && _media;

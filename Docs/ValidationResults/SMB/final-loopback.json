@@ -1,0 +1,55 @@
+{
+  "checks" : [
+    {
+      "name" : "bad-password-rejected-before-authenticated-session",
+      "passed" : true
+    },
+    {
+      "name" : "authenticated-directory-list",
+      "passed" : true
+    },
+    {
+      "name" : "unicode-directory-and-movie",
+      "passed" : true
+    },
+    {
+      "name" : "nested-directory-list",
+      "passed" : true
+    },
+    {
+      "name" : "unknown-account-rejected",
+      "passed" : true
+    },
+    {
+      "name" : "missing-share-rejected",
+      "passed" : true
+    },
+    {
+      "name" : "cancelled-directory-request",
+      "passed" : true
+    },
+    {
+      "name" : "authenticated-seek-preview-decodes-frame",
+      "passed" : true
+    },
+    {
+      "name" : "authenticated-video-time-advances",
+      "passed" : true
+    },
+    {
+      "name" : "network-seek",
+      "passed" : true
+    },
+    {
+      "name" : "network-pause",
+      "passed" : true
+    },
+    {
+      "name" : "network-resume",
+      "passed" : true
+    }
+  ],
+  "environment" : "macOS-loopback-SMB2-fixture",
+  "passed" : true,
+  "scope" : "Actual shipped VLC browser\/authentication\/thumbnail code and headless libVLC playback. Synthetic generated video, random test credentials; no NAS addresses, credentials or media content recorded. Not Vision Pro validation."
+}

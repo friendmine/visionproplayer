@@ -13,6 +13,7 @@ enum PlaybackEngine: String, CaseIterable, Identifiable, Codable {
     }
 
     func resolved(for url: URL) -> Self {
+        if url.scheme?.lowercased() == "smb" { return .vlc }
         guard self == .automatic else { return self }
         return ["mkv", "avi", "webm", "ts", "m2ts", "flv", "wmv"].contains(url.pathExtension.lowercased()) ? .vlc : .native
     }
@@ -62,6 +63,8 @@ struct PlaybackRequest: Identifiable {
     var libraryID: UUID?
     var isCinema = false
     var isSpatialVideo = false
+    var photoAssetIdentifier: String?
+    var networkCredentials: [String: String] = [:] // Session only; never Codable or diagnostic output.
     var usesTextureOutput: Bool { !isSpatialVideo && (layout.isStereo || converts2D || isCinema) }
 }
 

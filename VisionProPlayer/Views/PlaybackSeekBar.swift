@@ -5,11 +5,24 @@ struct PlaybackSeekBar: View {
     let holdKey: String
     @State private var fraction = 0.0
     @State private var draggingID: UUID?
+    @State private var released: SeekDestination?
+    @State private var resultTime: Double?
+    @State private var reachedTarget = false
+
+    private struct SeekDestination: Identifiable {
+        let id = UUID()
+        let requestID: UUID
+        let seconds: Double
+    }
 
     var body: some View {
         HStack(spacing: 14) {
-            Text(PlayerModel.clock(draggingID == nil ? model.elapsed : fraction * model.duration))
-                .monospacedDigit().frame(minWidth: 60)
+            VStack(spacing: 2) {
+                Text(draggingID != nil ? "目标" : resultTime != nil ? (reachedTarget ? "已跳至" : "当前位置") : "已播放")
+                    .font(.caption2).foregroundStyle(.secondary)
+                Text(PlayerModel.clock(draggingID != nil ? fraction * model.duration : resultTime ?? model.elapsed))
+                    .monospacedDigit()
+            }.frame(minWidth: 64)
             Slider(value: Binding(get: { fraction }, set: { value in
                 fraction = value
                 preview()
@@ -19,15 +32,30 @@ struct PlaybackSeekBar: View {
                 #endif
             }), in: 0...1, onEditingChanged: edit)
                 .disabled(!model.isSeekable)
+                .frame(minHeight: 44)
                 .accessibilityLabel("播放进度")
+                .accessibilityValue(PlayerModel.clock(fraction * model.duration))
             Text(PlayerModel.clock(model.duration)).monospacedDigit().frame(minWidth: 60)
         }
         .onChange(of: model.progress, initial: true) { _, value in
             if draggingID == nil { fraction = value }
         }
-        .onChange(of: model.request?.id) { _, _ in dismissPreview(); fraction = model.progress }
+        .onChange(of: model.request?.id) { _, _ in dismissPreview(); clearFeedback(); fraction = model.progress }
         .onChange(of: model.isSeekable) { _, seekable in if !seekable { dismissPreview() } }
-        .onDisappear { dismissPreview() }
+        .task(id: released?.id) {
+            guard let destination = released else { return }
+            // Read the decoder clock, since progress is set optimistically by seek().
+            for _ in 0..<30 {
+                try? await Task.sleep(for: .milliseconds(100))
+                guard !Task.isCancelled, destination.requestID == model.request?.id else { return }
+                if abs(model.elapsed - destination.seconds) < 1 { break }
+            }
+            resultTime = model.elapsed
+            reachedTarget = abs(model.elapsed - destination.seconds) < 1
+            try? await Task.sleep(for: .seconds(1))
+            if !Task.isCancelled { clearFeedback() }
+        }
+        .onDisappear { dismissPreview(); clearFeedback() }
     }
 
     private func edit(_ editing: Bool) {
@@ -37,19 +65,28 @@ struct PlaybackSeekBar: View {
         #endif
         if editing {
             guard let request = model.request, model.isSeekable else { return }
+            clearFeedback()
             draggingID = request.id
             model.focus.hold(holdKey, true)
             preview()
         } else {
             let commit = draggingID != nil && draggingID == model.request?.id && model.isSeekable
             dismissPreview()
-            if commit { model.seek(to: fraction) }
+            if commit, let id = model.request?.id {
+                released = SeekDestination(requestID: id, seconds: fraction * model.duration)
+                model.seek(to: fraction)
+            }
         }
+    }
+
+    private func clearFeedback() {
+        released = nil
+        resultTime = nil
     }
 
     private func preview() {
         guard let request = model.request, draggingID == request.id else { return }
-        model.seekPreview.show(request: request, fraction: fraction, duration: model.duration, swapped: model.swapEyes)
+        model.seekPreview.show(request: request, fraction: fraction, duration: model.duration, swapped: model.swapEyes, asset: model.nativePlayer?.currentItem?.asset)
     }
 
     private func dismissPreview() {
@@ -95,8 +132,13 @@ struct SeekPreviewCard: View {
                     ProgressView()
                 }
             }.frame(width: 132, height: 64)
-            Text(preview.frame.map { PlayerModel.clock($0.seconds) } ?? " ")
-                .monospacedDigit().font(.caption).frame(minWidth: 60)
+            VStack(alignment: .leading, spacing: 3) {
+                Text("跳转到").font(.caption2).foregroundStyle(.secondary)
+                Text(PlayerModel.clock(preview.requestedSeconds)).font(.headline).monospacedDigit()
+                if let frame = preview.frame, abs(frame.seconds - preview.requestedSeconds) > 1 {
+                    Text("预览 " + PlayerModel.clock(frame.seconds)).font(.caption2).monospacedDigit()
+                }
+            }.frame(minWidth: 76, alignment: .leading)
         }
         .padding(8)
         .background(.black.opacity(0.88), in: RoundedRectangle(cornerRadius: 12))

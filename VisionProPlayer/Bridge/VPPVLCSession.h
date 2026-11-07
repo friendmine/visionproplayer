@@ -7,6 +7,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Call control methods on the main thread. Pixel callbacks use a bounded mailbox.
 @interface VPPVLCSession : NSObject
 - (nullable instancetype)initWithURL:(NSURL *)url stereo:(BOOL)stereo steadyClock:(BOOL)steadyClock error:(NSError **)error;
+- (nullable instancetype)initWithURL:(NSURL *)url stereo:(BOOL)stereo steadyClock:(BOOL)steadyClock networkCredentials:(NSDictionary<NSString *, NSString *> *)networkCredentials error:(NSError **)error;
 - (void)attachDrawable:(UIView *)view;
 - (void)play;
 - (void)setPaused:(BOOL)paused;

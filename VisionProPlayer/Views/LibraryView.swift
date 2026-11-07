@@ -7,6 +7,8 @@ struct LibraryView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var importing = false
     @State private var choosingPhoto = false
+    @State private var browsingPhotos = false
+    @State private var browsingServers = false
     @State private var photoSelection: PhotosPickerItem?
     @State private var photoImporter = PhotoVideoImporter()
     @State private var settings = false
@@ -14,109 +16,94 @@ struct LibraryView: View {
     @State private var editingLink: LibraryFilm?
     @State private var relocating: UUID?
     @State private var search = ""
-    @State private var filter = "全部"
+    @State private var section = "片库"
+    @State private var addingSource = false
+    @State private var pendingSource: MovieSourceAction?
     @State private var renaming: LibraryFilm?
     @State private var removing: LibraryFilm?
 
+    @State private var browsing = FilmBrowsing()
+    @AppStorage("libraryFilmOrder") private var order: FilmOrder = .recent
+
+    private var shelf: [LibraryFilm] {
+        model.library.films.filter { $0.id != model.library.pendingRemoval?.id }
+    }
     private var visibleFilms: [LibraryFilm] {
-        model.library.recent.filter {
-            (filter != "收藏" || $0.favorite) && (filter != "网络" || $0.isNetwork)
-            && (search.isEmpty || $0.title.localizedStandardContains(search))
-        }
+        var options = browsing
+        options.order = order
+        return options.results(in: shelf, search: search, favorites: section == "收藏")
     }
     var body: some View {
-        // NavigationStack supplies its own glass plate on visionOS. Keep it
-        // exclusive to the library so focused playback can be transparent.
+        // Keep navigation glass exclusive to the library: focused video stays transparent.
         ZStack {
             if model.showingPlayer {
-                PlayerScreen(model: model)
+                PlayerScreen(model: model, browsePhotos: { browsingPhotos = true }, manageServer: { browsingServers = true })
             } else {
                 NavigationStack {
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 28) {
-                            if model.library.films.isEmpty {
-                                ContentUnavailableView {
-                                    Label("你的私人影院", systemImage: "film.stack")
-                                } description: {
-                                    Text("打开一部影片开始观看。进度和画面设置会为你保留。")
-                                } actions: {
-                                    Button("打开影片", systemImage: "folder") { importing = true }.buttonStyle(.borderedProminent)
-                                    Button("从相册导入", systemImage: "photo.on.rectangle") { choosingPhoto = true }
-                                    Button("播放视频链接", systemImage: "link") { editingLink = nil; linkSheet = true }
-                                }.frame(minHeight: 380)
-                            } else {
-                                if search.isEmpty, filter == "全部", let film = model.library.recent.first(where: { $0.resumable }) {
-                                    VStack(alignment: .leading, spacing: 14) {
-                                        Text("继续观看").font(.title2.bold())
-                                        Button { model.openFilm(film) } label: {
-                                            HStack(spacing: 24) {
-                                                FilmPoster(film: film, library: model.library).frame(width: 290, height: 165)
-                                                VStack(alignment: .leading, spacing: 12) {
-                                                    Text(film.title).font(.title2).lineLimit(2)
-                                                    Text("上次看到 \(PlayerModel.clock(film.position))").foregroundStyle(.secondary)
-                                                    ProgressView(value: min(1, film.position / max(1, film.duration)))
-                                                    Label("继续播放", systemImage: "play.fill")
-                                                }.padding(.trailing, 24)
-                                                Spacer(minLength: 0)
-                                            }.padding(12).background(.thinMaterial, in: RoundedRectangle(cornerRadius: 24))
-                                        }.buttonStyle(.plain)
-                                    }
-                                }
-                                HStack {
-                                    Text(filter == "全部" ? (model.library.hasWatchHistory ? "最近打开" : "我的片库") : filter).font(.title2.bold())
-                                    Spacer()
-                                    Picker("片库分类", selection: $filter) {
-                                        ForEach(["全部", "收藏", "网络"], id: \.self) { Text($0) }
-                                    }.pickerStyle(.segmented).frame(width: 300)
-                                }
-                                if visibleFilms.isEmpty {
-                                    ContentUnavailableView(search.isEmpty ? "这里还没有影片" : "没有找到影片", systemImage: search.isEmpty ? "film" : "magnifyingglass")
-                                }
-                                LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 22)], spacing: 24) {
-                                    ForEach(visibleFilms) { film in
-                                        Button { model.openFilm(film) } label: {
-                                            VStack(alignment: .leading, spacing: 9) {
-                                                FilmPoster(film: film, library: model.library).frame(height: 150)
-                                                HStack {
-                                                    Text(film.title).lineLimit(1).font(.headline)
-                                                    if film.favorite { Image(systemName: "heart.fill").foregroundStyle(.pink) }
-                                                }
-                                                Text("\(film.isSpatialVideo == true ? "空间 3D" : (film.preferences.layout.isStereo ? "3D" : "2D")) · \(film.sourceDescription)")
-                                                    .font(.caption).foregroundStyle(.secondary).lineLimit(1)
-                                                if film.duration > 0 { ProgressView(value: min(1, film.position / film.duration)).tint(.secondary) }
-                                            }.padding(12).background(.thinMaterial, in: RoundedRectangle(cornerRadius: 22))
-                                        }.buttonStyle(.plain)
-                                            .contextMenu {
-                                                Button("从头播放", systemImage: "play") { model.openFilm(film, fromStart: true) }
-                                                Button(film.favorite ? "取消收藏" : "收藏", systemImage: film.favorite ? "heart.slash" : "heart") { model.library.update(film.id) { $0.favorite.toggle() } }
-                                                Button("重命名", systemImage: "pencil") { renaming = film }
-                                                if film.isNetwork {
-                                                    Button("编辑网络来源", systemImage: "link") { editingLink = film; linkSheet = true }
-                                                } else if film.photoFile == nil {
-                                                    Button("重新定位文件", systemImage: "folder") { relocating = film.id; importing = true }
-                                                }
-                                                Button("从片库移除", systemImage: "minus.circle", role: .destructive) { removing = film }
-                                            }
-                                            .task { model.library.makeThumbnail(for: film) }
-                                    }
-                                }
+                    VStack(spacing: 0) {
+                        Picker("浏览片库", selection: $section) {
+                            Label("片库", systemImage: "square.grid.2x2").tag("片库")
+                            Label("收藏", systemImage: "heart").tag("收藏")
+                            Label("来源", systemImage: "folder").tag("来源")
+                        }.pickerStyle(.segmented).frame(maxWidth: 440).padding(.horizontal, 28).padding(.vertical, 12)
+                        if section == "来源" {
+                            ScrollView {
+                                VStack(alignment: .leading, spacing: 24) {
+                                    Text("影片在哪里？").font(.title2.bold())
+                                    Text("选择来源开始观看，进度和偏好会自动保存到片库。")
+                                        .foregroundStyle(.secondary)
+                                    MovieSourceOptions(select: selectSource)
+                                }.padding(28)
                             }
-                            if let error = model.library.error { Text(error).foregroundStyle(.orange).font(.caption) }
-                        }.padding(28)
+                        } else {
+                            filmLibrary.searchable(text: $search, prompt: "搜索影片")
+                        }
+                    }
+                    .safeAreaInset(edge: .bottom) {
+                        if let pending = model.library.pendingRemoval {
+                            HStack {
+                                Text("已移除《\(pending.title)》").lineLimit(1)
+                                Spacer()
+                                Button("撤销移除") { model.library.undoRemoval() }
+                            }.padding(12).padding(.horizontal, 12)
+                                .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: 18)).padding(.horizontal, 24)
+                        }
                     }
                     .navigationTitle("Vision Player")
-                    .searchable(text: $search, prompt: "搜索影片")
                     .toolbar {
                         ToolbarItemGroup(placement: .topBarTrailing) {
                             Button("设置", systemImage: "gearshape") { settings = true }
-                            Menu {
-                                Button("打开文件", systemImage: "folder") { relocating = nil; importing = true }
-                                Button("从相册导入", systemImage: "photo.on.rectangle") { choosingPhoto = true }
-                                Button("视频链接", systemImage: "link") { editingLink = nil; linkSheet = true }
-                            } label: { Label("打开影片", systemImage: "plus") }
+                            Button("添加影片", systemImage: "plus") { addingSource = true }
+                                .buttonStyle(.borderedProminent)
                         }
                     }
                 }
+            }
+        }
+        .sheet(isPresented: $addingSource, onDismiss: {
+            guard let action = pendingSource else { return }
+            pendingSource = nil
+            selectSource(action)
+        }) {
+            NavigationStack {
+                ScrollView { MovieSourceOptions { action in
+                    pendingSource = action
+                    addingSource = false
+                }.padding(28) }
+                .navigationTitle("添加影片")
+                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { addingSource = false } } }
+            }.frame(width: 640, height: 560)
+        }
+        .sheet(isPresented: $browsingServers) { NetworkSourcesView(model: model) }
+        .sheet(isPresented: $browsingPhotos) {
+            PhotoLibraryBrowser { asset in
+                do {
+                    let date = asset.creationDate?.formatted(date: .abbreviated, time: .shortened) ?? ""
+                    let film = try model.library.addPhotoReference(identifier: asset.localIdentifier,
+                        title: (asset.mediaSubtypes.contains(.spatialMedia) ? "空间视频 " : "相册视频 ") + date,
+                        duration: asset.duration, spatial: asset.mediaSubtypes.contains(.spatialMedia))
+                    model.openFilm(film)
+                } catch { model.errorMessage = error.localizedDescription }
             }
         }
         .photosPicker(isPresented: $choosingPhoto, selection: $photoSelection, matching: .videos, preferredItemEncoding: .current)
@@ -127,7 +114,7 @@ struct LibraryView: View {
         }
         .sheet(isPresented: Binding(get: { photoImporter.isImporting }, set: { if !$0 { photoImporter.cancel() } })) {
             VStack(spacing: 24) {
-                Text("正在导入视频").font(.title2)
+                Text("正在保存离线副本").font(.title2)
                 if let fraction = photoImporter.fraction { ProgressView(value: fraction).frame(width: 320) }
                 else { ProgressView() }
                 Text("iCloud 视频可能需要先下载。导入后会在 App 中保留一份副本，不改动相册原视频。").foregroundStyle(.secondary)
@@ -142,24 +129,190 @@ struct LibraryView: View {
                     do { try model.library.relocate(id, to: url); if let film = model.library.film(id) { model.openFilm(film) } }
                     catch { model.errorMessage = error.localizedDescription }
                 } else { model.importFilm(url) }
-            case .failure(let error): model.errorMessage = error.localizedDescription
+            case .failure(let error):
+                if (error as NSError).code != NSUserCancelledError { model.errorMessage = error.localizedDescription }
             }
         }
         .sheet(isPresented: $settings) { SettingsView(model: model) { settings = false } }
         .sheet(isPresented: $linkSheet) { NetworkSourceSheet(model: model, existing: editingLink) }
         .sheet(item: $renaming) { film in RenameFilmSheet(library: model.library, film: film) }
-        .confirmationDialog(removing?.photoFile != nil ? "移除影片及 App 内导入副本？相册原视频不会删除。" : "从片库移除？原始影片文件不会被删除。", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }), titleVisibility: .visible) {
-            Button("移除记录", role: .destructive) { if let film = removing { model.library.remove(film.id) }; removing = nil }
+        .confirmationDialog(removing?.photoFile != nil ? "移除影片及 App 内导入副本？相册原视频不会删除。" : "从片库移除？原始影片文件不会被删除。", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }), titleVisibility: .visible, presenting: removing) { film in
+            Button("移除记录", role: .destructive) { model.library.scheduleRemoval(film) }
         }
         .alert("无法打开影片", isPresented: Binding(get: { model.errorMessage != nil && !model.showingPlayer }, set: { if !$0 { model.errorMessage = nil } })) {
+            if model.sourceRecovery == .server { Button("管理服务器") { browsingServers = true } }
+            if model.sourceRecovery == .choosePhoto { Button("从相册选择") { browsingPhotos = true } }
             if let id = model.missingFilmID { Button("重新定位文件") { relocating = id; importing = true } }
             Button("好", role: .cancel) { model.errorMessage = nil }
         } message: { Text(model.errorMessage ?? "") }
         .onChange(of: scenePhase) { _, phase in
+            if phase == .background { model.library.finishPendingRemoval() }
             if phase == .background && !model.cinemaActive { model.pauseForBackground(); model.checkpoint() }
         }
         .onDisappear { photoImporter.cancel(); if !model.cinemaActive { model.pauseForBackground(); model.checkpoint() } }
         .task { await model.runSmokeTestIfRequested() }
+    }
+
+    private var filmLibrary: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 28) {
+                if shelf.isEmpty {
+                    ContentUnavailableView {
+                        Label("你的私人影院", systemImage: "play.rectangle.on.rectangle")
+                    } description: {
+                        Text("从文件、相册或局域网打开影片。下次回来，接着看。")
+                    } actions: {
+                        Button("添加第一部影片", systemImage: "plus") { addingSource = true }
+                            .buttonStyle(.borderedProminent)
+                    }.frame(minHeight: 360)
+                } else {
+                    if search.isEmpty, !browsing.filtered, section == "片库", let film = model.library.recent.first(where: { $0.id != model.library.pendingRemoval?.id && $0.resumable }) {
+                        VStack(alignment: .leading, spacing: 14) {
+                            Text("继续观看").font(.title2.bold())
+                            Button { model.openFilm(film) } label: {
+                                HStack(spacing: 24) {
+                                    FilmPoster(film: film, library: model.library).frame(width: 250, height: 141)
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        Text(film.title).font(.title2.bold()).lineLimit(2)
+                                        Text("上次看到 \(PlayerModel.clock(film.position)) · 剩余 \(PlayerModel.clock(max(0, film.duration - film.position)))")
+                                            .font(.callout).foregroundStyle(.secondary)
+                                        ProgressView(value: min(1, film.position / max(1, film.duration))).tint(.cyan)
+                                        Label("继续播放", systemImage: "play.fill").font(.headline)
+                                    }
+                                    Spacer(minLength: 0)
+                                }.padding(16).background(.thinMaterial, in: RoundedRectangle(cornerRadius: 24))
+                            }.buttonStyle(.plain).hoverEffect(.highlight)
+                        }
+                    }
+                    let results = visibleFilms
+                    HStack {
+                        Text(search.isEmpty ? (section == "收藏" ? "我的收藏" : "我的片库") : "搜索结果").font(.title2.bold())
+                        Spacer()
+                        Text("\(results.count) 部").font(.callout).foregroundStyle(.secondary)
+                        Menu {
+                            Picker("排序", selection: $order) {
+                                ForEach(FilmOrder.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                            }
+                            Picker("来源", selection: $browsing.source) {
+                                ForEach(FilmSourceFilter.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                            }
+                            Picker("观看进度", selection: $browsing.watch) {
+                                ForEach(FilmWatchFilter.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                            }
+                            if browsing.filtered { Button("清除筛选") { browsing = FilmBrowsing() } }
+                        } label: {
+                            Label("排序与筛选", systemImage: browsing.filtered ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                        }
+                    }
+                    if browsing.filtered {
+                        HStack {
+                            Text([browsing.source == .all ? nil : browsing.source.rawValue,
+                                  browsing.watch == .all ? nil : browsing.watch.rawValue].compactMap { $0 }.joined(separator: " · "))
+                            Button("清除筛选") { browsing = FilmBrowsing() }
+                        }.font(.callout)
+                    }
+                    if results.isEmpty {
+                        ContentUnavailableView {
+                            Label(browsing.filtered ? "没有符合筛选条件的影片" : (search.isEmpty ? "还没有收藏" : "没有找到影片"), systemImage: browsing.filtered ? "line.3.horizontal.decrease.circle" : (search.isEmpty ? "heart" : "magnifyingglass"))
+                        } description: {
+                            Text(browsing.filtered ? "清除筛选可以查看其他影片。" : search.isEmpty ? "点影片旁的更多按钮，即可收藏喜欢的影片。" : "试试影片名称中的其他关键词。")
+                        }
+                    }
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 22)], spacing: 24) {
+                        ForEach(results) { film in
+                            VStack(alignment: .leading, spacing: 8) {
+                                Button { model.openFilm(film) } label: {
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        FilmPoster(film: film, library: model.library).frame(height: 150)
+                                            .overlay(alignment: .topLeading) {
+                                                Text(film.isSpatialVideo == true ? "空间视频" : (film.preferences.layout.isStereo ? "3D" : "2D"))
+                                                    .font(.caption.bold()).padding(.horizontal, 9).padding(.vertical, 5)
+                                                    .background(.black.opacity(0.65), in: Capsule()).padding(10)
+                                            }
+                                        Text(film.title).lineLimit(2).font(.headline).frame(maxWidth: .infinity, alignment: .leading)
+                                    }.contentShape(RoundedRectangle(cornerRadius: 15))
+                                }.buttonStyle(.plain).hoverEffect(.highlight)
+                                    .contextMenu { filmActions(film) }
+                                HStack(spacing: 8) {
+                                    Text("\(film.watchFilter.rawValue) · \(film.sourceDescription)").font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                    Spacer(minLength: 0)
+                                    if film.favorite { Image(systemName: "heart.fill").font(.caption).foregroundStyle(.pink).accessibilityLabel("已收藏") }
+                                    Menu { filmActions(film) } label: {
+                                        Image(systemName: "ellipsis").frame(width: 44, height: 44)
+                                    }.accessibilityLabel("\(film.title)的更多操作")
+                                }
+                                if film.duration > 0 {
+                                    ProgressView(value: min(1, film.position / film.duration)).tint(.cyan)
+                                }
+                            }.padding(12).background(.thinMaterial, in: RoundedRectangle(cornerRadius: 22))
+                                .task { model.library.makeThumbnail(for: film) }
+                        }
+                    }
+                }
+                if let error = model.library.error { Text(error).foregroundStyle(.orange).font(.caption) }
+            }.padding(28)
+        }
+    }
+
+    @ViewBuilder private func filmActions(_ film: LibraryFilm) -> some View {
+        Button("从头播放", systemImage: "play") { model.openFilm(film, fromStart: true) }
+        Button(film.favorite ? "取消收藏" : "收藏", systemImage: film.favorite ? "heart.slash" : "heart") {
+            model.library.update(film.id) { $0.favorite.toggle() }
+        }
+        Button("重命名", systemImage: "pencil") { renaming = film }
+        if film.networkServerID != nil {
+            Button("管理服务器", systemImage: "server.rack") { browsingServers = true }
+        } else if film.isNetwork {
+            Button("编辑网络来源", systemImage: "link") { editingLink = film; linkSheet = true }
+        } else if film.photoFile == nil && film.photoAssetIdentifier == nil {
+            Button("重新定位文件", systemImage: "folder") { relocating = film.id; importing = true }
+        }
+        Divider()
+        Button("从片库移除", systemImage: "minus.circle", role: .destructive) { removing = film }
+    }
+
+    private func selectSource(_ source: MovieSourceAction) {
+        switch source {
+        case .file: relocating = nil; importing = true
+        case .photos: browsingPhotos = true
+        case .server: browsingServers = true
+        case .link: editingLink = nil; linkSheet = true
+        case .offlinePhoto: choosingPhoto = true
+        }
+    }
+
+}
+
+private enum MovieSourceAction { case file, photos, server, link, offlinePhoto }
+
+private struct MovieSourceOptions: View {
+    let select: (MovieSourceAction) -> Void
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 16)], spacing: 16) {
+                source("文件", "打开设备或文件 App 中的影片", "folder", .file)
+                source("相册", "直接播放，不保存完整视频副本", "photo.on.rectangle", .photos)
+                source("局域网", "浏览 NAS 或电脑的 SMB 共享", "externaldrive.connected.to.line.below", .server)
+                source("视频链接", "播放 HTTP / HTTPS 视频地址", "link", .link)
+            }
+            DisclosureGroup("离线副本") {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("需要独立保存在 App 内，或使用兼容播放时，可从相册保存副本。iCloud 视频可能需要先下载。")
+                        .font(.callout).foregroundStyle(.secondary)
+                    Button("从相册保存离线副本", systemImage: "square.and.arrow.down") { select(.offlinePhoto) }
+                }.padding(.top, 12)
+            }
+        }
+    }
+    private func source(_ title: String, _ subtitle: String, _ symbol: String, _ action: MovieSourceAction) -> some View {
+        Button { select(action) } label: {
+            VStack(alignment: .leading, spacing: 12) {
+                Image(systemName: symbol).font(.title2).foregroundStyle(.cyan).frame(height: 32)
+                Text(title).font(.headline)
+                Text(subtitle).font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+            }.frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading).padding(20)
+                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 22))
+        }.buttonStyle(.plain).hoverEffect(.highlight)
     }
 }
 
@@ -216,7 +369,7 @@ struct NetworkSourceSheet: View {
             Text(existing == nil ? "视频链接" : "编辑网络来源").font(.title2)
             TextField("https://…", text: $address).textInputAutocapitalization(.never).autocorrectionDisabled().textFieldStyle(.roundedBorder)
             TextField("名称（可选）", text: $name).textFieldStyle(.roundedBorder)
-            Text("输入视频直链或 HLS 地址。局域网文件也可通过系统“文件”中的服务器连接打开。").font(.callout).foregroundStyle(.secondary)
+            Text("输入视频直链或 HLS 地址。NAS 共享请使用“打开影片 → 局域网服务器”。").font(.callout).foregroundStyle(.secondary)
             if let error { Text(error).foregroundStyle(.red) }
             HStack {
                 Button("取消") { dismiss() }; Spacer()

@@ -6,10 +6,10 @@ struct PlayerScreen: View {
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     @Environment(\.dismissWindow) private var dismissWindow
-    @State private var picture = false
-    @State private var tracks = false
-    @State private var cinema = false
-    @State private var more = false
+    let browsePhotos: () -> Void
+    let manageServer: () -> Void
+    @Environment(\.openURL) private var openURL
+    @State private var page: PlaybackSettingsPage?
 
     private var stereoControls: Bool {
         guard let request = model.request else { return false }
@@ -27,16 +27,10 @@ struct PlayerScreen: View {
                 Button("片库", systemImage: "chevron.left") { Task { await leave() } }.frame(minHeight: 54)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(model.movieTitle).font(.headline).lineLimit(1)
-                    Text(model.pictureTitle).font(.caption).foregroundStyle(.secondary)
+                    Text(model.playbackNotice ?? model.pictureTitle).font(.caption).foregroundStyle(.secondary).lineLimit(2)
                 }
                 Spacer()
-                if let film = model.currentFilm {
-                    Button(film.favorite ? "取消收藏" : "收藏", systemImage: film.favorite ? "heart.fill" : "heart") { model.library.update(film.id) { $0.favorite.toggle() }; reveal() }.labelStyle(.iconOnly)
-                }
-                Button("画面", systemImage: "view.3d") { picture = true; reveal() }
-                    .popover(isPresented: $picture) { PictureSettings(model: model).padding(24).frame(width: 430) }
-                Button("影院", systemImage: "vision.pro") { cinema = true; reveal() }
-                    .popover(isPresented: $cinema) { CinemaSettings(model: model, enter: enterCinema).padding(24).frame(width: 430) }
+
             }.opacity(controlsVisible ? 1 : 0).allowsHitTesting(controlsVisible).accessibilityHidden(!controlsVisible)
             if stereoControls {
                 GeometryReader { geometry in
@@ -54,16 +48,21 @@ struct PlayerScreen: View {
         }.padding(24)
             .toolbar(.hidden, for: .navigationBar)
             .onChange(of: model.isPlaying) { _, _ in reveal() }
-            .onChange(of: picture) { _, value in if !value { model.savePicturePreferences(); reveal() } }
-            .onChange(of: tracks) { _, value in if !value { reveal() } }
-            .onChange(of: cinema) { _, value in if !value { reveal() } }
-            .onChange(of: picture) { _, value in model.focus.hold("window-picture", value) }
-            .onChange(of: tracks) { _, value in model.focus.hold("window-tracks", value) }
-            .onChange(of: cinema) { _, value in model.focus.hold("window-cinema", value) }
-            .onChange(of: more) { _, value in model.focus.hold("window-more", value) }
-            .onDisappear {
-                for key in ["window-picture", "window-tracks", "window-cinema", "window-more"] { model.focus.hold(key, false) }
+            .popover(isPresented: Binding(get: { page != nil }, set: { if !$0 { page = nil } }),
+                     attachmentAnchor: .point(.bottomTrailing)) {
+                VStack(spacing: 14) {
+                    HStack {
+                        Text("观看设置").font(.title2.bold())
+                        Spacer()
+                        Button("返回播放") { page = nil }
+                    }
+                    PlaybackSettingsPanel(model: model, page: $page, enterCinema: enterCinema, leaveLibrary: leave)
+                }.padding(24).frame(width: 490, height: 470)
             }
+            .onChange(of: page) { _, destination in
+                model.focus.hold("window-settings", destination != nil)
+            }
+            .onDisappear { model.focus.hold("window-settings", false) }
             .animation(.easeInOut(duration: 0.25), value: controlsVisible)
             .modifier(FocusPlaybackModifier(model: model))
     }
@@ -78,7 +77,7 @@ struct PlayerScreen: View {
                     else if request.usesTextureOutput { StereoPlayerView(model: model, request: request).id(request.id) }
                     else if request.engine == .vlc { VLCPlayerView(model: model).id(request.id) }
                     else if let player = model.nativePlayer { NativeVideoSurface(player: player) }
-                } else { ProgressView("正在打开影片…") }
+                } else { Color.clear }
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
             Color.clear.contentShape(Rectangle()).onTapGesture { reveal() }.offset(z: stereoControls ? 24 : 0)
             if !model.subtitleText.isEmpty && !model.cinemaActive {
@@ -93,60 +92,68 @@ struct PlayerScreen: View {
                 VStack(spacing: 16) {
                     Label("暂时无法播放这部影片", systemImage: "exclamationmark.triangle").font(.title3)
                     Text(model.errorMessage ?? model.rendererError ?? "").font(.callout).lineLimit(4)
-                    HStack {
-                        Button("重试") { model.retryPlayback() }
-                        if model.isPlaying { Button("关闭提示") { model.errorMessage = nil; model.rendererError = nil } }
-                        Button("返回片库") { Task { await leave() } }
+                    ViewThatFits(in: .horizontal) {
+                        HStack { recoveryButtons }
+                        VStack { recoveryButtons }
                     }
                 }.padding(28).frame(maxWidth: 550).glassBackgroundEffect().frame(maxHeight: .infinity).offset(z: stereoControls ? 32 : 0.04)
+            } else if model.isOpeningPhoto {
+                VStack(spacing: 16) {
+                    if let value = model.photoLoadingProgress {
+                        ProgressView(value: value).frame(maxWidth: 260)
+                        Text(value, format: .percent.precision(.fractionLength(0))).monospacedDigit()
+                    } else { ProgressView() }
+                    Text(model.loadingTitle ?? "正在打开相册视频…")
+                    Button("取消") { Task { await leave() } }
+                }.padding(24).glassBackgroundEffect().frame(maxHeight: .infinity)
             } else if model.hasEnded {
                 HStack(spacing: 20) {
                     Button("重新播放", systemImage: "arrow.counterclockwise") { model.restart(); reveal() }
                     Button("返回片库", systemImage: "square.grid.2x2") { Task { await leave() } }
                 }.padding(24).glassBackgroundEffect().frame(maxHeight: .infinity).offset(z: stereoControls ? 32 : 0.04)
-            } else if model.stateText.contains("打开") || model.stateText.contains("缓冲") || model.isSwitchingEngine {
-                ProgressView(model.isSwitchingEngine ? "正在尝试兼容播放…" : model.stateText)
-                    .padding(24).glassBackgroundEffect().frame(maxHeight: .infinity).offset(z: stereoControls ? 32 : 0.04)
+            } else if let title = model.loadingTitle ?? (model.request == nil ? "正在打开影片…" : nil) {
+                VStack(spacing: 16) {
+                    ProgressView(title)
+                    Button("取消播放") { Task { await leave() } }
+                }.padding(24).glassBackgroundEffect().frame(maxHeight: .infinity).offset(z: stereoControls ? 32 : 0.04)
             }
             if !stereoControls {
                 transport.padding(20).opacity(controlsVisible ? 1 : 0).allowsHitTesting(controlsVisible).accessibilityHidden(!controlsVisible).offset(z: 0.04)
             }
         }.clipShape(RoundedRectangle(cornerRadius: 26))
     }
+    @ViewBuilder private var recoveryButtons: some View {
+        Button("重试") { model.retryPlayback() }
+        if model.sourceRecovery == .photoPermission, let url = URL(string: UIApplication.openSettingsURLString) {
+            Button("相册访问设置") { openURL(url) }
+        } else if model.sourceRecovery == .choosePhoto {
+            Button("重新选择视频") { Task { await leave(); browsePhotos() } }
+        } else if model.sourceRecovery == .server || model.currentFilm?.networkServerID != nil {
+            Button("管理服务器") { Task { await leave(); manageServer() } }
+        }
+        if model.isPlaying { Button("关闭提示") { model.errorMessage = nil; model.rendererError = nil } }
+        Button("返回片库") { Task { await leave() } }
+    }
     private var transport: some View {
         VStack(spacing: 10) {
             PlaybackSeekBar(model: model, holdKey: "window-seek").font(.caption)
             SeekPreviewControlsRow(model: model, surface: "window-controls") {
-                HStack(spacing: 20) {
-                    Button("后退 10 秒", systemImage: "gobackward.10") { model.skip(-10); reveal() }.labelStyle(.iconOnly).disabled(!model.isSeekable)
-                    Button(model.isPlaying ? "暂停" : "播放", systemImage: model.isPlaying ? "pause.fill" : "play.fill") { model.togglePlayback(); reveal() }
-                        .labelStyle(.iconOnly).keyboardShortcut(.space, modifiers: []).frame(minWidth: 60, minHeight: 60)
-                    Button("快进 10 秒", systemImage: "goforward.10") { model.skip(10); reveal() }.labelStyle(.iconOnly).disabled(!model.isSeekable)
-                    Spacer()
-                    Button("字幕与音轨", systemImage: "captions.bubble") { model.loadTracks(); tracks = true; reveal() }
-                        .popover(isPresented: $tracks) { TrackSettings(model: model).frame(width: 460, height: 560) }
-                    Button("更多", systemImage: "ellipsis") { more = true; reveal() }.labelStyle(.iconOnly)
-                        .popover(isPresented: $more) {
-                        VStack(alignment: .leading, spacing: 20) {
-                        Button("从头播放", systemImage: "arrow.counterclockwise") { model.restart(); reveal() }
-                        if model.currentFilm?.title.hasPrefix("Big Buck Bunny") == true || model.request?.url.lastPathComponent.hasPrefix("BBB-") == true {
-                            Text("Big Buck Bunny © 2008 Blender Foundation · CC BY 3.0")
-                        }
-                        Button("返回片库", systemImage: "square.grid.2x2") { Task { await leave() } }
-                        }.padding(24).frame(width: 300)
-                    }
-                }
+                AdaptivePlaybackControls(model: model, page: $page)
+
             }
         }.padding(.horizontal, 24).padding(.vertical, 14).glassBackgroundEffect(in: RoundedRectangle(cornerRadius: 24))
     }
     private func reveal() { model.focus.reveal() }
     private func leave() async {
+        model.errorMessage = nil
+        model.rendererError = nil
+        model.missingFilmID = nil
         if model.cinemaActive { await dismissImmersiveSpace(); model.setCinema(false) }
         model.returnToLibrary()
     }
     private func enterCinema() async {
         guard !model.cinemaTransition, model.request != nil else { return }
-        cinema = false; model.cinemaTransition = true
+        page = nil; model.cinemaTransition = true
         defer { model.cinemaTransition = false }
         switch await openImmersiveSpace(id: "Cinema") {
         case .opened:
@@ -177,10 +184,15 @@ struct CaptionOverlay: View {
 
 struct PictureSettings: View {
     @Bindable var model: PlayerModel
+    var done: (() -> Void)? = nil
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                Text("画面设置").font(.title2)
+                HStack {
+                    LabeledContent("当前效果", value: model.pictureTitle).font(.headline)
+                    Spacer()
+                    if let done { Button("完成", action: done) }
+                }
                 if model.request?.isSpatialVideo == true {
                     Label(model.spatialStereoActive ? "正在播放原生双眼画面" : "正在准备原生空间画面", systemImage: "vision.pro")
                     Text("保留影片的左右眼画面，无需 AI 转换或手动分屏。").font(.callout).foregroundStyle(.secondary)
@@ -213,37 +225,57 @@ struct PictureSettings: View {
 
 struct DepthEffectControls: View {
     @Bindable var model: PlayerModel
+    @State private var adjustments = false
+    @State private var savedDefault = false
+    private var effectDescription: String {
+        switch model.currentDepthEffect.preset {
+        case .natural: "柔和的前后层次，适合日常观看。"
+        case .foreground: "让前景更靠近你，保留远景层次。"
+        case .custom: "按你的喜好微调，自动为这部影片记住。"
+        }
+    }
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Picker("观影预设", selection: Binding(get: { model.currentDepthEffect.preset }, set: { model.selectDepthPreset($0) })) {
+        VStack(alignment: .leading, spacing: 18) {
+            Picker("观影预设", selection: Binding(get: { model.currentDepthEffect.preset }, set: {
+                model.selectDepthPreset($0)
+                if $0 == .custom { adjustments = true }
+            })) {
                 ForEach(DepthPreset.allCases) { Text($0.title).tag($0) }
             }.pickerStyle(.segmented)
-            HStack { Text("立体强度"); Spacer(); Text("\(Int(model.depthStrength * 100))%").monospacedDigit() }
-            Slider(value: Binding(get: { model.depthStrength }, set: { model.depthStrength = $0; model.depthPreset = .custom }), in: 0...1, onEditingChanged: { editing in
-                if !editing { model.savePicturePreferences() }
-            }).accessibilityLabel("立体强度")
-            Text("控制前后层次；设为 0 可对比平面画面。").font(.caption).foregroundStyle(.secondary)
-            HStack { Text("出屏程度"); Spacer(); Text("\(Int(model.depthPopOut * 100))%").monospacedDigit() }
-            Slider(value: Binding(get: { model.depthPopOut }, set: { model.depthPopOut = $0; model.depthPreset = .custom }), in: 0...1, onEditingChanged: { editing in
-                if !editing { model.savePicturePreferences() }
-            }).accessibilityLabel("出屏程度")
-            Text("向右让前景更靠近你，并保留远景在屏幕后。立体强度调节前后层次；强度为 0 时保持平面。").font(.caption).foregroundStyle(.secondary)
-            Toggle("比例保护", isOn: Binding(get: { model.depthProportionProtection }, set: {
-                model.depthProportionProtection = $0; model.depthPreset = .custom; model.savePicturePreferences()
-            }))
-            #if DEBUG
-            DisclosureGroup("实验对比") { MotionAlignmentComparison(model: model) }
-            #endif
-            Text("减少脸部、四肢等区域的拉伸和扭斜，尽量保留原片形状。开启后部分局部景深会收敛。").font(.caption).foregroundStyle(.secondary)
-            Button(model.currentDepthEffect == model.library.defaultDepthEffect ? "已是新影片默认效果" : "设为新影片默认效果") {
-                model.library.saveDefaultDepthEffect(model.currentDepthEffect)
+            Text(effectDescription).font(.callout).foregroundStyle(.secondary)
+            DisclosureGroup("更多调整", isExpanded: $adjustments) {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack { Text("立体强度"); Spacer(); Text("\(Int(model.depthStrength * 100))%").monospacedDigit() }
+                    Slider(value: Binding(get: { model.depthStrength }, set: { model.depthStrength = $0; model.depthPreset = .custom }), in: 0...1, onEditingChanged: { editing in
+                        if !editing { model.savePicturePreferences() }
+                    }).accessibilityLabel("立体强度")
+                    Text("控制前后层次；设为 0 可对比平面画面。").font(.caption).foregroundStyle(.secondary)
+                    HStack { Text("出屏程度"); Spacer(); Text("\(Int(model.depthPopOut * 100))%").monospacedDigit() }
+                    Slider(value: Binding(get: { model.depthPopOut }, set: { model.depthPopOut = $0; model.depthPreset = .custom }), in: 0...1, onEditingChanged: { editing in
+                        if !editing { model.savePicturePreferences() }
+                    }).accessibilityLabel("出屏程度")
+                    Text("让前景更靠近你，并保留远景在屏幕后。").font(.caption).foregroundStyle(.secondary)
+                    Toggle("比例保护", isOn: Binding(get: { model.depthProportionProtection }, set: {
+                        model.depthProportionProtection = $0; model.depthPreset = .custom; model.savePicturePreferences()
+                    }))
+                    Text("减少脸部和四肢拉伸。出现重影时，可降低强度或出屏程度。").font(.caption).foregroundStyle(.secondary)
+                }.padding(.top, 16)
             }
-            .disabled(model.currentDepthEffect == model.library.defaultDepthEffect)
-            Text("新加入影片开启 AI 立体时使用，已有影片沿用各自设置。").font(.caption).foregroundStyle(.secondary)
-            Button("使用新影片默认效果") { model.applyDepthEffect(model.library.defaultDepthEffect) }
-                .disabled(model.currentDepthEffect == model.library.defaultDepthEffect)
-            Text("实验性效果。遮挡处仍可能拉伸；若出现重影，可降低强度或出屏程度。").font(.caption).foregroundStyle(.secondary)
-        }
+            Divider()
+            Button {
+                model.library.saveDefaultDepthEffect(model.currentDepthEffect)
+                savedDefault = true
+            } label: {
+                Label(savedDefault ? "已保存为新影片默认效果" : "设为新影片默认效果", systemImage: savedDefault ? "checkmark.circle.fill" : "bookmark")
+            }.disabled(model.currentDepthEffect == model.library.defaultDepthEffect)
+            Text(model.currentDepthEffect == model.library.defaultDepthEffect
+                 ? "之后添加的影片开启 AI 立体时将使用此效果。已有影片保持原设置。"
+                 : "只影响之后添加的影片；已有影片保留各自设置。")
+                .font(.caption).foregroundStyle(.secondary)
+            if model.currentDepthEffect != model.library.defaultDepthEffect {
+                Button("恢复新影片默认效果") { model.applyDepthEffect(model.library.defaultDepthEffect) }
+            }
+        }.onChange(of: model.currentDepthEffect) { _, _ in savedDefault = false }
     }
 }
 
@@ -278,14 +310,6 @@ struct TrackSettings: View {
                     Section {
                         Text("音轨和字幕选择会记住到当前影片，包括关闭字幕。")
                             .font(.caption).foregroundStyle(.secondary)
-                    }
-                }
-                if let request = model.request, !request.isSpatialVideo {
-                    Section("播放兼容性") {
-                        Picker("播放引擎", selection: Binding(get: { model.request?.engine ?? .native }, set: { model.switchEngine($0) })) {
-                            Text("Apple 原生").tag(PlaybackEngine.native)
-                            Text("VLCKit").tag(PlaybackEngine.vlc)
-                        }.disabled(model.isClosing || model.isSwitchingEngine)
                     }
                 }
                 Section("音轨") {
@@ -323,12 +347,85 @@ struct TrackSettings: View {
                             .onChange(of: model.subtitleOffset) { _, _ in model.savePicturePreferences() }
                     }
                 }
-            }.navigationTitle("字幕与音轨")
+            }.navigationTitle("字幕与声音")
                 .toolbar {
                     if let done { ToolbarItem(placement: .confirmationAction) { Button("完成", action: done) } }
                 }
         }.fileImporter(isPresented: $importing, allowedContentTypes: [UTType(filenameExtension: "srt") ?? .plainText, UTType(filenameExtension: "vtt") ?? .plainText, .plainText]) { result in
             if case .success(let url) = result { model.importSubtitle(url) }
+        }
+    }
+}
+
+
+/// Shared order and hit targets for window and immersive playback.
+struct PlaybackTransportButtons: View {
+    @Bindable var model: PlayerModel
+    var body: some View {
+        HStack(spacing: 8) {
+            Button("后退 10 秒", systemImage: "gobackward.10") { model.skip(-10); model.focus.reveal() }
+                .labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44).disabled(!model.isSeekable)
+            Button(model.isPlaying ? "暂停" : "播放", systemImage: model.isPlaying ? "pause.fill" : "play.fill") {
+                model.togglePlayback(); model.focus.reveal()
+            }.labelStyle(.iconOnly).keyboardShortcut(.space, modifiers: [])
+                .frame(minWidth: 60, minHeight: 60).buttonStyle(.borderedProminent).disabled(model.request == nil)
+            Button("快进 10 秒", systemImage: "goforward.10") { model.skip(10); model.focus.reveal() }
+                .labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44).disabled(!model.isSeekable)
+        }
+    }
+}
+
+struct PlaybackActionLabel: View {
+    let title: String
+    let symbol: String
+    init(_ title: String, symbol: String) { self.title = title; self.symbol = symbol }
+    var body: some View {
+        VStack(spacing: 5) {
+            Image(systemName: symbol).font(.title3)
+            Text(title).font(.caption)
+        }.frame(minWidth: 42, minHeight: 52)
+    }
+}
+
+struct PlaybackAdvancedSettings: View {
+    @Bindable var model: PlayerModel
+    let done: () -> Void
+    var body: some View {
+        NavigationStack {
+            Form {
+                if model.request?.url.scheme?.lowercased() == "smb" {
+                    Section {
+                        Text("SMB 共享使用 VLC 播放。原生空间视频请通过本地文件或相册打开。")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+                if model.request?.photoAssetIdentifier != nil {
+                    Section {
+                        Text("直接从相册播放。若需使用 VLC，请返回片库选择“从相册保存离线副本”。")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+                if let request = model.request, !request.isSpatialVideo, request.photoAssetIdentifier == nil, request.url.scheme?.lowercased() != "smb" {
+                    Section("播放兼容性") {
+                        Picker("播放引擎", selection: Binding(get: { model.request?.engine ?? .native }, set: { model.switchEngine($0) })) {
+                            Text("Apple 原生").tag(PlaybackEngine.native)
+                            Text("VLCKit").tag(PlaybackEngine.vlc)
+                        }.disabled(model.isClosing || model.isSwitchingEngine)
+                    }
+                }
+                Section("观影控制") {
+                    Toggle("专注观影", isOn: Binding(get: { model.library.focusViewing }, set: {
+                        model.library.focusViewing = $0; model.focus.reveal()
+                    }))
+                    Text("播放时无操作 3 秒后隐藏控制。选中影片并捏合可唤回。").font(.caption).foregroundStyle(.secondary)
+                }
+                #if DEBUG
+                Section("开发者") {
+                    DisclosureGroup("实验对比") { MotionAlignmentComparison(model: model) }
+                }
+                #endif
+            }.navigationTitle("播放设置")
+                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("返回更多", action: done) } }
         }
     }
 }

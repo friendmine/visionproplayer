@@ -8,6 +8,7 @@ struct SpatialVideoView: View {
     let model: PlayerModel
     let player: AVPlayer
     var immersive = false
+    var cinemaPage: Binding<PlaybackSettingsPage?> = .constant(nil)
     @State private var video = Entity()
     @State private var recordedStereo = false
     @State private var size = SIMD2<Float>(1, 9.0 / 16.0)
@@ -36,7 +37,7 @@ struct SpatialVideoView: View {
                         CinemaControlPlacement.placeCaptions(captions, model: model, aspect: size.x / size.y)
                     }
                 } attachments: {
-                    Attachment(id: "controls") { CinemaControls(model: model) }
+                    Attachment(id: "controls") { CinemaControls(model: model, panel: cinemaPage) }
                     Attachment(id: "captions") { CaptionOverlay(model: model).frame(width: 800).opacity(model.subtitleText.isEmpty ? 0 : 1) }
                 }
             } else {

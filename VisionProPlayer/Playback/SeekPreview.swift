@@ -12,12 +12,12 @@ final class SeekFrameReader {
     let request: PlaybackRequest
     private let scoped: Bool
     private let generator: AVAssetImageGenerator
-    private lazy var vlc = VPPSeekThumbnails(url: request.url)
+    private lazy var vlc = VPPSeekThumbnails(url: request.url, networkCredentials: request.networkCredentials)
 
-    init(_ request: PlaybackRequest) {
+    init(_ request: PlaybackRequest, asset: AVAsset? = nil) {
         self.request = request
         scoped = request.url.isFileURL && request.url.startAccessingSecurityScopedResource()
-        generator = AVAssetImageGenerator(asset: AVURLAsset(url: request.url))
+        generator = AVAssetImageGenerator(asset: asset ?? AVURLAsset(url: request.url))
         generator.appliesPreferredTrackTransform = true
         generator.maximumSize = CGSize(width: 448, height: 336)
         generator.requestedTimeToleranceBefore = CMTime(seconds: 0.12, preferredTimescale: 600)
@@ -62,6 +62,7 @@ final class SeekFrameReader {
 final class SeekPreview {
     private(set) var activeID: UUID?
     private(set) var frame: SeekPreviewFrame?
+    private(set) var requestedSeconds = 0.0
     private(set) var unavailable = false
     private struct Key: Hashable {
         let halfSecond: Int
@@ -98,15 +99,16 @@ final class SeekPreview {
     }
     #endif
 
-    func show(request: PlaybackRequest, fraction: Double, duration: Double, swapped: Bool) {
+    func show(request: PlaybackRequest, fraction: Double, duration: Double, swapped: Bool, asset: AVAsset? = nil) {
         guard duration.isFinite, duration > 0, fraction.isFinite else { return }
         if reader?.request.id != request.id {
             reset()
-            reader = SeekFrameReader(request)
+            reader = SeekFrameReader(request, asset: asset)
         }
         activeID = request.id
         let end = max(0, duration - 0.05)
         let seconds = min(end, max(0, fraction * duration))
+        requestedSeconds = seconds
         let key = Key(halfSecond: Int((seconds * 2).rounded()), swapped: request.layout.isStereo && swapped)
         guard target?.key != key else { return }
         target = Target(key: key, seconds: min(end, Double(key.halfSecond) / 2), session: session)

@@ -27,19 +27,40 @@ extension PlayerModel {
     }
 
     var captionAtTop: Bool { selectedSubtitle == "external" && library.externalCaptionAtTop }
-    var currentFilm: LibraryFilm? { request?.libraryID.flatMap { library.film($0) } }
+    var currentFilm: LibraryFilm? { (request?.libraryID ?? openingFilmID).flatMap { library.film($0) } }
     var movieTitle: String { currentFilm?.title ?? request?.url.deletingPathExtension().lastPathComponent ?? "正在打开影片" }
     var pictureTitle: String {
-        guard let request else { return "2D" }
+        guard let request else { return "准备中" }
         if request.isSpatialVideo { return "空间视频 · 原生 3D" }
-        return request.layout.isStereo ? "原片 3D" : (request.converts2D ? "AI 立体" : "2D")
+        return request.layout.isStereo ? "原片 3D" : (request.converts2D ? "AI · " + currentDepthEffect.preset.title : "普通 2D")
+    }
+    var loadingTitle: String? {
+        if isSwitchingEngine { return "正在切换到 VLC 兼容播放…" }
+        if isOpeningPhoto {
+            return photoLoadingProgress != nil ? "正在从 iCloud 载入视频…" : "正在打开相册视频…"
+        }
+        let opening = stateText.contains("打开") || stateText == "准备播放"
+        guard opening || stateText.contains("缓冲") else { return nil }
+        if currentFilm?.isNetwork == true || ["smb", "http", "https"].contains(request?.url.scheme?.lowercased() ?? "") {
+            return opening ? "正在连接影片来源…" : "正在缓冲网络影片…"
+        }
+        return stateText
     }
     var hasEnded: Bool { duration > 0 && (elapsed >= duration - 0.3 || (stateText.contains("播放结束") && elapsed > duration * 0.9)) }
 
     func openFilm(_ film: LibraryFilm, fromStart: Bool = false) {
+        sourceRecovery = nil
+        if library.pendingRemoval?.id == film.id { library.undoRemoval() }
         checkpoint()
+        let film = library.film(film.id) ?? film
         do {
-            let url = try library.resolve(film)
+            let url: URL
+            if let serverID = film.networkServerID {
+                guard let path = film.networkPath else { throw NetworkSourceError.invalidAddress }
+                url = try networkServers.source(serverID: serverID, path: path).url
+            } else if film.photoAssetIdentifier != nil {
+                url = URL(string: "photos://reference/" + film.id.uuidString)!
+            } else { url = try library.resolve(film) }
             missingFilmID = nil; errorMessage = nil
             library.update(film.id) { $0.lastOpened = Date() }
             let seconds = !fromStart && library.resumePlayback && film.resumable ? film.position : 0
@@ -47,7 +68,9 @@ extension PlayerModel {
                  recovery: (seconds, true), libraryID: film.id, cinema: cinemaActive)
             library.makeThumbnail(for: film)
         } catch {
-            missingFilmID = film.id
+            if film.networkServerID != nil { sourceRecovery = .server }
+            if film.photoFile != nil { sourceRecovery = .choosePhoto }
+            missingFilmID = film.sourceFilter == .files ? film.id : nil
             errorMessage = error.localizedDescription
         }
     }
@@ -57,7 +80,8 @@ extension PlayerModel {
     }
     func checkpoint() {
         guard let id = request?.libraryID, duration.isFinite, duration > 0, elapsed.isFinite else { return }
-        let seconds = max(0, nativePlayer?.currentTime().seconds ?? elapsed)
+        let seconds = max(0, request?.url.scheme?.lowercased() == "smb" && vlc?.failed == true
+                          ? lastNetworkPosition : (nativePlayer?.currentTime().seconds ?? elapsed))
         library.updateProgress(id, seconds: seconds.isFinite ? seconds : elapsed, duration: duration)
     }
     func savePicturePreferences() {
@@ -78,7 +102,7 @@ extension PlayerModel {
         eyeCheck = false
         open(current.url, layout: layout, engine: current.allowsNativeFallback ? .automatic : current.engine,
              convert2D: conversion, recovery: (seconds.isFinite ? seconds : 0, playing),
-             libraryID: current.libraryID, cinema: cinema, resolvedEngine: current.engine, restoringTracks: preferredTracks)
+             libraryID: current.libraryID, cinema: cinema, resolvedEngine: current.engine, restoringTracks: preferredTracks, photoAssetIdentifier: current.photoAssetIdentifier, networkCredentials: current.networkCredentials)
     }
     func setLayout(_ layout: StereoLayout) {
         guard let current = request, current.layout != layout else { return }
@@ -105,6 +129,8 @@ extension PlayerModel {
     func switchEngine(_ engine: PlaybackEngine) {
         guard let current = request, engine != current.engine, engine != .automatic,
               !current.isSpatialVideo else { return }
+        guard current.url.scheme?.lowercased() != "smb" else { playbackNotice = "SMB 共享使用 VLC 兼容播放。"; return }
+        guard current.photoAssetIdentifier == nil else { playbackNotice = PhotoPlaybackSource.AccessError.nativeOnly.localizedDescription; return }
         checkpoint()
         let seconds = nativePlayer?.currentTime().seconds ?? elapsed
         open(current.url, layout: current.layout, engine: engine, convert2D: current.converts2D,

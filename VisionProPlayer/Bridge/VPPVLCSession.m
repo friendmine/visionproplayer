@@ -1,3 +1,4 @@
+#import "VPPNetworkAuthentication.h"
 #import "VPPResumeClockGuard.h"
 #import "VPPVLCSession.h"
 #import <VLCKit/vlc/vlc.h>
@@ -152,6 +153,7 @@ static void VPPDisplay(void *opaque, void *picture) {
 @interface VPPPlaybackEvents : NSObject
 @property (nonatomic, strong) dispatch_semaphore_t stopped;
 @property (atomic) BOOL failed;
+@property (atomic) BOOL buffering;
 #if DEBUG
 @property (nonatomic, strong) NSMutableArray *decoderLog;
 #endif
@@ -235,6 +237,9 @@ static void VPPStateChanged(void *opaque, libvlc_state_t state) {
         dispatch_semaphore_signal(events.stopped);
     }
 }
+static void VPPBufferingChanged(void *opaque, float fraction) {
+    ((__bridge VPPPlaybackEvents *)opaque).buffering = fraction < 1.0f;
+}
 static void VPPMediaStopping(void *opaque, libvlc_media_t *media, libvlc_stopping_reason_t reason) {
     // libVLC 4 may already be Stopped by the next UI poll. Keep the error until
     // an explicit retry; otherwise a missing/invalid file looks like normal EOF.
@@ -245,6 +250,7 @@ static void VPPMediaStopping(void *opaque, libvlc_media_t *media, libvlc_stoppin
 static const struct libvlc_media_player_cbs VPPCallbacks = {
     .version = 0,
     .on_state_changed = VPPStateChanged,
+    .on_buffering_changed = VPPBufferingChanged,
     .on_media_stopping = VPPMediaStopping,
 };
 
@@ -285,6 +291,9 @@ static BOOL VPPFramesEqual(CVPixelBufferRef a, CVPixelBufferRef b) {
     double _resumeAnchorPosition;
 }
 - (instancetype)initWithURL:(NSURL *)url stereo:(BOOL)stereo steadyClock:(BOOL)steadyClock error:(NSError **)error {
+    return [self initWithURL:url stereo:stereo steadyClock:steadyClock networkCredentials:@{} error:error];
+}
+- (instancetype)initWithURL:(NSURL *)url stereo:(BOOL)stereo steadyClock:(BOOL)steadyClock networkCredentials:(NSDictionary<NSString *,NSString *> *)networkCredentials error:(NSError **)error {
     if (!(self = [super init])) return nil;
     const char *normal[] = {"--no-video-title-show", "--no-osd"};
     const char *sbs[] = {"--no-video-title-show", "--no-osd", "--avcodec-hw=none", "--clock-master=auto"};
@@ -315,6 +324,7 @@ static BOOL VPPFramesEqual(CVPixelBufferRef a, CVPixelBufferRef b) {
         if (error) *error = [NSError errorWithDomain:@"VisionPlayer.VLC" code:2 userInfo:@{NSLocalizedDescriptionKey:@"无法打开视频地址"}];
         return nil;
     }
+    if ([url.scheme.lowercaseString isEqualToString:@"smb"]) VPPApplyNetworkCredentials(media, networkCredentials);
     libvlc_media_player_set_media(_player, media);
     libvlc_media_release(media);
     if (stereo) {
@@ -437,7 +447,7 @@ static BOOL VPPFramesEqual(CVPixelBufferRef a, CVPixelBufferRef b) {
     if (self.failed) return @"播放失败：请检查文件、编码或网络地址";
     switch (libvlc_media_player_get_state(_player)) {
         case libvlc_Opening: return @"正在打开";
-        case libvlc_Playing: return @"播放中";
+        case libvlc_Playing: return _events.buffering ? @"正在缓冲" : @"播放中";
         case libvlc_Paused: return @"已暂停";
         case libvlc_Stopped: return @"已停止 / 播放结束";
         case libvlc_Stopping: return @"正在停止";

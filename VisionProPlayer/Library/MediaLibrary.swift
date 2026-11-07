@@ -2,6 +2,7 @@ import Foundation
 import Observation
 import AVFoundation
 import UIKit
+import Photos
 
 enum CaptionSize: String {
     case small, standard, large
@@ -36,6 +37,9 @@ struct LibraryFilm: Identifiable, Codable, Equatable {
     var location: String
     var bookmark: Data?
     var photoFile: String?
+    var photoAssetIdentifier: String? // Reference only; never a Photos-managed file URL.
+    var networkServerID: UUID?
+    var networkPath: [String]?
     var isSpatialVideo: Bool?
     var favorite = false
     var addedAt = Date()
@@ -43,10 +47,10 @@ struct LibraryFilm: Identifiable, Codable, Equatable {
     var position = 0.0
     var duration = 0.0
     var preferences = FilmPreferences()
-    var isNetwork: Bool { URL(string: location)?.isFileURL == false }
+    var isNetwork: Bool { photoAssetIdentifier == nil && URL(string: location)?.isFileURL == false }
     var completed: Bool { duration > 0 && position >= duration - min(10, duration * 0.05) }
     var resumable: Bool { position > 2 && !completed }
-    var sourceDescription: String { photoFile != nil ? "相册导入" : isNetwork ? (URL(string: location)?.host ?? "网络影片") : "本地影片" }
+    var sourceDescription: String { networkServerID != nil ? "SMB 共享" : photoAssetIdentifier != nil ? "相册直接播放" : photoFile != nil ? "相册离线副本" : isNetwork ? (URL(string: location)?.host ?? "网络影片") : "本地影片" }
 }
 
 @MainActor @Observable
@@ -164,14 +168,49 @@ final class MediaLibrary {
                                location: url.absoluteString, bookmark: bookmark)
         film.preferences.depthEffect = defaultDepthEffect
         // Only explicit naming conventions are hints; never infer SBS just from width.
+        applyLayoutHint(url, to: &film)
+        films.insert(film, at: 0); save()
+        return film
+    }
+    @discardableResult func addNetworkFilm(server: NetworkServer, path: [String]) throws -> LibraryFilm {
+        guard persistenceAvailable else { throw LibraryError.storageUnavailable }
+        guard !path.isEmpty else { throw NetworkSourceError.invalidAddress }
+        if let existing = films.first(where: { $0.networkServerID == server.id && $0.networkPath == path }) { return existing }
+        let url = try server.url(for: path)
+        var film = LibraryFilm(title: (path.last! as NSString).deletingPathExtension, location: url.absoluteString)
+        film.networkServerID = server.id; film.networkPath = path
+        film.preferences.depthEffect = defaultDepthEffect
+        applyLayoutHint(url, to: &film)
+        let updated = [film] + films
+        try JSONEncoder().encode(updated).write(to: root.appending(path: "library.json"), options: .atomic)
+        films = updated
+        return film
+    }
+
+    private func applyLayoutHint(_ url: URL, to film: inout LibraryFilm) {
         let name = url.lastPathComponent.lowercased()
         if name.contains("halfsbs") || name.contains("hsbs") || name.contains("half-sbs") { film.preferences.layout = .halfSBS }
         else if name.contains("fullsbs") || name.contains("full-sbs") || name.hasPrefix("bbb-sbs-") { film.preferences.layout = .fullSBS }
         else if name.contains("half-ou") || name.contains("halfou") || name.contains("half-tab") { film.preferences.layout = .halfOU }
         else if name.contains("full-ou") || name.contains("fullou") || name.contains("full-tab") || name.contains("_stereo_abl") { film.preferences.layout = .fullOU }
-        films.insert(film, at: 0); save()
+    }
+
+    @discardableResult func addPhotoReference(identifier: String, title: String, duration: Double, spatial: Bool) throws -> LibraryFilm {
+        guard persistenceAvailable else { throw LibraryError.storageUnavailable }
+        if let existing = films.first(where: { $0.photoAssetIdentifier == identifier }) { return existing }
+        var film = LibraryFilm(title: title, location: "")
+        // A non-resolvable marker keeps Photos identifiers out of URL handling.
+        film.location = "photos://reference/" + film.id.uuidString
+        film.photoAssetIdentifier = identifier
+        film.isSpatialVideo = spatial
+        film.duration = duration.isFinite ? max(0, duration) : 0
+        film.preferences.depthEffect = defaultDepthEffect
+        let updated = [film] + films
+        try JSONEncoder().encode(updated).write(to: root.appending(path: "library.json"), options: .atomic)
+        films = updated
         return film
     }
+
     private func photoURL(_ filename: String) -> URL? {
         guard filename == (filename as NSString).lastPathComponent, !filename.isEmpty, filename != ".", filename != ".." else { return nil }
         return root.appending(path: "PhotoVideos", directoryHint: .isDirectory).appending(path: filename)
@@ -194,6 +233,8 @@ final class MediaLibrary {
         } catch { try? FileManager.default.removeItem(at: destination); throw error }
     }
     func resolve(_ film: LibraryFilm) throws -> URL {
+        // References must be resolved by PhotoKit, never treated as a video URL.
+        guard film.photoAssetIdentifier == nil else { throw PhotoPlaybackSource.AccessError.nativeOnly }
         var stale = false
         let url: URL
         if let photo = film.photoFile {
@@ -221,6 +262,33 @@ final class MediaLibrary {
         update(id) { $0.bookmark = bookmark; $0.location = url.absoluteString }
         try? FileManager.default.removeItem(at: thumbnailURL(id))
     }
+    // Keep the complete record and any offline file until the undo period ends.
+    private(set) var pendingRemoval: LibraryFilm?
+    @ObservationIgnored private var removalTimer: Task<Void, Never>?
+
+    func scheduleRemoval(_ film: LibraryFilm) {
+        guard pendingRemoval?.id != film.id, self.film(film.id) != nil else { return }
+        finishPendingRemoval()
+        pendingRemoval = film
+        removalTimer = Task { [weak self] in
+            do { try await Task.sleep(for: .seconds(8)) } catch { return }
+            guard self?.pendingRemoval?.id == film.id else { return }
+            self?.finishPendingRemoval()
+        }
+    }
+
+    func undoRemoval() {
+        removalTimer?.cancel()
+        removalTimer = nil
+        pendingRemoval = nil
+    }
+
+    func finishPendingRemoval() {
+        guard let id = pendingRemoval?.id else { return }
+        undoRemoval()
+        remove(id)
+    }
+
     func remove(_ id: UUID) {
         let owned = film(id)?.photoFile.flatMap { photoURL($0) }
         let updated = films.filter { $0.id != id }
@@ -242,6 +310,14 @@ final class MediaLibrary {
             guard let self else { return }
             defer { self.thumbnailTasks[film.id] = nil }
             do {
+                if let identifier = film.photoAssetIdentifier {
+                    guard let image = await PhotoPlaybackSource.thumbnail(identifier, size: CGSize(width: 600, height: 340)),
+                          !Task.isCancelled, self.film(film.id) != nil,
+                          let data = image.jpegData(compressionQuality: 0.75) else { return }
+                    try data.write(to: self.thumbnailURL(film.id), options: .atomic)
+                    self.thumbnailRevision += 1
+                    return
+                }
                 let url = try self.resolve(film)
                 let scoped = url.startAccessingSecurityScopedResource()
                 defer { if scoped { url.stopAccessingSecurityScopedResource() } }

@@ -1,0 +1,31 @@
+{
+  "date": "2026-11-06",
+  "buildPassed": true,
+  "compiledLayers": 3,
+  "deviceInstalled": true,
+  "homeScreenAppearance": "pending physical device review",
+  "staticPreviewSizes": [
+    400,
+    80,
+    48,
+    32
+  ],
+  "assets": {
+    "VisionProPlayer/Resources/Assets.xcassets/AppIcon.solidimagestack/Front.solidimagestacklayer/Content.imageset/front.png": {
+      "sha256": "209efa2ebe25c898276b79ebb9f8fc72e77706bf8255a5dcf3dcfed856a3dff3",
+      "width": 1024,
+      "height": 1024
+    },
+    "VisionProPlayer/Resources/Assets.xcassets/AppIcon.solidimagestack/Back.solidimagestacklayer/Content.imageset/back.png": {
+      "sha256": "658a3b941d3f3da8fd8333a9dc347ff0078c4f756bc319644a363e3941fcf7bf",
+      "width": 1024,
+      "height": 1024
+    },
+    "VisionProPlayer/Resources/Assets.xcassets/AppIcon.solidimagestack/Middle.solidimagestacklayer/Content.imageset/middle.png": {
+      "sha256": "dfef0c6017c937b1a8e58f24ab1af469529c1096daa7ebd20b500e35104cdef8",
+      "width": 1024,
+      "height": 1024
+    }
+  },
+  "normalLaunchSucceeded": true
+}

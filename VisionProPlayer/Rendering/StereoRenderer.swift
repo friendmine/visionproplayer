@@ -353,6 +353,7 @@ struct StereoPlayerView: View {
     let model: PlayerModel
     let request: PlaybackRequest
     var immersive = false
+    var cinemaPage: Binding<PlaybackSettingsPage?> = .constant(nil)
     @State private var renderer = StereoRenderer()
     @State private var aspect: Float = 16 / 9
     @State private var ready = false
@@ -362,6 +363,11 @@ struct StereoPlayerView: View {
         Group {
             if immersive {
                 RealityView { content, attachments in
+                    if let controls = attachments.entity(for: "controls") {
+                        cinemaControls = controls
+                        CinemaControlPlacement.place(controls, model: model, aspect: aspect)
+                        content.add(controls)
+                    }
                     do {
                         try await renderer.prepare()
                         guard !Task.isCancelled, model.request?.id == request.id else { return }
@@ -370,11 +376,6 @@ struct StereoPlayerView: View {
                         sky.scale = [-1, 1, 1]; sky.name = "CinemaBackground"
                         sky.isEnabled = model.library.darkCinema; content.add(sky)
                         positionCinema()
-                        if let controls = attachments.entity(for: "controls") {
-                            cinemaControls = controls
-                            CinemaControlPlacement.place(controls, model: model, aspect: aspect)
-                            content.add(controls)
-                        }
                         if let captions = attachments.entity(for: "captions") { content.add(captions) }
                         ready = true
                     } catch {
@@ -390,7 +391,7 @@ struct StereoPlayerView: View {
                     try? renderer.bindEyes(swapped: model.swapEyes)
                     renderer.setEyeCheck(model.eyeCheck)
                 } attachments: {
-                    Attachment(id: "controls") { CinemaControls(model: model) }
+                    Attachment(id: "controls") { CinemaControls(model: model, panel: cinemaPage) }
                     Attachment(id: "captions") {
                         CaptionOverlay(model: model).frame(width: 800).opacity(model.subtitleText.isEmpty ? 0 : 1)
                     }

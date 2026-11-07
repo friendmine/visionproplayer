@@ -1,0 +1,619 @@
+{
+  "sample": "seek-preview",
+  "environment": "simulator",
+  "checks": [
+    {
+      "actualColor": [
+        252,
+        0,
+        0
+      ],
+      "actualTime": 1,
+      "aspect": 1.3333333730697632,
+      "expectedColor": [
+        255,
+        0,
+        0
+      ],
+      "name": "native-flat-1.0-swap-false",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        0,
+        0,
+        252
+      ],
+      "actualTime": 4,
+      "aspect": 1.3333333730697632,
+      "expectedColor": [
+        0,
+        0,
+        255
+      ],
+      "name": "native-flat-4.0-swap-false",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        252,
+        0,
+        0
+      ],
+      "actualTime": 1,
+      "aspect": 0.6666666865348816,
+      "expectedColor": [
+        255,
+        0,
+        0
+      ],
+      "name": "native-fullSBS-1.0-swap-false",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        255,
+        142,
+        0
+      ],
+      "actualTime": 1,
+      "aspect": 0.6666666865348816,
+      "expectedColor": [
+        0,
+        255,
+        0
+      ],
+      "name": "native-fullSBS-1.0-swap-true",
+      "passed": false
+    },
+    {
+      "actualColor": [
+        0,
+        0,
+        252
+      ],
+      "actualTime": 4,
+      "aspect": 0.6666666865348816,
+      "expectedColor": [
+        0,
+        0,
+        255
+      ],
+      "name": "native-fullSBS-4.0-swap-false",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        252,
+        253,
+        253
+      ],
+      "actualTime": 4,
+      "aspect": 0.6666666865348816,
+      "expectedColor": [
+        255,
+        255,
+        255
+      ],
+      "name": "native-fullSBS-4.0-swap-true",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        252,
+        0,
+        0
+      ],
+      "actualTime": 1,
+      "aspect": 1.3333333730697632,
+      "expectedColor": [
+        255,
+        0,
+        0
+      ],
+      "name": "native-halfSBS-1.0-swap-false",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        255,
+        142,
+        0
+      ],
+      "actualTime": 1,
+      "aspect": 1.3333333730697632,
+      "expectedColor": [
+        0,
+        255,
+        0
+      ],
+      "name": "native-halfSBS-1.0-swap-true",
+      "passed": false
+    },
+    {
+      "actualColor": [
+        0,
+        0,
+        252
+      ],
+      "actualTime": 4,
+      "aspect": 1.3333333730697632,
+      "expectedColor": [
+        0,
+        0,
+        255
+      ],
+      "name": "native-halfSBS-4.0-swap-false",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        252,
+        253,
+        253
+      ],
+      "actualTime": 4,
+      "aspect": 1.3333333730697632,
+      "expectedColor": [
+        255,
+        255,
+        255
+      ],
+      "name": "native-halfSBS-4.0-swap-true",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        252,
+        0,
+        0
+      ],
+      "actualTime": 1,
+      "aspect": 2.6666667461395264,
+      "expectedColor": [
+        255,
+        0,
+        0
+      ],
+      "name": "native-fullOU-1.0-swap-false",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        0,
+        0,
+        252
+      ],
+      "actualTime": 1,
+      "aspect": 2.6666667461395264,
+      "expectedColor": [
+        0,
+        0,
+        255
+      ],
+      "name": "native-fullOU-1.0-swap-true",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        0,
+        0,
+        252
+      ],
+      "actualTime": 4,
+      "aspect": 2.6666667461395264,
+      "expectedColor": [
+        0,
+        0,
+        255
+      ],
+      "name": "native-fullOU-4.0-swap-false",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        252,
+        0,
+        0
+      ],
+      "actualTime": 4,
+      "aspect": 2.6666667461395264,
+      "expectedColor": [
+        255,
+        0,
+        0
+      ],
+      "name": "native-fullOU-4.0-swap-true",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        252,
+        0,
+        0
+      ],
+      "actualTime": 1,
+      "aspect": 1.3333333730697632,
+      "expectedColor": [
+        255,
+        0,
+        0
+      ],
+      "name": "native-halfOU-1.0-swap-false",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        0,
+        0,
+        252
+      ],
+      "actualTime": 1,
+      "aspect": 1.3333333730697632,
+      "expectedColor": [
+        0,
+        0,
+        255
+      ],
+      "name": "native-halfOU-1.0-swap-true",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        0,
+        0,
+        252
+      ],
+      "actualTime": 4,
+      "aspect": 1.3333333730697632,
+      "expectedColor": [
+        0,
+        0,
+        255
+      ],
+      "name": "native-halfOU-4.0-swap-false",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        252,
+        0,
+        0
+      ],
+      "actualTime": 4,
+      "aspect": 1.3333333730697632,
+      "expectedColor": [
+        255,
+        0,
+        0
+      ],
+      "name": "native-halfOU-4.0-swap-true",
+      "passed": true
+    },
+    {
+      "elapsed": 0.130110034,
+      "name": "native-preview-keeps-main-player-paused",
+      "passed": true,
+      "playing": false,
+      "position": 0.130110034,
+      "previewTime": 5
+    },
+    {
+      "name": "native-dismiss-rejects-late-frame",
+      "passed": true
+    },
+    {
+      "elapsed": 4.8,
+      "name": "native-release-seek-reaches-preview-time",
+      "passed": true,
+      "target": 4.800000000000001
+    },
+    {
+      "actualColor": [
+        229,
+        0,
+        1
+      ],
+      "actualTime": 1.023001,
+      "aspect": 1.3333333730697632,
+      "expectedColor": [
+        255,
+        0,
+        0
+      ],
+      "name": "vlc-flat-1.0-swap-false",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        0,
+        0,
+        240
+      ],
+      "actualTime": 4.023001,
+      "aspect": 1.3333333730697632,
+      "expectedColor": [
+        0,
+        0,
+        255
+      ],
+      "name": "vlc-flat-4.0-swap-false",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        229,
+        0,
+        1
+      ],
+      "actualTime": 1.023001,
+      "aspect": 0.6666666865348816,
+      "expectedColor": [
+        255,
+        0,
+        0
+      ],
+      "name": "vlc-fullSBS-1.0-swap-false",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        19,
+        255,
+        6
+      ],
+      "actualTime": 1.023001,
+      "aspect": 0.6666666865348816,
+      "expectedColor": [
+        0,
+        255,
+        0
+      ],
+      "name": "vlc-fullSBS-1.0-swap-true",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        0,
+        0,
+        240
+      ],
+      "actualTime": 4.023001,
+      "aspect": 0.6666666865348816,
+      "expectedColor": [
+        0,
+        0,
+        255
+      ],
+      "name": "vlc-fullSBS-4.0-swap-false",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        250,
+        254,
+        253
+      ],
+      "actualTime": 4.023001,
+      "aspect": 0.6666666865348816,
+      "expectedColor": [
+        255,
+        255,
+        255
+      ],
+      "name": "vlc-fullSBS-4.0-swap-true",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        229,
+        0,
+        1
+      ],
+      "actualTime": 1.023001,
+      "aspect": 1.3333333730697632,
+      "expectedColor": [
+        255,
+        0,
+        0
+      ],
+      "name": "vlc-halfSBS-1.0-swap-false",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        19,
+        255,
+        6
+      ],
+      "actualTime": 1.023001,
+      "aspect": 1.3333333730697632,
+      "expectedColor": [
+        0,
+        255,
+        0
+      ],
+      "name": "vlc-halfSBS-1.0-swap-true",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        0,
+        0,
+        240
+      ],
+      "actualTime": 4.023001,
+      "aspect": 1.3333333730697632,
+      "expectedColor": [
+        0,
+        0,
+        255
+      ],
+      "name": "vlc-halfSBS-4.0-swap-false",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        250,
+        254,
+        253
+      ],
+      "actualTime": 4.023001,
+      "aspect": 1.3333333730697632,
+      "expectedColor": [
+        255,
+        255,
+        255
+      ],
+      "name": "vlc-halfSBS-4.0-swap-true",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        229,
+        0,
+        1
+      ],
+      "actualTime": 1.023001,
+      "aspect": 2.6666667461395264,
+      "expectedColor": [
+        255,
+        0,
+        0
+      ],
+      "name": "vlc-fullOU-1.0-swap-false",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        0,
+        0,
+        240
+      ],
+      "actualTime": 1.023001,
+      "aspect": 2.6666667461395264,
+      "expectedColor": [
+        0,
+        0,
+        255
+      ],
+      "name": "vlc-fullOU-1.0-swap-true",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        0,
+        0,
+        240
+      ],
+      "actualTime": 4.023001,
+      "aspect": 2.6666667461395264,
+      "expectedColor": [
+        0,
+        0,
+        255
+      ],
+      "name": "vlc-fullOU-4.0-swap-false",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        229,
+        0,
+        1
+      ],
+      "actualTime": 4.023001,
+      "aspect": 2.6666667461395264,
+      "expectedColor": [
+        255,
+        0,
+        0
+      ],
+      "name": "vlc-fullOU-4.0-swap-true",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        229,
+        0,
+        1
+      ],
+      "actualTime": 1.023001,
+      "aspect": 1.3333333730697632,
+      "expectedColor": [
+        255,
+        0,
+        0
+      ],
+      "name": "vlc-halfOU-1.0-swap-false",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        0,
+        0,
+        240
+      ],
+      "actualTime": 1.023001,
+      "aspect": 1.3333333730697632,
+      "expectedColor": [
+        0,
+        0,
+        255
+      ],
+      "name": "vlc-halfOU-1.0-swap-true",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        0,
+        0,
+        240
+      ],
+      "actualTime": 4.023001,
+      "aspect": 1.3333333730697632,
+      "expectedColor": [
+        0,
+        0,
+        255
+      ],
+      "name": "vlc-halfOU-4.0-swap-false",
+      "passed": true
+    },
+    {
+      "actualColor": [
+        229,
+        0,
+        1
+      ],
+      "actualTime": 4.023001,
+      "aspect": 1.3333333730697632,
+      "expectedColor": [
+        255,
+        0,
+        0
+      ],
+      "name": "vlc-halfOU-4.0-swap-true",
+      "passed": true
+    },
+    {
+      "elapsed": 0.023001,
+      "name": "vlc-preview-keeps-main-player-paused",
+      "passed": true,
+      "playing": false,
+      "position": 0.023001,
+      "previewTime": 5.023001
+    },
+    {
+      "name": "vlc-dismiss-rejects-late-frame",
+      "passed": true
+    },
+    {
+      "elapsed": 4.723001,
+      "name": "vlc-release-seek-reaches-preview-time",
+      "passed": true,
+      "target": 4.8184000000000005
+    }
+  ],
+  "passed": false
+}

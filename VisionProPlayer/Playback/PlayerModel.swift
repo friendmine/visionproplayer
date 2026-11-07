@@ -5,6 +5,7 @@ import SwiftUI
 @MainActor @Observable
 final class PlayerModel {
     let library = MediaLibrary()
+    let networkServers = NetworkServerStore()
     let focus = FocusPlayback()
     let seekPreview = SeekPreview()
     var showingPlayer = false
@@ -61,11 +62,19 @@ final class PlayerModel {
     @ObservationIgnored private var depthFrameTimes: [Double] = []
     var request: PlaybackRequest?
     var nativePlayer: AVPlayer?
+    var isOpeningPhoto = false
+    var photoLoadingProgress: Double?
+    var openingFilmID: UUID?
+    @ObservationIgnored private let photoSource = PhotoPlaybackSource()
+    @ObservationIgnored private var photoWantsPlayback = true
     var vlc: VPPVLCSession?
     var stateText = "选择一个测试片或导入自己的视频"
+    enum SourceRecovery { case photoPermission, choosePhoto, server }
+    var sourceRecovery: SourceRecovery?
     var errorMessage: String?
     var progress = 0.0
     var elapsed = 0.0
+    var lastNetworkPosition = 0.0
     var duration = 0.0
     var isPlaying = false
     var isSeekable = false
@@ -130,13 +139,20 @@ final class PlayerModel {
     func open(_ url: URL, layout: StereoLayout? = nil, engine: PlaybackEngine? = nil, convert2D: Bool? = nil,
               recovery: (seconds: Double, playing: Bool)? = nil, libraryID: UUID? = nil,
               cinema: Bool = false, resolvedEngine: PlaybackEngine? = nil,
-              restoringTracks: PlaybackTrackChoices? = nil) {
+              restoringTracks: PlaybackTrackChoices? = nil, photoAssetIdentifier: String? = nil,
+              networkCredentials: [String: String] = [:]) {
+        sourceRecovery = nil
+        playbackNotice = nil
+        photoSource.cancel()
+        isOpeningPhoto = false; photoLoadingProgress = nil; openingFilmID = nil
         showingPlayer = true
+        let photoIdentifier = libraryID.flatMap { library.film($0)?.photoAssetIdentifier } ?? photoAssetIdentifier
+        photoWantsPlayback = recovery?.playing ?? true
         // Take access before the fileImporter callback returns; release only after decoder shutdown.
         let scoped = url.isFileURL && url.startAccessingSecurityScopedResource()
         let selectedLayout = layout ?? layoutChoice
         let preference = engine ?? engineChoice
-        let selectedEngine = resolvedEngine ?? preference.resolved(for: url)
+        let selectedEngine: PlaybackEngine = photoIdentifier != nil ? .native : (url.scheme?.lowercased() == "smb" ? .vlc : (resolvedEngine ?? preference.resolved(for: url)))
         let conversion = (convert2D ?? depthEnabled) && !selectedLayout.isStereo
         openGeneration += 1
         let generation = openGeneration
@@ -156,26 +172,73 @@ final class PlayerModel {
                 if scoped { url.stopAccessingSecurityScopedResource() }
                 return
             }
+            self.openingFilmID = libraryID
+            var credentials = networkCredentials
+            if let film = libraryID.flatMap({ self.library.film($0) }), let serverID = film.networkServerID {
+                do {
+                    guard let path = film.networkPath else { throw NetworkSourceError.invalidAddress }
+                    let source = try self.networkServers.source(serverID: serverID, path: path)
+                    guard source.url == url else { throw NetworkSourceError.changedServer }
+                    credentials = source.credentials.dictionary
+                } catch {
+                    self.sourceRecovery = .server
+                    self.errorMessage = error.localizedDescription; self.stateText = "无法连接服务器"
+                    return
+                }
+            }
+            var photoItem: AVPlayerItem?
+            if let photoIdentifier {
+                self.isOpeningPhoto = true; self.openingFilmID = libraryID
+                self.errorMessage = nil; self.stateText = "正在打开相册视频…"
+                do {
+                    photoItem = try await self.photoSource.load(photoIdentifier) { [weak self] value in
+                        guard let self, self.openGeneration == generation else { return }
+                        self.photoLoadingProgress = min(1, max(0, value))
+                    }
+                } catch {
+                    guard generation == self.openGeneration else { return }
+                    self.isOpeningPhoto = false; self.photoLoadingProgress = nil
+                    self.errorMessage = error.localizedDescription
+                    if let issue = error as? PhotoPlaybackSource.AccessError {
+                        switch issue {
+                        case .permission: self.sourceRecovery = .photoPermission
+                        case .unavailable: self.sourceRecovery = .choosePhoto
+                        default: break
+                        }
+                    }
+                    self.stateText = "相册视频暂不可用"
+                    return
+                }
+            }
             var spatial = false
-            if selectedLayout == .flat, selectedEngine == .native, url.isFileURL {
-                let tracks = try? await AVURLAsset(url: url).loadTracks(withMediaCharacteristic: .containsStereoMultiviewVideo)
+            if selectedLayout == .flat, selectedEngine == .native, url.isFileURL || photoItem != nil {
+                let asset = photoItem?.asset ?? AVURLAsset(url: url)
+                let tracks = try? await asset.loadTracks(withMediaCharacteristic: .containsStereoMultiviewVideo)
                 spatial = tracks?.isEmpty == false
             }
             guard generation == self.openGeneration else {
                 if scoped { url.stopAccessingSecurityScopedResource() }
                 return
             }
+            if let photoIdentifier, !spatial, selectedLayout == .flat,
+               (try? PhotoPlaybackSource.asset(photoIdentifier).mediaSubtypes.contains(.spatialMedia)) == true {
+                self.isOpeningPhoto = false; self.photoLoadingProgress = nil
+                self.errorMessage = "系统尚未提供此空间视频的双眼原片。请先在系统相册完成下载，再重试。"
+                return
+            }
+            self.isOpeningPhoto = false; self.photoLoadingProgress = nil; self.openingFilmID = nil
             if let libraryID { self.library.update(libraryID) { $0.isSpatialVideo = spatial } }
             self.preferredTracks = restoringTracks ?? libraryID.flatMap { self.library.film($0)?.preferences.trackChoices } ?? PlaybackTrackChoices()
             self.start(PlaybackRequest(url: url, engine: selectedEngine, layout: selectedLayout,
                                        swapEyes: self.swapEyes, securityScoped: scoped,
-                                       allowsNativeFallback: preference == .automatic && !spatial,
-                                       converts2D: conversion && !spatial, libraryID: libraryID, isCinema: cinema, isSpatialVideo: spatial), recovery: recovery)
+                                       allowsNativeFallback: preference == .automatic && !spatial && photoIdentifier == nil && url.scheme?.lowercased() != "smb",
+                                       converts2D: conversion && !spatial, libraryID: libraryID, isCinema: cinema, isSpatialVideo: spatial, photoAssetIdentifier: photoIdentifier, networkCredentials: url.scheme?.lowercased() == "smb" ? credentials : [:]),
+                       recovery: photoItem != nil ? (recovery?.seconds ?? 0, self.photoWantsPlayback) : recovery, photoItem: photoItem)
         }
     }
 
     private func start(_ next: PlaybackRequest, recovery: (seconds: Double, playing: Bool)? = nil,
-                       notice: String? = nil) {
+                       notice: String? = nil, photoItem: AVPlayerItem? = nil) {
         request = next
         spatialStereoActive = false
         if let id = next.libraryID, let film = library.film(id) {
@@ -204,14 +267,14 @@ final class PlayerModel {
         depthDisplayTimes.removeAll(); depthGPUTimeSamples.removeAll()
         errorMessage = nil; rendererError = nil
         renderedFrames = 0; stereoDisplayAspect = 0; frameSize = "等待视频帧"
-        progress = 0; elapsed = 0; duration = 0
+        progress = 0; elapsed = 0; duration = 0; lastNetworkPosition = recovery?.seconds ?? 0
         isPlaying = false; isSeekable = false
         stateText = "正在打开"
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
             try AVAudioSession.sharedInstance().setActive(true)
             if next.engine == .native {
-                let item = AVPlayerItem(url: next.url)
+                let item = photoItem ?? AVPlayerItem(url: next.url)
                 if next.usesTextureOutput {
                     let output = AVPlayerItemVideoOutput(pixelBufferAttributes: [
                         kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
@@ -269,7 +332,7 @@ final class PlayerModel {
                 nativePresented = false
                 if recovery == nil { player.play() }
             } else {
-                vlc = try VPPVLCSession(url: next.url, stereo: next.usesTextureOutput, steadyClock: next.converts2D)
+                vlc = try VPPVLCSession(url: next.url, stereo: next.usesTextureOutput, steadyClock: next.converts2D, networkCredentials: next.networkCredentials)
                 // Public libVLC preselection applies before playback starts.
                 // Avoid briefly showing a default subtitle before restoration.
                 if next.usesTextureOutput || preferredTracks.subtitle != nil { vlc?.selectSubtitleTrack("") }
@@ -296,7 +359,7 @@ final class PlayerModel {
         guard let old = request, old.id == requestID, old.engine == .native,
               !isClosing, !isSwitchingEngine else { return }
         guard old.allowsNativeFallback else {
-            errorMessage = message
+            errorMessage = old.photoAssetIdentifier != nil ? "相册原生播放失败。请重试，或通过“从相册保存离线副本”使用兼容播放。" : message
             stateText = "播放失败"
             return
         }
@@ -360,7 +423,11 @@ final class PlayerModel {
             elapsed = vlc.elapsedSeconds; duration = vlc.durationSeconds
             isPlaying = vlc.playing; isSeekable = vlc.seekable
             stateText = vlc.stateText
-            if vlc.failed { errorMessage = vlc.stateText }
+            if vlc.failed {
+                errorMessage = request?.url.scheme?.lowercased() == "smb" ? "共享连接已中断。请检查 NAS 和网络，点重试从已记录的位置重新连接。" : vlc.stateText
+            } else if request?.url.scheme?.lowercased() == "smb", duration > 0, elapsed.isFinite, elapsed >= 0 {
+                lastNetworkPosition = elapsed
+            }
             if let recovery = pendingVLCRecovery, vlc.seekable, duration > 0 {
                 pendingVLCRecovery = nil
                 if recovery.seconds > 0 {
@@ -411,6 +478,8 @@ final class PlayerModel {
     }
 
     func stop() {
+        photoSource.cancel()
+        isOpeningPhoto = false; photoLoadingProgress = nil; openingFilmID = nil
         openGeneration += 1
         let previous = pendingOpen
         pendingOpen = Task { [weak self] in
@@ -422,6 +491,7 @@ final class PlayerModel {
     func waitForPendingChange() async { await pendingOpen?.value }
 
     func pauseForBackground() {
+        photoWantsPlayback = false
         #if DEBUG
         lastBackgroundPause = ProcessInfo.processInfo.systemUptime
         #endif

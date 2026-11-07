@@ -1,0 +1,170 @@
+{
+  "sample": "depth-presets",
+  "environment": "physical-device",
+  "systemVersion": "Version 27.2 (Build 24N120)",
+  "timestamp": "2026-11-07T07:33:00Z",
+  "checks": [
+    {
+      "name": "factory-default-natural",
+      "passed": true
+    },
+    {
+      "name": "existing-film-keeps-original-effect",
+      "passed": true
+    },
+    {
+      "name": "new-local-inherits-foreground-with-ai-off",
+      "passed": true
+    },
+    {
+      "name": "reimport-preserves-film-override",
+      "passed": true
+    },
+    {
+      "name": "network-inherits-custom",
+      "passed": true
+    },
+    {
+      "name": "photo-inherits-custom",
+      "passed": true
+    },
+    {
+      "name": "default-and-film-effects-survive-relaunch",
+      "passed": true
+    },
+    {
+      "name": "legacy-film-keeps-tuned-effect",
+      "passed": true
+    },
+    {
+      "name": "oldest-film-keeps-balanced-effect",
+      "passed": true
+    },
+    {
+      "name": "stored-out-of-range-default-is-bounded",
+      "passed": true
+    },
+    {
+      "name": "unreadable-default-falls-back-to-natural",
+      "passed": true
+    },
+    {
+      "name": "native-ai-started",
+      "passed": true
+    },
+    {
+      "name": "native-natural-playing",
+      "passed": true,
+      "submittedFPS": 29.999027219131204
+    },
+    {
+      "name": "native-foreground-playing",
+      "passed": true,
+      "submittedFPS": 29.992095208444695
+    },
+    {
+      "framesSubmitted": 2,
+      "name": "native-paused-natural-updates-picture",
+      "passed": true,
+      "positionDelta": 0
+    },
+    {
+      "name": "native-paused-natural-settles",
+      "passed": true
+    },
+    {
+      "framesSubmitted": 2,
+      "name": "native-paused-foreground-updates-picture",
+      "passed": true,
+      "positionDelta": 0
+    },
+    {
+      "name": "native-paused-foreground-settles",
+      "passed": true
+    },
+    {
+      "name": "native-custom-selection-keeps-values",
+      "passed": true
+    },
+    {
+      "name": "native-paused-custom-updates-picture",
+      "passed": true
+    },
+    {
+      "name": "native-custom-survives-reopen",
+      "passed": true
+    },
+    {
+      "name": "native-cinema-preserves-effect",
+      "passed": true
+    },
+    {
+      "name": "native-window-return-preserves-effect",
+      "passed": true
+    },
+    {
+      "name": "native-diagnostic-keeps-film-and-defaults",
+      "passed": true
+    },
+    {
+      "name": "vlc-ai-started",
+      "passed": true
+    },
+    {
+      "name": "vlc-natural-playing",
+      "passed": true,
+      "submittedFPS": 29.99767611751229
+    },
+    {
+      "name": "vlc-foreground-playing",
+      "passed": true,
+      "submittedFPS": 30.249357201106935
+    },
+    {
+      "framesSubmitted": 2,
+      "name": "vlc-paused-natural-updates-picture",
+      "passed": true,
+      "positionDelta": 0
+    },
+    {
+      "name": "vlc-paused-natural-settles",
+      "passed": true
+    },
+    {
+      "framesSubmitted": 2,
+      "name": "vlc-paused-foreground-updates-picture",
+      "passed": true,
+      "positionDelta": 0
+    },
+    {
+      "name": "vlc-paused-foreground-settles",
+      "passed": true
+    },
+    {
+      "name": "vlc-custom-selection-keeps-values",
+      "passed": true
+    },
+    {
+      "name": "vlc-paused-custom-updates-picture",
+      "passed": true
+    },
+    {
+      "name": "vlc-custom-survives-reopen",
+      "passed": true
+    },
+    {
+      "name": "vlc-cinema-preserves-effect",
+      "passed": true
+    },
+    {
+      "name": "vlc-window-return-preserves-effect",
+      "passed": true
+    },
+    {
+      "name": "vlc-diagnostic-keeps-film-and-defaults",
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "error": ""
+}

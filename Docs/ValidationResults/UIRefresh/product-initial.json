@@ -1,0 +1,176 @@
+{
+  "checks": [
+    {
+      "name": "focus-hides-after-idle",
+      "passed": true
+    },
+    {
+      "name": "focus-interaction-restores-controls",
+      "passed": true
+    },
+    {
+      "name": "focus-overlapping-interactions-hold-and-restart-timer",
+      "passed": true
+    },
+    {
+      "name": "focus-pause-errors-and-disabled-mode-stay-visible",
+      "passed": true
+    },
+    {
+      "name": "legacy-library-defaults-to-balanced-pop-out",
+      "passed": true
+    },
+    {
+      "name": "legacy-library-enables-proportion-protection",
+      "passed": true
+    },
+    {
+      "name": "caption-appearance-survives-relaunch",
+      "passed": true
+    },
+    {
+      "name": "photo-import-preserves-video-bytes",
+      "passed": true
+    },
+    {
+      "name": "history-clear-persists-and-preserves-library",
+      "passed": true
+    },
+    {
+      "name": "history-clear-rejects-delayed-progress",
+      "passed": true
+    },
+    {
+      "name": "history-new-viewing-records-progress",
+      "passed": true
+    },
+    {
+      "name": "history-clear-storage-failure-preserves-records",
+      "passed": true
+    },
+    {
+      "name": "photo-import-survives-container-move",
+      "passed": true
+    },
+    {
+      "name": "photo-remove-keeps-original",
+      "passed": true
+    },
+    {
+      "name": "photo-cancel-cleans-staging",
+      "passed": true
+    },
+    {
+      "name": "library-deduplicates",
+      "passed": true
+    },
+    {
+      "name": "bookmark-deduplicates-relocated-container",
+      "passed": true
+    },
+    {
+      "name": "damaged-library-preserved-before-save",
+      "passed": true
+    },
+    {
+      "name": "library-persists-progress-favorite-settings",
+      "passed": true
+    },
+    {
+      "name": "bookmark-resolves",
+      "passed": true
+    },
+    {
+      "name": "per-film-settings-isolated",
+      "passed": false
+    },
+    {
+      "name": "network-source-saved-without-opening",
+      "passed": true
+    },
+    {
+      "name": "removing-record-keeps-source",
+      "passed": true
+    },
+    {
+      "name": "missing-file-needs-relink",
+      "passed": true
+    },
+    {
+      "name": "relink-preserves-record",
+      "passed": true
+    },
+    {
+      "name": "subtitle-timing-and-seek",
+      "passed": true
+    },
+    {
+      "name": "webvtt-parser",
+      "passed": true
+    },
+    {
+      "name": "native-unified-player-and-tracks",
+      "passed": true
+    },
+    {
+      "name": "native-audio-selection",
+      "passed": true
+    },
+    {
+      "name": "native-embedded-caption-output",
+      "passed": true
+    },
+    {
+      "name": "external-caption-after-seek",
+      "passed": true
+    },
+    {
+      "name": "cinema-restores-audio-and-disabled-subtitle",
+      "passed": true
+    },
+    {
+      "name": "cinema-track-switch-keeps-session",
+      "passed": true
+    },
+    {
+      "name": "cinema-tracks-return-to-window",
+      "passed": true
+    },
+    {
+      "name": "format-change-preserves-paused-position",
+      "passed": true
+    },
+    {
+      "name": "return-and-resume",
+      "passed": true
+    },
+    {
+      "name": "vlc-unified-player-and-tracks",
+      "passed": true
+    },
+    {
+      "name": "vlc-audio-selection",
+      "passed": true
+    },
+    {
+      "name": "vlc-subtitle-selection",
+      "passed": true
+    },
+    {
+      "name": "vlc-external-caption",
+      "passed": true
+    },
+    {
+      "name": "background-pauses",
+      "passed": true
+    }
+  ],
+  "environment": "physical-device",
+  "error": "",
+  "passed": false,
+  "runID": "59671973-e3b3-400c-9059-5128d946f359",
+  "sample": "product",
+  "scope": "Persistent library, access recovery, per-film isolation, unified playback, native/VLC audio and subtitle selection, external text timing. Immersive comfort and UI usability require manual headset observation.",
+  "systemVersion": "Version 27.2 (Build 24N120)",
+  "timestamp": "2026-11-06T14:07:34Z"
+}

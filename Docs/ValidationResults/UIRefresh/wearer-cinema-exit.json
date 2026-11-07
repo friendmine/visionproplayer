@@ -1,0 +1,17 @@
+{
+  "date": "2026-11-06",
+  "method": "user-reported-headset-observation",
+  "checks": [
+    {
+      "name": "exit-cinema-restores-window-and-playback",
+      "passed": true,
+      "feedback": "可以退出，窗口和播放正常"
+    },
+    {
+      "name": "inline-settings-and-both-return-actions",
+      "passed": true,
+      "feedback": "设置与两个返回入口都正常"
+    }
+  ],
+  "scope": "Cinema exit and in-panel settings navigation. Does not imply acceptance of other pending UI or source features."
+}

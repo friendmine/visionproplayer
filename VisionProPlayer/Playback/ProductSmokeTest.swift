@@ -69,6 +69,25 @@ extension PlayerModel {
                     $0.favorite = true; $0.preferences.strength = 0.6
                 }
             }
+            let removalStore = MediaLibrary(root: folder.appending(path: "removal-store"), defaults: defaults)
+            let offline = try removalStore.importPhoto(PhotoVideoTransfer.stage(nativeURL))
+            let ownedCopy = try removalStore.resolve(offline)
+            removalStore.update(offline.id) { $0.position = 5; $0.duration = 12; $0.favorite = true }
+            let beforeRemoval = removalStore.film(offline.id)
+            removalStore.scheduleRemoval(offline)
+            removalStore.undoRemoval()
+            check("undo-keeps-offline-copy-progress-and-favorite", removalStore.pendingRemoval == nil
+                  && removalStore.film(offline.id) == beforeRemoval && FileManager.default.isReadableFile(atPath: ownedCopy.path))
+            removalStore.scheduleRemoval(offline)
+            await wait(12) { removalStore.pendingRemoval == nil }
+            check("confirmed-removal-cleans-only-owned-copy", removalStore.film(offline.id) == nil
+                  && !FileManager.default.fileExists(atPath: ownedCopy.path) && FileManager.default.isReadableFile(atPath: nativeURL.path))
+            let filtered = FilmBrowsing(source: .offline, watch: .watching)
+            check("source-progress-favorite-filters-intersect", filtered.results(in: photoStore.films, search: "", favorites: true).map(\.id) == [photo.id])
+            var episode2 = localHistory, episode10 = networkHistory
+            episode2.title = "Episode 2"; episode10.title = "Episode 10"
+            let sorted = FilmBrowsing(order: .title).results(in: [episode10, episode2], search: "episode", favorites: false)
+            check("episode-titles-sort-numerically", sorted.map(\.id) == [episode2.id, episode10.id])
             let expectedAfterClear = photoStore.films.map { film in
                 var copy = film; copy.lastOpened = nil; copy.position = 0; return copy
             }
@@ -119,7 +138,7 @@ extension PlayerModel {
             check("library-persists-progress-favorite-settings", reloaded.film(first.id)?.favorite == true && reloaded.film(first.id)?.position == 3 && reloaded.film(first.id)?.preferences.strength == 0.62 && reloaded.film(first.id)?.preferences.popOut == 0.6 && reloaded.film(first.id)?.preferences.proportionProtection == false)
             check("bookmark-resolves", try reloaded.resolve(first).path == nativeURL.path)
             let second = try reloaded.add(vlcURL)
-            check("per-film-settings-isolated", reloaded.film(second.id)?.preferences.layout == .flat && reloaded.film(second.id)?.preferences.strength == 0.35 && reloaded.film(second.id)?.preferences.popOut == nil && (reloaded.film(second.id)?.preferences.proportionProtection ?? true))
+            check("per-film-settings-isolated", reloaded.film(second.id)?.preferences.layout == .flat && reloaded.film(second.id)?.preferences.depthEffect == .natural && reloaded.film(first.id)?.preferences.strength == 0.62 && reloaded.film(first.id)?.preferences.popOut == 0.6 && reloaded.film(first.id)?.preferences.proportionProtection == false)
             let remote = try reloaded.add(URL(string: "https://example.com/movie.mp4")!, title: "Network fixture")
             check("network-source-saved-without-opening", reloaded.film(remote.id)?.isNetwork == true)
             reloaded.remove(first.id)
